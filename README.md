@@ -29,19 +29,19 @@ You need install:
 - `rtl-sdr`
   Turns your Realtek RTL2832 based DVB dongle into a SDR receiver
   https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
-  build see: [build-rtl-sdr.md](.docs/build-rtl-sdr.md)
+  build see: [build-rtl-sdr.md](docs/build-rtl-sdr.md)
 <br>
 
 - `rtl-wmbus`
   Software defined receiver for Wireless-M-Bus with RTL-SDR. The Osmocom **RTL-SDR** library must be installed before you can build rtl-wmbus.
   https://github.com/xaelsouth/rtl-wmbus, 
-  build see: [build-rtl-wmbus.md](.docs/build-rtl-wmbus.md)
+  build see: [build-rtl-wmbus.md](docs/build-rtl-wmbus.md)
 <br>
 
 - `wmbusmeters`
   Program receives and decodes WMBus telegrams
   https://github.com/weetmuts/wmbusmeters, 
-  build see: [build-wmbusmeters](.docs/build-wmbusmeters.md)
+  build see: [build-wmbusmeters](docs/build-wmbusmeters.md)
 
   
 ## Integration
