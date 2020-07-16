@@ -1,0 +1,13 @@
+{
+    "media": "water",
+    "meter": "izar",
+    "name": "watermeter",
+    "id": "1231150",
+    "total_m3": 166.625,
+    "last_month_total_m3": 162.614,
+    "last_month_measure_date": "2020-07-01",
+    "remaining_battery_life_y": 13,
+    "current_alarms": "no_alarm",
+    "previous_alarms": "no_alarm",
+    "timestamp": "2020-07-16T11:32:38Z"
+}

@@ -1,0 +1,92 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os.path
+import sys
+from datetime import datetime
+
+now = datetime.now()
+
+# application settings
+SMARTMETER_ID = '17142225'                              ## internal used smartmeter identification
+SMARTMETER_NAME = 'Wasserzähler Haus'                   ## Name of the smartmeter
+
+# Datafile, if defined every hour the data will be stored as csv to this location
+DATAFILE = os.path.join(os.path.dirname(__file__),'data/' + SMARTMETER_ID + ".json")
+
+## Reportfile, if defined every end of month data will be saved to this location
+REPORTFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + "-report.csv")
+
+# all for the mqtt brocker
+MQTT_HOST = '**EDIT: HOSTNAME**'                        ## mqtt brocker host
+MQTT_PORT = 1883                                        ## mqtt brocker port
+MQTT_CLIENTID = 'waterDataClient'                       ## mqtt client id 
+MQTT_APPID = 'smarthome'                                ## mqtt brocker user name
+MQTT_PASSWORD = '**EDIT: theSecretOne'                  ## mqtt brocker user password
+MQTT_KEEPALIVE = 60                                     ## mqtt brocker keep alive time
+
+## all topic settings
+MQTT_TOPIC = 'tele/wasser/verbrauch'                    ## listen to this wmbusmeters topic
+MQTT_PUBLISH_TOPIC = 'tele/smartmeter/wasser'           ## used for publishing new data
+MQTT_STATE_TOPIC = 'stat/smartmeter/wasser'             ## mqtt state topic
+MQTT_AVAILABILITY_TOPIC = 'tele/smartmeter/wasser/LWT'  ## mqtt availability topic Online | Offline
+MQTT_ENABLE_LOGGING = False                             ## enable | disable debug logging mqtt
+
+# switch logging
+LOG_LEVEL = 10                                          # LOG_LEVEL DEBUG: 10
+# LOG_LEVEL = 20                                        # LOG_LEVEL INFO: 20
+# LOG_LEVEL = 30                                        # LOG_LEVEL WARNING: 30
+# LOG_LEVEL = 30                                        # LOG_LEVEL ERROR: 40
+# LOG_LEVEL = 50                                        # LOG_LEVEL CRITICAL: 50
+# LOG_LEVEL = 100                                       # LOG_LEVEL DISABLED: 100
+LOG_DIR = './logs/'
+
+# write summary data to console
+DATALOG_ENABLED = True                                  ## enable True | False, writes datalog to console
+DATALOG_FILENAME = './logs/data.csv'                    ## output folder for data log
+
+# data model 
+WATERMETER_DATA = {
+    "name": SMARTMETER_NAME,
+    "device": "watermeter",
+    "deviceid": SMARTMETER_ID,
+    "date": "",
+    "time": "",
+    "total_m3": 0.00,
+    "m3": {
+        "current": 0.000,
+        "hour": 0.000,
+        "day": 0.000,
+        "month": 0.000,
+        "year": 0.000
+    },
+    "liter": {
+        "current": 0.000,
+        "hour": 0.000,
+        "day": 0.000,
+        "month": 0.000,
+        "year": 0.000
+    },
+    "last_total": {
+        "hour": "2020-14-09",
+        "hour_m3": 0.000,
+        "day": "2020-07-14",
+        "day_m3": 0.000,
+        "month": "2020-07",
+        "month_m3": 0.000,
+        "year": "2019-12-31",
+        "year_m3": 117.730
+    },
+    "alarm": "No alarm",
+    "last_alarm": "No alarm",
+    "periode": now.strftime('%Y-%m-%d'),
+    "month": now.strftime('%Y-%m'),
+    "year": now.strftime('%Y'),
+    "timestamp": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
+    "last_update": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
+    "elapsed_time": 0,
+    "icon": "mdi:billboard",
+    "unit_of_measurement": u"\u33A5",
+    "version": "1.0.0",
+    "attribution": "Data provided by Peter Siebler"
+}

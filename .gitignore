@@ -1,3 +1,10 @@
+# Project files
+settings.py
+.DS_Store
+.env
+config.py
+internal/
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]
@@ -14,7 +21,6 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
 lib64/
 parts/
 sdist/

@@ -1,0 +1,44 @@
+{
+    "name": "Wasserz\u00e4hler Haus",
+    "device": "watermeter",
+    "deviceid": "43430778",
+    "date": "2020-07-15",
+    "time": "11:57:55",
+    "total_m3": 166.397,
+    "m3": {
+        "current": 0.0,
+        "hour": 166.397,
+        "day": 166.397,
+        "month": 3.783,
+        "year": 48.667
+    },
+    "liter": {
+        "current": 0.0,
+        "hour": 166397.0,
+        "day": 166397.0,
+        "month": 3783.0,
+        "year": 48667.0
+    },
+    "last_total": {
+        "hour": "13",
+        "hour_m3": 166.397,
+        "day": "2020-07-15",
+        "day_m3": 165.397,
+        "month": "2020-07",
+        "month_m3": 162.614,
+        "year": "2020-01-01",
+        "year_m3": 117.73
+    },
+    "alarm": "no_alarm",
+    "last_alarm": "no_alarm",
+    "periode": "2020-07-15",
+    "month": "2020-07",
+    "year": "2020",
+    "timestamp": "2020-07-15T11:57:55Z",
+    "last_update": "2020-07-15 13:57:55.955455",
+    "elapsed_time": "0:00:17",
+    "icon": "mdi:billboard",
+    "unit_of_measurement": "\u33a5",
+    "version": "1.0.0",
+    "attribution": "Data provided by Peter Siebler"
+}

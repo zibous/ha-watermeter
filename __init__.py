@@ -1,0 +1,2 @@
+import config
+name = 'watermeter'

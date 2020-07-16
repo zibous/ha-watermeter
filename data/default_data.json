@@ -1,0 +1,19 @@
+{
+	"name": "Wasserzähler Haus",
+	"device": "watermeter",
+	"deviceid": "43430778",
+	"m3": { "hour": 0.0, "day": 0.0, "month": 0.0, "year": 0.0 },
+	"liter": { "hour": 0.0, "day": 0.0, "month": 0.0, "year": 0.0 },
+	"alarms": "No alarm",
+	"previous_alarms": "No alarm",
+	"periode": "2020-07-15",
+	"month": "2020-07",
+	"year": "2020",
+	"last_month_measure_date": "",
+	"timestamp": "2020-07-15T05:23:12Z",
+	"last_update": "2020-07-15T05:23:12Z",
+	"icon": "mdi:billboard",
+	"unit_of_measurement": "㎥",
+	"version": "1.0.0",
+	"attribution": "Data provided by Peter Siebler"
+}

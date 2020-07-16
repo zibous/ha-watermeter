@@ -1,0 +1,21 @@
+[Unit]
+# cp service.template /etc/systemd/system/ha-watermeter.service
+# systemctl start ha-watermeter
+# systemctl enable ha-watermeter
+Description=Smartmeter Water data provider
+Documentation=https://github.com/zibous/ha-watermeter
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/ha-watermeter/
+ExecStart=/usr/bin/python3 /opt/ha-watermeter/app.py
+StandardOutput=null
+
+
+StandardError=journal
+Environment=PYTHONUNBUFFERED=true
+Restart=always
+
+[Install]
+WantedBy=multi-user.target

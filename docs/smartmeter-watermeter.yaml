@@ -1,0 +1,94 @@
+## ########################################
+## Verbrauchsmessung Wasser
+## Aktueller Verbrauch
+## Liter =  total_m3 * 1000.000
+## ########################################
+
+## {
+##  "media":"water",
+##  "meter":"izar",
+##  "name":"watermeter",
+##  "id":"43430778",
+##  "total_m3":166.204,
+##  "last_month_total_m3":162.614,
+##  "last_month_measure_date":"2020-07-01",
+##  "remaining_battery_life_y":13,
+##  "current_alarms":"no_alarm",
+##  "previous_alarms":"no_alarm",
+##  "timestamp":"2020-07-14T14:18:45Z"
+## }
+
+## all from wmbusmeters
+- platform: mqtt
+  name: "Wasserzähler aktuell"
+  state_topic: "tele/wasser/verbrauch"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['total_m3']|default(0.000)}}"
+
+- platform: mqtt
+  name: "Wasserzähler letzer Monat"
+  state_topic: "tele/wasser/verbrauch"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['last_month_total_m3']|default(0.000)}}"
+
+- platform: mqtt
+  name: "Wasserzähler Alarm"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json['current_alarms']|default('no_alarm')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+
+- platform: mqtt
+  name: "Wasserzähler Status"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json.timestamp|default('--')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+
+## all from watermeter data provider
+- platform: mqtt
+  name: "Wasserverbrauch"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].current|default(0.000)|float }}"
+
+- platform: mqtt
+  name: "Wasser pro Stunde"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].hour|default(0.000)|float }}"
+
+- platform: mqtt
+  name: "Wasser pro Tag"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].day|default(0.000)|float }}"
+
+- platform: mqtt
+  name: "Wasser pro Monat"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].month|default(0.000)|float }}"
+
+- platform: mqtt
+  name: "Wasser pro Jahr"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].year|default(0.000)|float }}"
+
+- platform: mqtt
+  name: "Wasser Alarm"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json.alarm|default('Kein Alarm')}}"
+
+- platform: mqtt
+  name: "Zählerstand"
+  state_topic: "tele/smartmeter/wasser"
+  value_template: "{{ value_json['total_m3']|default(0.000)}}"
+  unit_of_measurement: "m³"
+  json_attributes_topic: "tele/smartmeter/wasser"
+
+- platform: mqtt
+  name: "Hauswasserzähler Status"
+  state_topic: "tele/smartmeter/wasser"
+  value_template: "{{ value_json['total_m3']|default('--')}}"
+  json_attributes_topic: "tele/smartmeter/wasser"
