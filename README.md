@@ -6,10 +6,10 @@
 
 ### Requirements
 
-- Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL )
+- Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL), 
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters. 
   <br>
-- Supported DVB-T receiver or Nano CUL Adapter
+- Supported DVB-T receiver or Nano CUL Adapter, 
   Andoer Tragbarer Mini Digitaler TV Stock USB 2.0 DVB-T + DAB + FM + RTL2832U + FC0012 Chip Unterstützung SDR Stimmer Empfänger 
   <br>
 - A computer. I’m using Raspbian Buster on a Raspberry Pi 3B+, but any Linux, macOS should work
@@ -32,15 +32,15 @@ You need install:
   build see: [build-rtl-sdr.md](.docs/build-rtl-sdr.md)
 <br>
 
--  `rtl-wmbus`
+- `rtl-wmbus`
   Software defined receiver for Wireless-M-Bus with RTL-SDR. The Osmocom **RTL-SDR** library must be installed before you can build rtl-wmbus.
-  https://github.com/xaelsouth/rtl-wmbus
+  https://github.com/xaelsouth/rtl-wmbus, 
   build see: [build-rtl-wmbus.md](.docs/build-rtl-wmbus.md)
 <br>
 
--  `wmbusmeters`
+- `wmbusmeters`
   Program receives and decodes WMBus telegrams
-  https://github.com/weetmuts/wmbusmeters
+  https://github.com/weetmuts/wmbusmeters, 
   build see: [build-wmbusmeters](.docs/build-wmbusmeters.md)
 
   
