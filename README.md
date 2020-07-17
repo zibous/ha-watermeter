@@ -72,7 +72,7 @@ This data can be subscribed to and processed by other applications. From this po
 
 A simple Linux python script to query arbitrary smartmeter water sensor devices and send the data to an MQTT broker, e.g., the famous Eclipse Mosquitto.  After data made the hop to the MQTT broker it can be used by home automation software, like openHAB or Home Assistant.
 
-## Installation ha-watermeter
+## Installation ha-watermeter Version 1.0.1
 
 On a modern Linux system just a few steps are needed to get the daemon working. The following example shows the installation under Debian/Raspbian below the `/opt` directory:
 
