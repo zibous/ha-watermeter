@@ -22,7 +22,9 @@ $ cd wmbusmeters
 $ make && make test
 $ make install
 
-$ wmbusmeters/build_debug/wmbusmeters --debug --t1 rtlwmbus MonCompt izar 20eec43b NOKEY
+# example for testing
+$ cd wmbusmeters/build_debug/
+$ wmbusmeters --debug --t1 rtlwmbus watermeter1 izar 20eec43b NOKEY
 
 ```
 
@@ -49,6 +51,23 @@ You can trigger a reload of the config files with `sudo killall -HUP wmbusmeters
 
 
 ### Running without config files, good for experimentation and test.
+
+
+
+```bash
+$ cd wmbusmeters/build_debug/
+$ wmbusmeters --debug --t1 rtlwmbus diehl izar 43410778 NOKEY
+
+# with config files
+$ wmbusmeters --debug --useconfig=/root/.config/wmbusmeters
+
+$ cd /
+wmbusmeters --debug --t1 rtlwmbus diehl izar 43410778 NOKEY
+wmbusmeters --debug --useconfig=/root/.config/wmbusmeters
+
+$ tail -f /var/log/syslog
+$ tail -f /root/log/wmbusmeters/wmbusmeters.log
+```
 
 see: https://github.com/weetmuts/wmbusmeters#running-without-config-files-good-for-experimentation-and-test
 
