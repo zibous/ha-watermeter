@@ -32,10 +32,20 @@ $ rtl_sdr -f 868.9M -s 1600000 - 2 | rtl_wmbus
 
 For more information see:
 
-### 
-
 ```txt
 https://github.com/xaelsouth/rtl-wmbus
+
+## Adjust length byte after DLL CRC:s are removed.
+   When trimming away the crc bytes, update the first len byte.
+
+   Previously wmbusmeters was not so picky, and it worked anyway,
+   but now wmbusmeters actually check the internal payload crc:s and
+   other lengths. So an incorrect len byte fails.
+
+   The hardware dongles like im871a, amb8465 do update the 
+   len byte as well.
+
+   https://github.com/weetmuts/rtl-wmbus
 ```
 
 
