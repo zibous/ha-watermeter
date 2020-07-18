@@ -10,11 +10,12 @@ To install rtl-wmbus, download, unpack the source code and go to the top level d
 
 ```bash
 $ git clone https://github.com/xaelsouth/rtl-wmbus.git
+# $ git clone https://github.com/weetmuts/rtl-wmbus.git
 $ cd rtl-wmbus
 $ make
 $ make debug    # (no optimization at all, with debug options)
 $ make release  # (-O3 optimized version, without any debugging options
-$ cp ~/rtl-wmbus/build/rtl_wmbus /usr/bin/rtl_wmbus
+$ cp rtl-wmbus/build/rtl_wmbus /usr/bin/rtl_wmbus
 
 ```
 
@@ -23,8 +24,8 @@ $ cp ~/rtl-wmbus/build/rtl_wmbus /usr/bin/rtl_wmbus
 ```bash
 $ ls -l /dev/rtlsdr*
 
-$ rtl_sdr -f 868.9M -s 1.6e6 - | rtl_wmbus
-$ rtl_sdr -f 868.9M -s 1600000 - 2 | rtl_wmbus
+$ rtl_sdr -f 868.95M -s 1.6e6 - | rtl_wmbus
+$ rtl_sdr -f 868.95M -s 1600000 - 2 | rtl_wmbus
 $ rtl_sdr -f 868.95M -s 1.6e6 - 2>/dev/null | rtl_wmbus
 
 ```
