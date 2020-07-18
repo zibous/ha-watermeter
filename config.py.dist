@@ -1,6 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+import os
+import time
 import os.path
 import sys
 from datetime import datetime
@@ -8,44 +10,64 @@ from datetime import datetime
 now = datetime.now()
 
 # application settings
-SMARTMETER_ID = '17142225'                              ## internal used smartmeter identification
-SMARTMETER_NAME = 'Wasserzähler Haus'                   ## Name of the smartmeter
+SMARTMETER_ID = '1234556'  # internal used smartmeter identification
+SMARTMETER_NAME = 'Wasserzähler Haus'  # Name of the smartmeter
+APPS_VERSION = '1.0.1'  # Application version
 
 # Datafile, if defined every hour the data will be stored as csv to this location
-DATAFILE = os.path.join(os.path.dirname(__file__),'data/' + SMARTMETER_ID + ".json")
+DATAFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + ".json")
 
-## Reportfile, if defined every end of month data will be saved to this location
+# Reportfile, if defined every end of month data will be saved to this location
+DAYREPORTFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + "-day-report.csv")
+
+# Reportfile, if defined every end of month data will be saved to this location
 REPORTFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + "-report.csv")
 
 # all for the mqtt brocker
-MQTT_HOST = '**EDIT: HOSTNAME**'                        ## mqtt brocker host
-MQTT_PORT = 1883                                        ## mqtt brocker port
-MQTT_CLIENTID = 'waterDataClient'                       ## mqtt client id 
-MQTT_APPID = 'smarthome'                                ## mqtt brocker user name
-MQTT_PASSWORD = '**EDIT: theSecretOne'                  ## mqtt brocker user password
-MQTT_KEEPALIVE = 60                                     ## mqtt brocker keep alive time
+MQTT_HOST = '**EDIT: Hostname'  # mqtt brocker host
+MQTT_PORT = 1883  # mqtt brocker port
+MQTT_APPID = 'smarthome'  # mqtt brocker user name
+MQTT_PASSWORD = '**EDIT: theSecretOne'  # mqtt brocker user password
+MQTT_KEEPALIVE = 60  # mqtt brocker keep alive time
 
-## all topic settings
-MQTT_TOPIC = 'tele/wasser/verbrauch'                    ## listen to this wmbusmeters topic
-MQTT_PUBLISH_TOPIC = 'tele/smartmeter/wasser'           ## used for publishing new data
-MQTT_STATE_TOPIC = 'stat/smartmeter/wasser'             ## mqtt state topic
-MQTT_AVAILABILITY_TOPIC = 'tele/smartmeter/wasser/LWT'  ## mqtt availability topic Online | Offline
-MQTT_ENABLE_LOGGING = False                             ## enable | disable debug logging mqtt
+# all topic settings
+MQTT_TOPIC = 'tele/wasser/verbrauch'  # listen to this wmbusmeters topic
+
+# all application publish topics
+MQTT_TOPIC_NAME = 'IZAR'
+MQTT_PUBLISH_TOPIC = 'tele/' + MQTT_TOPIC_NAME + '/wasser'  # used for publishing new data
+MQTT_STATE_TOPIC = 'tele/' + MQTT_TOPIC_NAME + '/wasser/status'  # mqtt state topic
+MQTT_AVAILABILITY_TOPIC = 'tele/' + MQTT_TOPIC_NAME + '/LWT'  # mqtt availability topic Online | Offline
+MQTT_ENABLE_LOGGING = False  # enable | disable debug logging mqtt
 
 # switch logging
-LOG_LEVEL = 10                                          # LOG_LEVEL DEBUG: 10
-# LOG_LEVEL = 20                                        # LOG_LEVEL INFO: 20
-# LOG_LEVEL = 30                                        # LOG_LEVEL WARNING: 30
-# LOG_LEVEL = 30                                        # LOG_LEVEL ERROR: 40
-# LOG_LEVEL = 50                                        # LOG_LEVEL CRITICAL: 50
-# LOG_LEVEL = 100                                       # LOG_LEVEL DISABLED: 100
+LOG_LEVEL = 10  # DEBUG: 10
+# LOG_LEVEL = 20  # INFO: 20
+# LOG_LEVEL = 30  # WARNING: 30
+# LOG_LEVEL = 40  # ERROR: 40
+# LOG_LEVEL = 50  # CRITICAL: 50
+# LOG_LEVEL = 100 # DISABLED: 100
 LOG_DIR = './logs/'
 
 # write summary data to console
-DATALOG_ENABLED = True                                  ## enable True | False, writes datalog to console
-DATALOG_FILENAME = './logs/data.csv'                    ## output folder for data log
+DATALOG_ENABLED = True  # enable True | False, writes datalog to console
+DATALOG_FILENAME = './logs/data.csv'  # output folder for data log
 
-# data model 
+# data model application status
+APP_STATEINFO = {
+    "hostname": os.uname().nodename,
+    "state": 'Online',
+    "smartmeter": SMARTMETER_NAME,
+    "time": time.ctime(),
+    "timestamp": "",
+    "uptime": "-1",
+    "lastdata": "-1",
+    "synctime": -1,
+    "version": APPS_VERSION,
+    "attribution": "Data provided by Peter Siebler"
+}
+
+# data model smartmeter
 WATERMETER_DATA = {
     "name": SMARTMETER_NAME,
     "device": "watermeter",
@@ -53,6 +75,7 @@ WATERMETER_DATA = {
     "date": "",
     "time": "",
     "total_m3": 0.00,
+    "ratio": 0.00,
     "m3": {
         "current": 0.000,
         "hour": 0.000,
@@ -87,6 +110,6 @@ WATERMETER_DATA = {
     "elapsed_time": 0,
     "icon": "mdi:billboard",
     "unit_of_measurement": u"\u33A5",
-    "version": "1.0.0",
+    "version": APPS_VERSION,
     "attribution": "Data provided by Peter Siebler"
 }
