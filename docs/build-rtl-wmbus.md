@@ -25,6 +25,7 @@ $ ls -l /dev/rtlsdr*
 
 $ rtl_sdr -f 868.9M -s 1.6e6 - | rtl_wmbus
 $ rtl_sdr -f 868.9M -s 1600000 - 2 | rtl_wmbus
+$ rtl_sdr -f 868.95M -s 1.6e6 - 2>/dev/null | rtl_wmbus
 
 ```
 
