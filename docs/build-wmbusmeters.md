@@ -184,6 +184,29 @@ Wmbusmeters should start automatically, check with
 ```bash
 $ tail -f /var/log/syslog
 $ tail -f /var/log/wmbusmeters/wmbusmeters.log
+
+>>> Result
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|411A001312DDB7F5CC3D3A2F35B3D7|+1730"
+(wmbusmeters) shutting down
+(wmbusmeters) logging started 2020-07-19 06:34:40
+(wmbusmeters) waiting for telegrams
+(wmbusmeters) logging started 2020-07-19 06:34:46
+(wmbusmeters) waiting for telegrams
+(wmbusmeters) shutting down
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|011A001312810AD360BA754859D7DD|+20"
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|711A001312E4C62F315F4E455898D0|+80"
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|111A00131296259ACB9BA69182CEDF|+97"
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|211A001312AF544036F9D2FBEFE5D8|+105"
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|411A001312DDB7F5CC3D3A2F35B3D7|+122"
+(meter) watermeter: probably not for me since received media 0x18 does not match
+(izar) log "telegram=|1944A511780743434418A2|511A001312CA98BC671CE9F6EEAAD5|+131"
+
 ```
 
  If not you will see the error message `(rtlwmbus) error: when starting as daemon, wmbusmeters expects /usr/bin/rtl_sdr to exist!` and the daemon will refuse to start.)
