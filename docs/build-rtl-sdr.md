@@ -2,6 +2,9 @@
 
 # RTL-SDR: Inexpensive Software Defined Radio
 
+
+Turns your Realtek RTL2832 based DVB dongle into a SDR receiver
+
 ## Driver Installation Instructions
 
 All the installation instructions below were derived from the following links:
@@ -9,6 +12,9 @@ All the installation instructions below were derived from the following links:
 - http://sdr.osmocom.org/trac/wiki/rtl-sdr
 - https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
 - http://www.rtlsdr.org
+- https://github.com/steve-m/librtlsdr
+
+
 
 The Osmocom RTL-SDR library must be installed before you can build rtl-wmbus. See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
 
@@ -45,6 +51,40 @@ Connect your USB dongle to your computer and run the rtl_test. You should get th
 ```
 
 
+
+### rtl-sdr for Debian
+
+#### Blacklists DVB-T kernel modules provided by the Linux kernel
+
+Config file:
+`/etc/modprobe.d/librtlsdr-blacklist.conf`
+
+contains lines to blacklist dvb_usb_rtl28xxu, e4000 and rtl2832 kernel modules.
+
+Should you wish to use a device via the Linux video receiver software while still having the librtlsdr0 package installed you may edit this file. (Placing a # at the beginning os a line makes it a comment.)
+
+Then unplug/plug the USB stick.
+
+Not that if rtl-sdr applications are then run, they will complain about failing to open the device. In that case, restore the blacklist and unplug/plug the USB stick.
+
+If librtlsdr-blacklist.conf does not exist, then rtl-sdr was built with the DETACH_KERNEL_DRIVER option.
+
+
+
+#### Permissions
+
+Devices are available to users in the plugdev group.
+
+The librtlsdr0 package installs these default rules: `/lib/udev/rules.d/60-librtlsdr0.rules`
+
+If you have permissions issues, you may override these values with your own rules in /etc:
+
+/etc/udev/rules.d/60-librtlsdr0.rules
+
+After editing udev rules, run as root: 
+ `udevadm control --reload-rules`
+
+https://github.com/steve-m/librtlsdr/tree/master/debian
 
 ### Using rtl_sdr to capture to a file
 
