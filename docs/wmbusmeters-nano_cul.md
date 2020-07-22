@@ -1,14 +1,18 @@
 # wmbusmeters with NANO-CUL (mbus) 868 Mhz
 
-![nano CUL 868 ](nano CUL 868 .png)
+![nano CUL 868 ](nanoCUL868.png)
 
 
 
-NANO-CUL (mbus) 868 is a lot easier to use because it only requires `wmbusmeters`. The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus. The tests also show that the signal processing is better and thus the range for receiving the data is increased.
+NANO-CUL (mbus) 868 is a lot easier to use because it only requires `wmbusmeters`. 
+The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus. 
+#### RTL-SDR and rtl-wmbus: 32 % CPU
+![nano CUL 868 ](top-rtlsdr.png)
+The tests also show that the signal processing is better and thus the range for receiving the data is increased.
+#### RTL-SDR and rtl-wmbus: 0.7 % CPU !
+![nano CUL 868 ](top-nanocul.png)
 
-`nano CUL 868 mit Externer Magnetfußantenne` 
-
-siehe: https://www.smart-home-komponente.de/
+`nano CUL 868 mit Externer Magnetfußantenne` , siehe: https://www.smart-home-komponente.de/
 
 ## Update system
 
@@ -30,11 +34,17 @@ $ cd wmbusmeters
 $ make && make test
 
 $ make install
-## optional
+
+## optional, only if debuging
 $ make DEBUG=true
 
 $ ls -l /dev
 ## >>  wmbusmeters 188,   0 Jul 21 13:50 ttyUSB0
+
+$ dmesg | grep ttyUSB0
+##[  491.198770] usb 2-5: FTDI USB Serial Device converter now attached to ttyUSB0
+##[ 2413.835006] ftdi_sio ttyUSB0: FTDI USB Serial Device converter now ##disconnected from ttyUSB0
+##[ 2419.879307] usb 2-5: FTDI USB Serial Device converter now attached to ttyUSB0
 
 # get the id for the watermeter
 $ wmbusmeters --listento=t1 /dev/ttyUSB0
@@ -55,21 +65,6 @@ Received telegram from: 15300778
           manufacturer: (DME) DIEHL Metering, Germany
            device type: A/D converter
 Received telegram from: 43430778
-          manufacturer: (DME) DIEHL Metering, Germany
-           device type: Pressure meter
-Received telegram from: 43430778
-          manufacturer: (DME) DIEHL Metering, Germany
-           device type: Pressure meter
-Received telegram from: 43410778
-          manufacturer: (DME) DIEHL Metering, Germany
-           device type: Pressure meter
-Received telegram from: 43310778
-          manufacturer: (DME) DIEHL Metering, Germany
-           device type: Pressure meter
-Received telegram from: 15300778
-          manufacturer: (DME) DIEHL Metering, Germany
-           device type: A/D converter
-Received telegram from: 43410778
           manufacturer: (DME) DIEHL Metering, Germany
            device type: Pressure meter
 ```
