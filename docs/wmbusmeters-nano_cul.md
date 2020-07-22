@@ -10,7 +10,7 @@ The resources (memory) required are also less compared to the variant with RTL-S
 ![nano CUL 868 ](top-rtlsdr.png)
 <br>
 The tests also show that the signal processing is better and thus the range for receiving the data is increased.
-#### RTL-SDR and rtl-wmbus: 0.7 % CPU !
+#### NANO-CUL (mbus) 868: 0.7 % CPU !
 ![nano CUL 868 ](top-nanocul.png)
 
 `nano CUL 868 mit Externer Magnetfußantenne` , siehe: https://www.smart-home-komponente.de/
