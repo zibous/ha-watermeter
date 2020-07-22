@@ -13,7 +13,7 @@ The tests also show that the signal processing is better and thus the range for 
 #### NANO-CUL (mbus) 868: 0.7 % CPU !
 ![nano CUL 868 ](top-nanocul.png)
 
-`nano CUL 868 mit Externer Magnetfußantenne` , siehe: https://www.smart-home-komponente.de/
+`nano CUL 868 mit Externer Magnetfußantenne` , see: https://www.smart-home-komponente.de/
 
 ## Update system
 
