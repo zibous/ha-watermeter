@@ -24,9 +24,9 @@ Here, we will provide you with binaries and basic installation that  will enable
 
 ```bash
 >> sudo apt-get update
->> sudo apt install ncurses-dev apt install cmake librtlsdr-dev
+>> sudo apt install ncurses-dev apt cmake librtlsdr-dev
 >> sudo apt install git git-core cmake libusb-1.0-0-dev build-essential
->> sudo apt install libtool-bin automake makeinfo libc6-dev libgmp-dev libgmp3-dev gawk qpdf bison
+>> sudo apt install libtool-bin automake make info libc6-dev libgmp-dev libgmp3-dev gawk qpdf bison
 
 >> git clone git://git.osmocom.org/rtl-sdr.git
 >> cd /rtl-sdr
