@@ -8,6 +8,7 @@ NANO-CUL (mbus) 868 is a lot easier to use because it only requires `wmbusmeters
 The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus. 
 #### RTL-SDR and rtl-wmbus: 32 % CPU
 ![nano CUL 868 ](top-rtlsdr.png)
+<br>
 The tests also show that the signal processing is better and thus the range for receiving the data is increased.
 #### RTL-SDR and rtl-wmbus: 0.7 % CPU !
 ![nano CUL 868 ](top-nanocul.png)
