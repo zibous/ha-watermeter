@@ -129,6 +129,8 @@ You most probably want to execute the program **continuously in the background**
 Sensor setting see: [smartmeter-watermeter.yaml](docs/smartmeter-watermeter.yaml) 
 
 
+<br>
+<a href="https://www.buymeacoff.ee/zibous" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
 
 
 ### For more information see:
