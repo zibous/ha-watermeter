@@ -16,7 +16,7 @@ class Calculator:
     """Calculator
     """
 
-    version = "1.0.1"
+    version = "1.0.2"
 
     def __init__(self, mqttClient):
         """Constructor Calculator
@@ -40,7 +40,7 @@ class Calculator:
         else:
             log.error(f"No payload present!")
             return None
-        return now.strftime('%Y-%m-%d %H:%M:%S.%f')
+        return now.strftime(DATEFORMAT_CURRENT)
 
     def __doCalc__(self):
         """Calculate all data based on the current payload
@@ -54,20 +54,20 @@ class Calculator:
             log.info('✔︎ Start calculation')
 
             # "timestamp": "2020-07-15T07:34:17Z"
-            current_dts = datetime.strptime(self.payload['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
-            previous_dts = datetime.strptime(self.pd['timestamp'], '%Y-%m-%dT%H:%M:%SZ')
-            lastmonth_dts = datetime.strptime(self.payload['last_month_measure_date'], '%Y-%m-%d')
+            current_dts = datetime.strptime(self.payload['timestamp'], DATEFORMAT_TIMESTAMP)
+            previous_dts = datetime.strptime(self.pd['timestamp'], DATEFORMAT_TIMESTAMP)
+            lastmonth_dts = datetime.strptime(self.payload['last_month_measure_date'], DATEFORMAT_DAY)
             self.elapsed_time = current_dts - previous_dts
 
             # watermeter display data
-            self.cd['date'] = current_dts.strftime('%Y-%m-%d')
-            self.cd['time'] = current_dts.strftime('%H:%M:%S')
+            self.cd['date'] = current_dts.strftime(DATEFORMAT_DAY)
+            self.cd['time'] = current_dts.strftime(TIME_FORMAT)
             # current water meter counter value
             self.cd['total_m3'] = float(self.payload['total_m3'])
             meterM3 = float(round(self.payload['total_m3'], 3))
 
             # the last periode data
-            self.cd['last_total']['month'] = lastmonth_dts.strftime('%Y-%m')
+            self.cd['last_total']['month'] = lastmonth_dts.strftime(DATEFORMAT_MONTH)
             self.cd['last_total']['month_m3'] = float(self.payload['last_month_total_m3'])
 
             # current / prev m3
@@ -93,10 +93,10 @@ class Calculator:
                 self.cd['liter']['year'] = round(float(self.cd['m3']['year']) * 1000.00, 2)
 
                 # check update last total for hour
-                if(current_dts.strftime('%H') != previous_dts.strftime('%H')):
+                if(current_dts.strftime(DATEFORMAT_HOUR) != previous_dts.strftime(DATEFORMAT_HOUR) ):
                     # new hour
-                    log.debug(f"✔︎ Update last total hour: {current_dts.strftime('%H')} prev: {previous_dts.strftime('%H')}")
-                    self.cd['last_total']['hour'] = current_dts.strftime('%H')
+                    log.debug(f"✔︎ Update last total hour: {current_dts.strftime(DATEFORMAT_HOUR)} prev: {previous_dts.strftime(DATEFORMAT_HOUR)}")
+                    self.cd['last_total']['hour'] = current_dts.strftime(DATEFORMAT_HOUR)
                     self.cd['last_total']['hour_m3'] = meterM3
                     # new hour, store the previous data to
                     self.__printLogData()
@@ -105,10 +105,10 @@ class Calculator:
                     self.cd['last_total']['hour_m3'] = self.pd['last_total']['hour_m3']
 
                 # check update last total for day
-                if(current_dts.strftime('%Y-%m-%d') != previous_dts.strftime('%Y-%m-%d')):
+                if(current_dts.strftime(DATEFORMAT_DAY) != previous_dts.strftime(DATEFORMAT_DAY)):
                     # new day
-                    log.debug(f"✔︎ Update last total day: {current_dts.strftime('%Y-%m-%d')} prev: {previous_dts.strftime('%Y-%m-%d')}")
-                    self.cd['last_total']['day'] = current_dts.strftime('%Y-%m-%d')
+                    log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_DAY)} prev: {previous_dts.strftime(DATEFORMAT_DAY)}")
+                    self.cd['last_total']['day'] = current_dts.strftime(DATEFORMAT_DAY)
                     self.cd['last_total']['day_m3'] = meterM3
                     self.__savedayreport__()
                 else:
@@ -116,10 +116,10 @@ class Calculator:
                     self.cd['last_total']['day_m3'] = self.pd['last_total']['day_m3']
 
                 # check update last total for month
-                if(current_dts.strftime('%Y-%m') != previous_dts.strftime('%Y-%m')):
+                if(current_dts.strftime(DATEFORMAT_MONTH) != previous_dts.strftime(DATEFORMAT_MONTH)):
                     # new month
-                    log.debug(f"✔︎ Update last total day: {current_dts.strftime('%Y-%m')} prev: {previous_dts.strftime('%Y-%m')}")
-                    self.cd['last_total']['month'] = current_dts.strftime('%Y-%m')
+                    log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")
+                    self.cd['last_total']['month'] = current_dts.strftime(DATEFORMAT_MONTH)
                     self.cd['last_total']['month_m3'] = meterM3
                     # new month, store the reportdata
                     self.__savereportdata__()
@@ -128,10 +128,10 @@ class Calculator:
                     self.cd['last_total']['month_m3'] = self.pd['last_total']['month_m3']
 
                 # check update last total for year
-                if(current_dts.strftime('%Y') != previous_dts.strftime('%Y')):
+                if(current_dts.strftime(DATEFORMAT_YEAR) != previous_dts.strftime(DATEFORMAT_YEAR)):
                     # new year
-                    log.debug(f"✔︎ Update last total day: {current_dts.strftime('%Y')} prev: {previous_dts.strftime('%Y')}")
-                    self.cd['last_total']['year'] = current_dts.strftime('%Y')
+                    log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
+                    self.cd['last_total']['year'] = current_dts.strftime(DATEFORMAT_YEAR)
                     self.cd['last_total']['year_m3'] = meterM3
                 else:
                     self.cd['last_total']['year'] = self.pd['last_total']['year']
@@ -140,11 +140,11 @@ class Calculator:
             # add periodes and timestamps
             log.debug('update periodes and timestamps')
             self.cd['timestamp'] = self.payload['timestamp']
-            self.cd['periode'] = now.strftime('%Y-%m-%d')
-            self.cd['month'] = now.strftime('%Y-%m')
-            self.cd['year'] = now.strftime('%Y')
+            self.cd['periode'] = now.strftime(DATEFORMAT_DAY)
+            self.cd['month'] = now.strftime(DATEFORMAT_MONTH)
+            self.cd['year'] = now.strftime(DATEFORMAT_YEAR)
             self.cd['elapsed_time'] = str(self.elapsed_time)
-            self.cd['last_update'] = now.strftime('%Y-%m-%d %H:%M:%S.%f')
+            self.cd['last_update'] = now.strftime(DATEFORMAT_CURRENT)
             self.cd['data_provider'] = APP_STATEINFO['hostname']
 
             # water leak status

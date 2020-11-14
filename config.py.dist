@@ -9,10 +9,19 @@ from datetime import datetime
 
 now = datetime.now()
 
+# date and time formats
+DATEFORMAT_TIMESTAMP = '%Y-%m-%dT%H:%M:%SZ'
+DATEFORMAT_CURRENT   = '%Y-%m-%d %H:%M:%S.%f'
+DATEFORMAT_HOUR = '%H'
+DATEFORMAT_DAY = '%Y-%m-%d'
+DATEFORMAT_MONTH = '%Y-%m'
+DATEFORMAT_YEAR = '%Y-%m'
+TIME_FORMAT = '%H:%M:%S'
+
 # application settings
 SMARTMETER_ID = '1234556'  # internal used smartmeter identification
 SMARTMETER_NAME = 'Wasserzähler Haus'  # Name of the smartmeter
-APPS_VERSION = '1.0.1'  # Application version
+APPS_VERSION = '1.0.2'  # Application version
 
 # Datafile, if defined every hour the data will be stored as csv to this location
 DATAFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + ".json")
@@ -102,11 +111,11 @@ WATERMETER_DATA = {
     },
     "alarm": "No alarm",
     "last_alarm": "No alarm",
-    "periode": now.strftime('%Y-%m-%d'),
-    "month": now.strftime('%Y-%m'),
-    "year": now.strftime('%Y'),
-    "timestamp": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
-    "last_update": now.strftime('%Y-%m-%d %H:%M:%S.%f'),
+    "periode": now.strftime(DATEFORMAT_DAY),
+    "month": now.strftime(DATEFORMAT_MONTH),
+    "year": now.strftime(DATEFORMAT_YEAR),
+    "timestamp": now.strftime(DATEFORMAT_CURRENT),
+    "last_update": now.strftime(DATEFORMAT_CURRENT),
     "elapsed_time": 0,
     "icon": "mdi:billboard",
     "unit_of_measurement": u"\u33A5",

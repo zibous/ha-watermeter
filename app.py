@@ -79,7 +79,7 @@ def WatermeterData():
         appLogger.info(f"✔︎ MQTT Message received topic {msg.topic}")
         # application state
         if(APP_STATEINFO):
-            APP_STATEINFO["timestamp"] = now.strftime('%Y-%m-%d %H:%M:%S.%f')
+            APP_STATEINFO["timestamp"] = now.strftime(DATEFORMAT_CURRENT)
             APP_STATEINFO["time"] = time.ctime()
             APP_STATEINFO["uptime"] = up_time()
             # publish state
@@ -94,7 +94,7 @@ def WatermeterData():
             calcModul = calc.Calculator(client)
             lastData = calcModul.getResult(msg.payload)
             # reset state
-            APP_STATEINFO["lastdata"] = now.strftime('%Y-%m-%d %H:%M:%S.%f')
+            APP_STATEINFO["lastdata"] = now.strftime(DATEFORMAT_CURRENT)
             APP_STATEINFO["synctime"] = str(calcModul.elapsed_time)
             APP_STATEINFO["state"] = calcModul.state
 

@@ -2,6 +2,7 @@
 settings.py
 .DS_Store
 .env
+.history
 config.py
 internal/
 
