@@ -1,0 +1,45 @@
+type: "custom:mini-graph-card"
+style: |-
+    ha-card{
+      transform: scale(0.96);
+      background-size: 100% 100%;
+    }
+entities:
+  - entity: sensor.wasser_liter_tag
+    name: Tagesverbrauch
+    aggregate_func: last
+    state_adaptive_color: true
+    
+name: Wasser / Tag  _
+font_size: 85
+font_size_header: 18
+align_icon: left
+align_state: center
+align_header: left
+height: 186
+hours_to_show: 168
+hour24: true
+group_by: date
+unit: "Liter / Tag"
+icon: mdi:waves
+line_width: 1
+more_info: true
+lower_bound: 0.00
+upper_bound: 400.00
+show:
+  icon_adaptive_color: true
+  name_adaptive_color: true
+  extrema: true
+  graph: bar
+  
+color_thresholds:
+  - value: 50
+    color: "#2196F3"
+  - value: 100
+    color: "#0D47A1"
+  - value: 200
+    color: "#1976D2"
+  - value: 300
+    color: "#42A5F5"
+  - value: 400
+    color: "#90CAF9"    

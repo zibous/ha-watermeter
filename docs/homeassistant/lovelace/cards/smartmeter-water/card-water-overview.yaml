@@ -1,0 +1,45 @@
+type: "custom:mini-graph-card"
+style: |-
+    ha-card{
+      transform: scale(0.96);
+      background-size: 100% 100%;
+    }
+entities:
+  - entity: sensor.wasser_liter_h
+    name: Aktuell
+    aggregate_func: max
+name: Wasser / Stunde  _
+font_size: 85
+font_size_header: 18
+align_icon: left
+align_state: center
+align_header: left
+height: 186
+hours_to_show: 48
+hour24: true
+group_by: hour
+unit: "Liter / h"
+icon: mdi:waves
+line_width: 1
+more_info: true
+show:
+  icon_adaptive_color: true
+  name_adaptive_color: true
+  name: true
+  icon: true
+  state: true
+  fill: fade
+  legend: true
+  extrema: true
+  graph: bar
+color_thresholds:
+  - value: 5
+    color: "#2196F3"
+  - value: 10
+    color: "#0D47A1"
+  - value: 15
+    color: "#1976D2"
+  - value: 20
+    color: "#42A5F5"
+  - value: 30
+    color: "#90CAF9"    

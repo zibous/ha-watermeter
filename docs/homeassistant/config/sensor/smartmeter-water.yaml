@@ -1,0 +1,209 @@
+## ########################################
+## Verbrauchsmessung Wasser
+## Aktueller Verbrauch
+## Liter =  total_m3 * 1000.000
+## ########################################
+
+## ######################################
+## all from wmbusmeters
+## MQTT-TOPIC: tele/wasser/verbrauch
+## ######################################
+
+## {
+##  "media":"water",
+##  "meter":"izar",
+##  "name":"watermeter",
+##  "id":"43430778",
+##  "total_m3":166.204,
+##  "last_month_total_m3":162.614,
+##  "last_month_measure_date":"2020-07-01",
+##  "remaining_battery_life_y":13,
+##  "current_alarms":"no_alarm",
+##  "previous_alarms":"no_alarm",
+##  "timestamp":"2020-07-14T14:18:45Z"
+## }
+
+- platform: mqtt
+  name: "Wasserzähler aktuell"
+  state_topic: "tele/wasser/verbrauch"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['total_m3']|default(0.000)}}"
+  icon: mdi:counter
+
+- platform: mqtt
+  name: "Wasserzähler letzer Monat"
+  state_topic: "tele/wasser/verbrauch"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['last_month_total_m3']|default(0.000)}}"
+  icon: mdi:counter
+
+- platform: mqtt
+  name: "Wasserzähler Alarm"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json['current_alarms']|default('OFFLINE')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+  icon: mdi:alarm-light-outline
+
+- platform: mqtt
+  name: "Wasserzähler voriger Alarm"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json['previous_alarms']|default('OFFLINE')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+  icon: mdi:alarm-light-outline
+
+- platform: mqtt
+  name: "Wasserzähler Zeit"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json['timestamp']|default('OFFLINE')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+  icon: mdi:timetable
+
+- platform: mqtt
+  name: "Wasserzähler vorige Messung"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: "{{ value_json['timestamp']|default('OFFLINE')}}"
+  json_attributes_topic: "tele/wasser/verbrauch"
+  icon: mdi:timetable
+
+- platform: mqtt
+  name: "Wasserzähler Status"
+  state_topic: "tele/wasser/verbrauch"
+  value_template: >-
+    {% if ( value_json['current_alarms']|default('OFFLINE') == 'no_alarm') %}
+      Sensor online
+    {% else %}
+      Sensor {{ value_json['current_alarms']|default('OFFLINE') }}!
+    {% endif %}
+  json_attributes_topic: "tele/wasser/verbrauch"
+  icon: mdi:message-processing
+
+- platform: mqtt
+  name: "Wasserverbrauch"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].current|default(0.000)|float }}"
+  icon: mdi:waves
+
+- platform: mqtt
+  name: "Wasseraktuell Liter"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "l"
+  value_template: "{{ value_json['liter'].current|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser pro Stunde"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].hour|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser Liter/h"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "l"
+  value_template: "{{ value_json['liter'].hour|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser pro Tag"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].day|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser Liter/Tag"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "l"
+  value_template: "{{ value_json['liter'].day|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser pro Monat"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].month|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser Liter/Monat"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "l"
+  value_template: "{{ value_json['liter'].month|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser pro Jahr"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "m³"
+  value_template: "{{ value_json['m3'].year|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser Liter/Jahr"
+  state_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: "l"
+  value_template: "{{ value_json['liter'].year|default(0.000)|float }}"
+  icon: mdi:water
+
+- platform: mqtt
+  name: "Wasser Alarm"
+  state_topic: "tele/smartmeter/wasser"
+  json_attributes_topic: "tele/smartmeter/wasser"
+  icon: mdi:alarm-light-outline
+  unit_of_measurement: ""
+  value_template: >
+    {% set mapper =
+      { 'leakage': 'Wasseraustritt',
+        'meter_blocked':'Zähler blockiert',
+        'back_flow':'Zähler Rückfluss',
+        'underflow':'Zähler Unterlauf',
+        'submarine':'Überschwemmung',
+        'sensor_fraud':'Sensor Fehler',
+        'mechanical_fraud':'Mechanischer Felhler',
+        'general_alarm':'Allgemeiner Alarm',
+        'no_alarm':'Kein Alarm',
+        'offline': 'Sensor OFFLINE'} 
+    %}
+    {% set state = value_json['alarm']|default('offline') %}
+    {% set alarm = mapper[state] if state in mapper %}
+    {{ alarm }}
+
+- platform: mqtt
+  name: "Wasser letzter Alarm"
+  state_topic: "tele/smartmeter/wasser"
+  icon: mdi:alarm-light-outline
+  json_attributes_topic: "tele/smartmeter/wasser"
+  unit_of_measurement: ""
+  value_template: >
+    {% set mapper =
+      { 'leakage': 'Wasseraustritt',
+        'meter_blocked':'Zähler blockiert',
+        'back_flow':'Zähler Rückfluss',
+        'underflow':'Zähler Unterlauf',
+        'submarine':'Überschwemmung',
+        'sensor_fraud':'Sensor Fehler',
+        'mechanical_fraud':'Mechanischer Felhler',
+        'no_alarm':'Kein Alarm',
+        'general_alarm':'Allgemeiner Alarm',
+        'offline': 'Sensor OFFLINE'} 
+    %}
+    {% set state = value_json['last_alarm']|default('offline') %}
+    {% set alarm = mapper[state] if state in mapper %}
+    {{ alarm }}
+
+- platform: mqtt
+  name: "Zählerstand"
+  state_topic: "tele/smartmeter/wasser"
+  value_template: "{{ value_json['total_m3']|default(0.000)}}"
+  unit_of_measurement: "m³"
+  json_attributes_topic: "tele/smartmeter/wasser"
+  icon: mdi:counter
+
+- platform: mqtt
+  name: "Hauswasserzähler Status"
+  state_topic: "tele/smartmeter/wasser"
+  value_template: "{{ value_json['last_update']|default('OFFLINE')}}"
+  json_attributes_topic: "tele/smartmeter/wasser"
+  icon: mdi:timetable

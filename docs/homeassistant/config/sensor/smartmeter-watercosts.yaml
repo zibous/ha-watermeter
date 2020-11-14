@@ -1,0 +1,37 @@
+
+- platform: template
+
+  sensors:
+
+    ## calculate the water costs
+
+    water_cost_current:
+      friendly_name: "Wasser aktuell"
+      value_template:  >-
+          {{ (states("sensor.wasserverbrauch")|float * states.input_number.cost_m3_wasser.state|float)|round(2)}}
+      unit_of_measurement: "€"
+
+    water_cost_hour:
+      friendly_name: "Wasser pro Stunde"
+      value_template:  >-
+          {{ (states("sensor.wasser_pro_stunde")|float * states.input_number.cost_m3_wasser.state|float)|round(2)}}
+      unit_of_measurement: "€"
+
+    water_cost_day:
+      friendly_name: "Wasser pro Tag"
+      value_template:  >-
+          {{ (states("sensor.wasser_pro_tag")|float * states.input_number.cost_m3_wasser.state|float)|round(2)}}
+      unit_of_measurement: "€"
+
+    water_cost_month:
+      friendly_name: "Wasser pro Monat"
+      value_template:  >-
+          {{ (states("sensor.wasser_pro_monat")|float * states.input_number.cost_m3_wasser.state|float)|round(2)}}
+      unit_of_measurement: "€"
+
+    water_cost_jahr:
+      friendly_name: "Wasser pro Jahr"
+      value_template:  >-
+           {{ (states("sensor.wasser_pro_jahr")|float * states.input_number.cost_m3_wasser.state|float)|round(2)}}
+      unit_of_measurement: "€"
+

@@ -1,0 +1,75 @@
+## ####################################################################################################
+## calulation for a month
+## (m3_water * cost_m3_wasser) + (m3_water * cost_m3abwasser) + cost_watermeterfee + cost_waterbasefee
+## ####################################################################################################
+cost_m3_wasser:
+  name: Wasser €/m3
+  icon: mdi:currency-eur
+  initial: 5.4176
+  unit_of_measurement: "€"
+  min: 5.00
+  max: 10.00
+  mode: box
+
+cost_m3wasser:
+  name: Wasserbezugsgebühr
+  icon: mdi:currency-eur
+  initial: 0.88
+  unit_of_measurement: "€"
+  min: 0.80
+  max: 1.50
+  mode: box
+  
+cost_m3abwasser:
+  name: Kanalbenützungsgebühr
+  icon: mdi:currency-eur
+  initial: 3.38
+  unit_of_measurement: "€"
+  min: 3.00
+  max: 5.00
+  mode: box
+
+cost_watermeterfee:
+  name: Zählermiete / Monat
+  icon: mdi:currency-eur
+  initial: 2.157
+  unit_of_measurement: "€"
+  min: 2.000
+  max: 3.500
+  mode: box
+
+cost_waterbasefee:
+  name: Wassergrundgebühr / Monat
+  icon: mdi:currency-eur
+  initial: 4.917
+  unit_of_measurement: "€"
+  min: 4.800
+  max: 6.500
+  mode: box  
+
+max_m3_day:
+  name: Wasser m3 pro Tag
+  icon: mdi:counter
+  initial: 0.60
+  unit_of_measurement: "\u33A5"
+  min: .200
+  max: 3.00
+  mode: box  
+
+max_m3_month:
+  name: Wasser m3 pro Monat
+  icon: mdi:counter
+  initial: 15.00
+  unit_of_measurement: "\u33A5"
+  min: 5.00
+  max: 20.00
+  mode: box  
+
+max_m3_year:
+  name: Wasser m3 pro Jahr
+  icon: mdi:counter
+  initial: 102.000
+  unit_of_measurement: "\u33A5"
+  min: 80.00
+  max: 200.00
+  mode: box  
