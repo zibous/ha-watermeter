@@ -43,8 +43,41 @@ You need install:
   https://github.com/weetmuts/wmbusmeters, 
   build see: [build-wmbusmeters](docs/build-wmbusmeters.md)
 
-  
-## Integration
+
+
+
+
+## Raspbian Buster + wmbusmeters with NANO-CUL (mbus) 868 Mhz
+
+**NANO-CUL (mbus) 868** is a lot easier to use because it only requires `wmbusmeters`. The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus.
+
+
+
+![nanoCUL868](docs/nanoCUL868.png)
+
+
+
+More Info see: [wmbusmeters-nano_cul.md](https://github.com/zibous/ha-watermeter/blob/master/docs/wmbusmeters-nano_cul.md)
+
+https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/
+
+Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not for** `***\*FHEM\****`!! . smart-home-komponente.net can flash the firmware for `wmbusmeters`. 
+
+
+
+### Install dependencies
+
+- `wmbusmeters`
+  Program receives and decodes WMBus telegrams
+  https://github.com/weetmuts/wmbusmeters, 
+  build see: [build-wmbusmeters](docs/build-wmbusmeters.md)
+
+
+
+
+
+- ## Integration
+
 
 In the `wmbusmeters`  reporting mode, data will be published to the MQTT broker topic "`tele/wasser/verbrauch`". 
 
