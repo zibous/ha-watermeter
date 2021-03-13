@@ -12,7 +12,7 @@
 
 
 
-![water_homekitpanel card](water_homekitpanel card.png)
+![water_homekitpanel card](water_homekitpanel_card.png)
 
 
 
