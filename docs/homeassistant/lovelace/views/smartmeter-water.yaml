@@ -2,9 +2,12 @@
 ##
 ##   VIEW SMARTMETER WATER
 ##
+##   - custom:cards-layout
+##   - custom:homekit-card
+##
 ## ######################################################
 
-icon: "mdi:water-well-outline"
+icon: 'mdi:water-well-outline'
 id: WATERDIEHL
 title: Wasser
 panel: true
@@ -21,25 +24,25 @@ cards:
       icon: 'mdi:water-well-outline'
       iconcolor: '#1AB0F4'
       style: >-
-          background-image: url('/hacsfiles/cards-layout/assets/ha-header-bathroom.png');
-          background-color: #D0EDF5;
-          color: #1AB0F4;
+        background-image: url('/hacsfiles/cards-layout/assets/ha-header-bathroom.png');
+        background-color: #D0EDF5;
+        color: #1AB0F4;
     page:
       title: Übersicht
       icon: 'mdi:view-agenda'
       description: Austellung Wasserverbauch
       width: 95%
       style: >-
-          color:"#FFFFFF";
-          background: linear-gradient(to top, #0C47A1,#03A9F4);
+        color:"#FFFFFF";
+        background: linear-gradient(to top, #0C47A1,#03A9F4);
     content:
       - row:
           - columns:
-            title: "Übersicht Wasserverbrauch"
+            title: 'Übersicht Wasserverbrauch'
             width: 50%
             entities:
-                - !include ../cards/smartmeter-water/card-water-overview.yaml
-                - !include ../cards/smartmeter-water/card-water-days.yaml
+              - !include ../cards/smartmeter-water/card-water-overview.yaml
+              - !include ../cards/smartmeter-water/card-water-days.yaml
       - row:
           - columns:
             title: Detaildaten Wasserverbrauch
@@ -48,32 +51,32 @@ cards:
               - !include ../cards/smartmeter-water/card-water-usage.yaml
       - row:
           - columns:
-            title: "Details zu Wasserverbrauch & - Kosten"
+            title: 'Details zu Wasserverbrauch & - Kosten'
             width: 100%
             entities:
-              - type: "custom:homekit-card"
+              - type: 'custom:homekit-card'
                 useBrightness: false
-                titleColor: "#fff"
+                titleColor: '#fff'
                 enableColumns: false
                 statePositionTop: true
                 home: false
                 style: |
-                    .card-title {
-                      font-size: 1.25em !important;
-                      line-height: 3em !important;
-                      padding-top: 18px !important;
-                    }
-                    .name {
-                      font-size: 0.90em !important;
-                    }
-                    .state{
-                      overflow: hidden !important;
-                      text-overflow: ellipsis !important;
-                    }
+                  .card-title {
+                    font-size: 1.25em !important;
+                    line-height: 3em !important;
+                    padding-top: 18px !important;
+                  }
+                  .name {
+                    font-size: 0.90em !important;
+                  }
+                  .state{
+                    overflow: hidden !important;
+                    text-overflow: ellipsis !important;
+                  }
                 tap_action:
                   action: more-info
                 entities:
-                  - title: "Wasserverbrauch"
+                  - title: 'Wasserverbrauch'
                     entities:
                       - entity: sensor.wasseraktuell_liter
                         name: zur Zeit
@@ -101,7 +104,7 @@ cards:
                           action: more-info
                           entity: sensor.wasser_liter_jahr
 
-                  - title: "Wasser Kosten"
+                  - title: 'Wasser Kosten'
                     entities:
                       - entity: sensor.water_cost_current
                         name: zur Zeit
@@ -118,7 +121,7 @@ cards:
                         tap_action:
                           action: more-info
                           entity: sensor.water_cost_day
-                      - entity:  sensor.water_cost_month
+                      - entity: sensor.water_cost_month
                         name: Monat
                         tap_action:
                           action: more-info
@@ -129,7 +132,7 @@ cards:
                           action: more-info
                           entity: sensor.water_cost_jahr
 
-                  - title: "Wasserzähler Anzeige"
+                  - title: 'Wasserzähler Anzeige'
                     entities:
                       - entity: sensor.wasserzahler_aktuell
                         name: Gesamt m³
@@ -140,7 +143,7 @@ cards:
                         name: m³/Monat
                         tap_action:
                           action: more-info
-                          entity: sensor.wasser_pro_monat    
+                          entity: sensor.wasser_pro_monat
                       - entity: sensor.wasser_pro_jahr
                         name: m³/Jahr
                         tap_action:
@@ -156,6 +159,3 @@ cards:
                         tap_action:
                           action: more-info
                           entity: sensor.wasser_alarm
-    
-    
-    
