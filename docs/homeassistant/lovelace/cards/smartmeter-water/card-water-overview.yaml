@@ -22,6 +22,8 @@ unit: "Liter / h"
 icon: mdi:waves
 line_width: 1
 more_info: true
+# lower_bound: 0.00
+# upper_bound: 50.00
 show:
   icon_adaptive_color: true
   name_adaptive_color: true

@@ -1,0 +1,45 @@
+{
+	"name": "Wasserz\u00e4hler Haus",
+	"device": "watermeter",
+	"deviceid": "43430778",
+	"date": "2021-03-13",
+	"time": "13:45:46",
+	"total_m3": 234.489,
+	"m3": {
+		"current": 0.0,
+		"hour": 0.028,
+		"day": 0.204,
+		"month": 3.64,
+		"year": 20.216
+	},
+	"liter": {
+		"current": 0.0,
+		"hour": 28.0,
+		"day": 204.0,
+		"month": 3640.0,
+		"year": 20216.0
+	},
+	"last_total": {
+		"hour": "13",
+		"hour_m3": 234.461,
+		"day": "2021-03-13",
+		"day_m3": 234.285,
+		"month": "2021-03",
+		"month_m3": 230.849,
+		"year": "2021",
+		"year_m3": 214.273
+	},
+	"alarm": "no_alarm",
+	"last_alarm": "no_alarm",
+	"periode": "2021-03-13",
+	"month": "2021-03",
+	"year": "2021",
+	"timestamp": "2021-03-13T13:45:46Z",
+	"last_update": "2021-03-13 14:45:46.914795",
+	"elapsed_time": "0:00:17",
+	"icon": "mdi:billboard",
+	"unit_of_measurement": "\u33a5",
+	"version": "1.0.0",
+	"attribution": "Data provided by Peter Siebler",
+	"data_provider": "smarthome.siebler.home"
+}

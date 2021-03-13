@@ -43,6 +43,7 @@ style: |
      color: #007aff;
   }
   .graph__legend { flex-wrap: nowrap; }
+  #states {  padding: 24px 24px; }
   bar-card-value { font-size: 0.9em }
   bar-card-current, bar-card-backgroundbar, bar-card-currentbar {
     border-radius: 0 0 1.6em 1.6em;
