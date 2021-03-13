@@ -76,8 +76,7 @@ Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not
 
 
 
-- ## Integration
-
+## Integration
 
 In the `wmbusmeters`  reporting mode, data will be published to the MQTT broker topic "`tele/wasser/verbrauch`". 
 
