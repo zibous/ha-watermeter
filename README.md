@@ -141,7 +141,7 @@ You most probably want to execute the program **continuously in the background**
 1. Systemd service - on systemd powered systems the **recommended** option
 
    ```bash
-   sudo cp /opt/ha-watermeter/template.service /etc/systemd/system/ha-watermenter.service
+   sudo cp /opt/ha-watermeter/service.template /etc/systemd/system/ha-watermeter.service
    
    sudo systemctl daemon-reload
    sudo systemctl start ha-watermeter.service
