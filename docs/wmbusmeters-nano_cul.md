@@ -1,4 +1,4 @@
-# wmbusmeters with NANO-CUL (mbus) 868 Mhz
+# wmbusmeters version: 0.9.34 with NANO-CUL (mbus) 868 Mhz
 
 ![nano CUL 868 ](nanoCUL868.png)
 
@@ -39,13 +39,20 @@ $ make install
 ## optional, only if debuging
 $ make DEBUG=true
 
-$ ls -l /dev
+$ lsusb
+## --> Bus 001 Device 004: ID 0403:6001 Future Technology Devices International, Ltd FT232 Serial (UART) IC
+
+$ ls -l /dev/serial/by-id
+## --> lrwxrwxrwx 1 root root 13 Feb  8 09:33 usb-SHK_NANO_CUL_868-if00-port0 -> ../../ttyUSB0
+
+$ ls -l /dev/ttyUSB0
 ## >>  wmbusmeters 188,   0 Jul 21 13:50 ttyUSB0
 
 $ dmesg | grep ttyUSB0
 ##[  491.198770] usb 2-5: FTDI USB Serial Device converter now attached to ttyUSB0
 ##[ 2413.835006] ftdi_sio ttyUSB0: FTDI USB Serial Device converter now ##disconnected from ttyUSB0
 ##[ 2419.879307] usb 2-5: FTDI USB Serial Device converter now attached to ttyUSB0
+
 
 # get the id for the watermeter
 $ wmbusmeters --listento=t1 /dev/ttyUSB0
