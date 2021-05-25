@@ -157,7 +157,7 @@ You most probably want to execute the program **continuously in the background**
 ![ha-card](docs/ha-card.png)
 
 
-Sensor setting see: [smartmeter-watermeter.yaml](docs/smartmeter-watermeter.yaml) 
+Sensor setting see: [smartmeter-watermeter.yaml](docs/homeassistant) 
 
 
 <br>
