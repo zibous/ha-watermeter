@@ -13,17 +13,34 @@
 # Copyright (c) 2020 Peter Siebler
 # All rights reserved.
 
-import os.path
 import sys
-import paho.mqtt.client as mqtt
-import json
-import threading
-import time
-from time import sleep
-from uptime import uptime
 
-from lib import logger, calc
-from config import *
+# simple check if python 3 is used 
+if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
+    print("This script requires Python 3.5 or higher!")
+    print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
+    sys.exit(1)
+
+## all requirements
+try:
+    import os.path
+    import paho.mqtt.client as mqtt
+    import json
+    import threading
+    import time
+    from time import sleep
+    from uptime import uptime
+    from lib import logger, calc
+except Exception as e:
+    print('Import error {}, check requirements.txt'.format(e))
+    sys.exit(1)
+
+try:
+  from config import *
+except Exception as e:
+    print('Configuration error {}, check config.py'.format(e))
+    sys.exit(1)
+
 
 # register the application logger
 appLogger = logger.Log(__name__, LOG_LEVEL, LOG_DIR)
@@ -123,15 +140,16 @@ def WatermeterData():
 
     # Connect to mqtt brocker
     appLogger.info(f"✔︎ Watermeter connect to MQTT Client {MQTT_HOST}, {MQTT_AVAILABILITY_TOPIC}")
-
-    # To connect with a username and password, call username_pw_set() before connecting:
-    mqttclient.username_pw_set(MQTT_APPID, MQTT_PASSWORD)
-
-    # Set a Will to be sent by the broker in case the client disconnects unexpectedly.
-    mqttclient.will_set(MQTT_AVAILABILITY_TOPIC, 'Offline', 2, True)
-
-    # conect to the MQTT Broker
-    mqttclient.connect(MQTT_HOST, MQTT_PORT, keepalive=MQTT_KEEPALIVE)
+    try:
+        # To connect with a username and password, call username_pw_set() before connecting:
+        mqttclient.username_pw_set(MQTT_APPID, MQTT_PASSWORD)
+        # Set a Will to be sent by the broker in case the client disconnects unexpectedly.
+        mqttclient.will_set(MQTT_AVAILABILITY_TOPIC, 'Offline', 2, True)
+        # conect to the MQTT Broker
+        mqttclient.connect(MQTT_HOST, MQTT_PORT, keepalive=MQTT_KEEPALIVE)
+    except:
+        appLogger.error()(f"Error Connection for {MQTT_HOST}, check your settings or mqtt installation !")
+        sys.exit(-1)
 
     # Wait until we've connected
     while not not mqttclient.is_connected():  # wait in loop

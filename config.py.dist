@@ -21,7 +21,7 @@ TIME_FORMAT = '%H:%M:%S'
 # application settings
 SMARTMETER_ID = '1234556'  # internal used smartmeter identification
 SMARTMETER_NAME = 'Wasserzähler Haus'  # Name of the smartmeter
-APPS_VERSION = '1.0.2'  # Application version
+APPS_VERSION = '1.0.3'  # Application version
 
 # Datafile, if defined every hour the data will be stored as csv to this location
 DATAFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + ".json")
@@ -33,13 +33,14 @@ DAYREPORTFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID 
 REPORTFILE = os.path.join(os.path.dirname(__file__), 'data/' + SMARTMETER_ID + "-report.csv")
 
 # all for the mqtt brocker
-MQTT_HOST = '**EDIT: Hostname'  # mqtt brocker host
-MQTT_PORT = 1883  # mqtt brocker port
-MQTT_APPID = 'smarthome'  # mqtt brocker user name
-MQTT_PASSWORD = '**EDIT: theSecretOne'  # mqtt brocker user password
+MQTT_HOST = 'localhost'  # mqtt brocker host ! must be a string
+MQTT_PORT = 1883  # mqtt brocker port ! must be a number
+MQTT_APPID = 'pi'  # mqtt brocker user name
+MQTT_PASSWORD = 'raspberry'  # mqtt brocker user password
 MQTT_KEEPALIVE = 60  # mqtt brocker keep alive time
 
 # all topic settings
+# test: mosquitto_sub -h localhost -p 1883   -u 'pi' -P 'raspberry' -v -t 'tele/wasser/verbrauch'
 MQTT_TOPIC = 'tele/wasser/verbrauch'  # listen to this wmbusmeters topic
 
 # all application publish topics
