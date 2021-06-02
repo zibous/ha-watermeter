@@ -38,7 +38,7 @@ https://www.amazon.de/gp/product/B013Q94CT6/ref=as_li_tl?ie=UTF8&tag=az-shop--21
 To activate the menu we need to press CTRL + SHIFT + X and we then gain access to advanced options that enable advanced users to customize the OS to meet their needs before they write the software to a micro SD card. 
 
 ```bash
-# 1. flash Ubuntu 20.04.2 to sd card 2021-05-07-raspios-buster-armhf-lite.zip
+# 1. flash buster armhf lite to sd card 2021-05-07-raspios-buster-armhf-lite.zip
 # 2. customize the setting with Raspberry Pi Imager (CTRL + SHIFT + X)
 #    WLAN, SSH, Hostname
 # 3. insert sd card to rasberry zero board
