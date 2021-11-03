@@ -115,7 +115,7 @@ alarmexpectedactivity=mon-sun(00-23)
 ## MQTT Brocker settings
 shell=/usr/bin/mosquitto_pub -h 10.1.1.94 -p 1883 -u MQTTUSERNAME -P MQTTPASSWORD -t tele/watermeter -m "$METER_JSON"
 alarmshell=/usr/bin/mosquitto_pub -h 10.1.1.94  -u MQTTUSERNAME -P MQTTPASSWORD -t   tele/watermeter/_alarm -m "$ALARM_TYPE $ALARM_MESSAGE"
-'
+'>wmbusmeters.conf
 ```
 
 ## Install Docker Image
