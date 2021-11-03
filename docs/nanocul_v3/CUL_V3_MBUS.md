@@ -36,7 +36,7 @@ $ dmesg -w
 
 
 
-## Flash CUK V3 MBUS
+## Flashing CUL V3 MBUS
 
 ```bash
 $ su -
@@ -49,7 +49,7 @@ $ wget https://github.com/smarthomeagentur/culfw1/releases/download/180dcb5/CUL_
 
 ## the chip must first be in DFU mode. Either connect via serial
 ## and send "B99" or close the solder bridge "HWB" on the back.
-## If the stick is then on the USB and is reset by pressing the button, it is in the DFU
+## If the stick is on the USB and then reset by pressing the button, now it is in the DFU
 
 ## insert nanocul and test usb port
 $ lsusb
@@ -60,8 +60,6 @@ $ ls -l /dev/serial/by-id
 
 ## flash the CUL_V3_MBUS firmware
 $ dfu-programmer atmega32u4 erase || true
---> dfu-programmer: no device present.
-
 $ dfu-programmer atmega32u4 flash CUL_V3_MBUS.hex
 
 --> Validating...
@@ -140,7 +138,7 @@ see: https://hub.docker.com/r/weetmuts/wmbusmeters
 
 ```Json
 {
-  "media":"water",
+ "media":"water",
  "meter":"izar",
  "name":"watermeter",
  "id":"18444343",
