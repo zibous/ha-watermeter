@@ -7,7 +7,7 @@
 
 
 see: https://www.smarthome-agentur.de/blog/der-neue-cul-stick/
-
+<br>
 
 
 ## Install dfu programmer
@@ -33,7 +33,7 @@ $ dmesg -w
 [511471.577971] cdc_acm 1-1.3:1.0: ttyACM0: USB ACM device
 
 ```
-
+<br>
 
 
 ## Flashing CUL V3 MBUS
@@ -43,9 +43,9 @@ $ su -
 $ cd /opt && mkdir nanocul && cd /opt/nanocul
 $ wget https://github.com/smarthomeagentur/culfw1/releases/download/180dcb5/CUL_V3_MBUS.hex
 
-## der Chip muss erst in den DFU Mode. Entweder per Serial verbinden 
-## und "B99" senden oder die Lötbrücke "HWB" auf der rückseite schließen. 
-## Wenn der Stick dann am USB ist und per taste resetet wird, ist er im DFU 
+## der Chip muss erst in den DFU Mode. Entweder per Serial verbinden
+## und "B99" senden oder die Lötbrücke "HWB" auf der rückseite schließen.
+## Wenn der Stick dann am USB ist und per taste resetet wird, ist er im DFU
 
 ## the chip must first be in DFU mode. Either connect via serial
 ## and send "B99" or close the solder bridge "HWB" on the back.
@@ -78,10 +78,34 @@ $ wmbusmeters --listento=t1 --debug --logtelegrams /dev/ttyACM0 diehl izar 43410
 
 see: https://www.computerhilfen.de/info/fhem-cul-flashen-und-neue-firmware-installieren.html
 
+## Status Led Nanocul
+Command: l<hex>
+   Set the led mode. - 00: Set LED off - 01: Set LED on - 02: The LED will blink once a second
 
+```bash
+    $:~# echo  'l00' > /dev/ttyACM1
+    $:~# echo  'l01' > /dev/ttyACM1
+    $:~# echo  'l00' > /dev/ttyACM1
+```
+
+## Test with python serial.tools.miniterm
+```bash
+$~# python3 -m serial.tools.miniterm
+
+--- Available ports:
+---  1: /dev/ttyACM0         'ConBee II'
+---  2: /dev/ttyACM1         'CUL868'
+--- Enter port index or full name: 2
+--- Miniterm on /dev/ttyACM1  9600,8,N,1 ---
+--- Quit: Ctrl+] | Menu: Ctrl+T | Help: Ctrl+T followed by Ctrl+H ---
+b1944A5117807414344183F7CA2211800133E1EFEC6F8435F4CC5DB87620F8E1F
+b1944A511780743434418491CA2711800133C641E9A9BA726CF1186D92B42A00F
+b1944A5117807414344183F7CA2311800133E09D18F53628C951EC285A949941F
+b1944A5117807414344183F7CA2411800133E6C1D730287B7981F8D88E4FE8D1F
+b1944A511780743434418491CA2111800133C16FD2F6163CE1BCBD0D6ADB3970F
+```
 
 ## Create WMBUSMETERS config
-
 ```bash
 $su -
 $ mkdir -p /docker/wmbusmeters/etc && cd /docker/wmbusmeters/etc
@@ -117,6 +141,7 @@ shell=/usr/bin/mosquitto_pub -h 10.1.1.94 -p 1883 -u MQTTUSERNAME -P MQTTPASSWOR
 alarmshell=/usr/bin/mosquitto_pub -h 10.1.1.94  -u MQTTUSERNAME -P MQTTPASSWORD -t   tele/watermeter/_alarm -m "$ALARM_TYPE $ALARM_MESSAGE"
 '>wmbusmeters.conf
 ```
+<br>
 
 ## Install Docker Image
 
@@ -132,7 +157,15 @@ docker run -d --privileged \
 
 see: https://hub.docker.com/r/weetmuts/wmbusmeters
 
+<br>
 
+## Docker Log
+```log
+2021-11-05T12:29:17.268083085Z Started config cul on /dev/ttyACM1 listening on t1,
+2021-11-05T12:30:04.324756538Z telegram=|1944A511780743434418A2|011800133C0FD266CA421DC210C9D4|+49,
+2021-11-05T12:31:55.697491534Z telegram=|1944A511780743434418A2|511800133C444009CDE4817CA7B4DC|+160
+```
+<br>
 
 ## MQTT Brocker Message
 

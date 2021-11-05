@@ -6,17 +6,17 @@
 
 ### Requirements
 
-- Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL), 
-  IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters. 
+- Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL),
+  IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
-- Supported DVB-T receiver or Nano CUL Adapter, 
-  Andoer Tragbarer Mini Digitaler TV Stock USB 2.0 DVB-T + DAB + FM + RTL2832U + FC0012 Chip Unterstützung SDR Stimmer Empfänger 
+- Supported DVB-T receiver or Nano CUL Adapter,
+  Andoer Tragbarer Mini Digitaler TV Stock USB 2.0 DVB-T + DAB + FM + RTL2832U + FC0012 Chip Unterstützung SDR Stimmer Empfänger
   <br>
 - A computer. I’m using Raspbian Buster on a Raspberry Pi 3B+, but any Linux, macOS should work
 
 
 
-##  Raspbian Buster  +  DVB-T receiver 
+##  Raspbian Buster  +  DVB-T receiver
 
 ### ![RB3B_DVBT](docs/RB3B_DVBT.png)
 
@@ -39,12 +39,12 @@ You need install:
 - `wmbusmeters`
   Program receives and decodes WMBus telegrams
   https://github.com/weetmuts/wmbusmeters
-  
-  
+
+
 
 ## Raspberry Zero - RASPIOS "buster armhf lite" with DVB dongle
 
-Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-with-rtl-sdr.md) 
+Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-with-rtl-sdr.md)
 
 
 
@@ -53,16 +53,22 @@ Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-wi
 **NANO-CUL (mbus) 868** is a lot easier to use because it only requires `wmbusmeters`. The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus.
 
 
-
 ![nanoCUL868](docs/nanoCUL868.png)
+Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not for** `***\*FHEM\****`!! . smart-home-komponente.net can flash the firmware for `wmbusmeters`.
+<br>
 
 
+Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-with-rtl-sdr.md)
+## Docker + wmbusmeters with NANO-CUL (mbus) 868 Mhz
+wmbusmeters docker is able to detect attachment and removal of wmbus dongles and to provide that functionality within docker image it must be started in privileged mode to have access to hosts /dev/ content.
 
-More Info see: [wmbusmeters-nano_cul.md](https://github.com/zibous/ha-watermeter/blob/master/docs/wmbusmeters-nano_cul.md)
+see: https://hub.docker.com/r/weetmuts/wmbusmeters
+![nanoCUL868](docs/nanocul_v3/nanocul.jpg)
+
+More Info see: [Testcase Flash CUL-Stick](docs/nanocul_v3/README.md)
 
 https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/
 
-Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not for** `***\*FHEM\****`!! . smart-home-komponente.net can flash the firmware for `wmbusmeters`. 
 
 
 
@@ -70,16 +76,15 @@ Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not
 
 - `wmbusmeters`
   Program receives and decodes WMBus telegrams
-  https://github.com/weetmuts/wmbusmeters, 
+  https://github.com/weetmuts/wmbusmeters,
   build see: [build-wmbusmeters](docs/build-wmbusmeters.md)
-
 
 
 
 
 ## Integration
 
-In the `wmbusmeters`  reporting mode, data will be published to the MQTT broker topic "`tele/wasser/verbrauch`". 
+In the `wmbusmeters`  reporting mode, data will be published to the MQTT broker topic "`tele/wasser/verbrauch`".
 
 This data can be subscribed to and processed by other applications. From this point forward your options are endless. Example for simple mode - publish all smartmeter display data:
 
@@ -143,11 +148,11 @@ You most probably want to execute the program **continuously in the background**
 
    ```bash
    sudo cp /opt/ha-watermeter/service.template /etc/systemd/system/ha-watermeter.service
-   
+
    sudo systemctl daemon-reload
    sudo systemctl start ha-watermeter.service
    sudo systemctl status ha-watermeter.service
-   
+
    sudo systemctl enable ha-watermeter.service
    ```
 
@@ -158,7 +163,7 @@ You most probably want to execute the program **continuously in the background**
 ![ha-card](docs/ha-card.png)
 
 
-Sensor setting see: [smartmeter-watermeter.yaml](docs/homeassistant) 
+Sensor setting see: [smartmeter-watermeter.yaml](docs/homeassistant)
 
 
 <br>
