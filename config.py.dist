@@ -1,12 +1,25 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import os
-import time
-import os.path
 import sys
-from datetime import datetime
 
+# simple check if python 3 is used 
+if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
+    print("This script requires Python 3.5 or higher!")
+    print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
+    sys.exit(1)
+
+## all requirements
+try:
+    import os
+    import time
+    import os.path
+    import sys
+    from datetime import datetime
+except Exception as e:
+    print('Import error {}, check requirements.txt'.format(e))
+    sys.exit(1)
+    
 now = datetime.now()
 
 # date and time formats
@@ -110,16 +123,20 @@ WATERMETER_DATA = {
         "year": "2019-12-31",
         "year_m3": 117.730
     },
+    "wmbusmeter": "",
     "alarm": "No alarm",
     "last_alarm": "No alarm",
     "periode": now.strftime(DATEFORMAT_DAY),
     "month": now.strftime(DATEFORMAT_MONTH),
     "year": now.strftime(DATEFORMAT_YEAR),
-    "timestamp": now.strftime(DATEFORMAT_CURRENT),
+    "timestamp": now.strftime(DATEFORMAT_TIMESTAMP),
     "last_update": now.strftime(DATEFORMAT_CURRENT),
     "elapsed_time": 0,
     "icon": "mdi:billboard",
     "unit_of_measurement": u"\u33A5",
+    "last_reset": "1970-01-01T00:00:00+00:00",
+    "state_class": "measurement",
+    "device_class": "energy",
     "version": APPS_VERSION,
     "attribution": "Data provided by Peter Siebler"
 }
