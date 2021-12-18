@@ -76,7 +76,7 @@ class Calculator:
             current_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
             previous_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
 
-            lastmonth_dts = datetime.strptime(self.__checkPayload__('last_month_measure_date', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_DAY)
+            lastmonth_dts = datetime.strptime(self.__checkPayload__('last_month_measure_date', now.strftime(DATEFORMAT_DAY)), DATEFORMAT_DAY)
             self.elapsed_time = current_dts - previous_dts
 
             # watermeter display data
