@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-
-from asyncio import FastChildWatcher
 import sys
 
-# simple check if python 3 is used 
+# simple check if python 3 is used
 if not (sys.version_info.major == 3 and sys.version_info.minor >= 5):
     print("This script requires Python 3.5 or higher!")
     print("You are using Python {}.{}.".format(sys.version_info.major, sys.version_info.minor))
@@ -20,7 +18,7 @@ try:
 except Exception as e:
     print('Import error {}, check requirements.txt'.format(e))
     sys.exit(1)
-    
+
 now = datetime.now()
 
 # date and time formats
@@ -29,7 +27,7 @@ DATEFORMAT_CURRENT   = '%Y-%m-%d %H:%M:%S.%f'
 DATEFORMAT_HOUR = '%H'
 DATEFORMAT_DAY = '%Y-%m-%d'
 DATEFORMAT_MONTH = '%Y-%m'
-DATEFORMAT_YEAR = '%Y-%m'
+DATEFORMAT_YEAR = '%Y'
 TIME_FORMAT = '%H:%M:%S'
 
 # application settings
@@ -75,9 +73,6 @@ LOG_DIR = './logs/'
 
 DEBUG_DATA = False
 
-# use colorlog
-# pip3 install colorlog
-COLOR_LOG_ENABLED = False
 
 # write summary data to console
 DATALOG_ENABLED = True  # enable True | False, writes datalog to console
@@ -128,7 +123,7 @@ WATERMETER_DATA = {
         "month": "2020-07",
         "month_m3": 0.000,
         "year": "2019-12-31",
-        "year_m3": 117.730
+        "year_m3": 0.000
     },
     "wmbusmeter": "",
     "alarm": "No alarm",

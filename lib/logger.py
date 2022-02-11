@@ -3,32 +3,37 @@
 import logging
 import sys
 import traceback
+from time import gmtime, strftime
 from config import *
 
 
 class CustomFormatter(logging.Formatter):
-    """ Logging Formatter to add colors and count warning / errors
-    """
-    grey = "\x1b[38;21m"
-    yellow = "\x1b[33;21m"
-    red = "\x1b[31;21m"
-    bold_red = "\x1b[31;1m"
-    reset = "\x1b[0m"
-    format = "%(asctime)s - %(levelname)s: %(message)s (%(name)s:%(lineno)d)"
-    # format = "%(asctime)s - %(levelname)s: %(message)s)"
-    FORMATS = {
-        logging.DEBUG: grey + format + reset,
-        logging.INFO: grey + format + reset,
-        logging.WARNING: yellow + format + reset,
-        logging.ERROR: red + format + reset,
-        logging.CRITICAL: bold_red + format + reset
-    }
+    """Logging colored formatter, adapted from https://stackoverflow.com/a/56944256/3638629"""
+
+    grey = '\x1b[38;21m'
+    blue = '\x1b[38;5;39m'
+    yellow = '\x1b[38;5;226m'
+    red = '\x1b[38;5;196m'
+    bold_red = '\x1b[31;1m'
+    reset = '\x1b[0m'
+
+    def __init__(self, fmt):
+        super().__init__()
+        self.fmt = fmt
+        self.FORMATS = {
+            logging.DEBUG: self.grey + self.fmt + self.reset,
+            logging.INFO: self.blue + self.fmt + self.reset,
+            logging.WARNING: self.yellow + self.fmt + self.reset,
+            logging.ERROR: self.red + self.fmt + self.reset,
+            logging.CRITICAL: self.bold_red + self.fmt + self.reset
+        }
 
     def format(self, record):
         log_fmt = self.FORMATS.get(record.levelno)
-        formatter = logging.Formatter(log_fmt)
+        date_fmt = "%Y/%m/%d %H:%M:%S"
+        formatter = logging.Formatter(log_fmt,date_fmt)
+        formatter.default_msec_format = '%s.%03d'
         return formatter.format(record)
-
 
 class Log(object):
     """Logging wrapper for better output
@@ -52,8 +57,10 @@ class Log(object):
             fh = logging.FileHandler(self.logDir + '%s.log' % name, 'w')
             self.logger.addHandler(fh)
 
+        fmt = "%(asctime)s.%(msecs)03d  - %(levelname)s: %(message)s (%(name)s: Line %(lineno)d)"
+
         sh = logging.StreamHandler()
-        sh.setFormatter(CustomFormatter())
+        sh.setFormatter(CustomFormatter(fmt))
         self.logger.addHandler(sh)
 
         sys.excepthook = self.handle_excepthook
@@ -82,5 +89,4 @@ class Log(object):
 
     def handle_excepthook(self, type, message, stack):
         self.logger.error(f'An unhandled exception occured: {message}. Traceback: {traceback.extract_tb(stack,1)}')
-        
-    
+

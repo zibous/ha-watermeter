@@ -77,11 +77,11 @@ class Calculator:
 
           if (self.pd['last_total']['month_m3']==0.00):
             self.pd['last_total']['month_m3'] = self.cd['last_total']['month_m3']
-              
+
 
         except BaseException as e:
           log.error(f"😡 Error on  {__name__},  line: {e.__traceback__.tb_lineno}, message: {str(e)}")
-        
+
     def __doCalc__(self):
         """Calculate all data based on the current payload
         """
@@ -100,7 +100,7 @@ class Calculator:
             lastmonth_dts = datetime.strptime(self.__checkPayload__('last_month_measure_date', now.strftime(DATEFORMAT_DAY)), DATEFORMAT_DAY)
 
             if (DEBUG_DATA == True):
-                log.debug("✔︎ Date current:{}, prevoius:{},last month:{}, last year:{} ".format(current_dts,previous_dts,lastmonth_dts, previous_dts.strftime(DATEFORMAT_YEAR)))
+                log.warning("✔︎ Date current:{}, prevoius:{},last month:{}, last year:{} ".format(current_dts,previous_dts,lastmonth_dts, previous_dts.strftime(DATEFORMAT_YEAR)))
 
             self.elapsed_time = current_dts - previous_dts
 
@@ -143,19 +143,19 @@ class Calculator:
                 self.cd['liter']['day']=round(float(self.cd['m3']['day']) * 1000.00, 2)
                 self.cd['liter']['month']=round(float(self.cd['m3']['month']) * 1000.00, 2)
                 self.cd['liter']['year']=round(float(self.cd['m3']['year']) * 1000.00, 2)
-                
+
 
                 if (DEBUG_DATA == True):
-                    log.debug("⁍ DATA: result = data[current,hour,day,month,year] - previous[current,hour,day,month,year]")
-                    log.debug("⁍ DATA: current m3   : {}={}-{}".format(self.cd['m3']['current'],meterM3, self.pd['total_m3']))
-                    log.debug("⁍ DATA: current hour : {}={}-{}".format(self.cd['m3']['hour'],meterM3, self.pd['last_total']['hour_m3']))
-                    log.debug("⁍ DATA: current day  : {}={}-{}".format(self.cd['m3']['day'],meterM3, self.pd['last_total']['day_m3']))
-                    log.debug("⁍ DATA: current month: {}={}-{}".format(self.cd['m3']['month'],meterM3, self.pd['last_total']['month_m3']))
-                    log.debug("⁍ DATA: current year : {}={}-{}".format(self.cd['m3']['year'],meterM3, self.pd['last_total']['year_m3']))
+                    log.warning("⁍ DATA: result = data[current,hour,day,month,year] - previous[current,hour,day,month,year]")
+                    log.warning("⁍ DATA: current m3   : {}={}-{}".format(self.cd['m3']['current'],meterM3, self.pd['total_m3']))
+                    log.warning("⁍ DATA: current hour : {}={}-{}".format(self.cd['m3']['hour'],meterM3, self.pd['last_total']['hour_m3']))
+                    log.warning("⁍ DATA: current day  : {}={}-{}".format(self.cd['m3']['day'],meterM3, self.pd['last_total']['day_m3']))
+                    log.warning("⁍ DATA: current month: {}={}-{}".format(self.cd['m3']['month'],meterM3, self.pd['last_total']['month_m3']))
+                    log.warning("⁍ DATA: current year : {}={}-{}".format(self.cd['m3']['year'],meterM3, self.pd['last_total']['year_m3']))
 
                 # check update last total for hour
                 if (DEBUG_DATA == True):
-                    log.debug(f"⁍ DATA: Check update last total hour: {current_dts.strftime(DATEFORMAT_HOUR)} prev: {previous_dts.strftime(DATEFORMAT_HOUR)}")
+                    log.warning(f"⁍ DATA: Check update last total hour: {current_dts.strftime(DATEFORMAT_HOUR)} prev: {previous_dts.strftime(DATEFORMAT_HOUR)}")
 
                 if(current_dts.strftime(DATEFORMAT_HOUR) != previous_dts.strftime(DATEFORMAT_HOUR)):
                     # new hour
@@ -170,7 +170,7 @@ class Calculator:
 
                 # check update last total for day
                 if (DEBUG_DATA == True):
-                    log.debug(f"⁍ DATA: Check last total day update: {current_dts.strftime(DATEFORMAT_DAY)} prev: {previous_dts.strftime(DATEFORMAT_DAY)}")
+                    log.warning(f"⁍ DATA: Check last total day update: {current_dts.strftime(DATEFORMAT_DAY)} prev: {previous_dts.strftime(DATEFORMAT_DAY)}")
 
                 if(current_dts.strftime(DATEFORMAT_DAY) != previous_dts.strftime(DATEFORMAT_DAY)):
                     # new day
@@ -184,7 +184,7 @@ class Calculator:
 
                 # check update last total for month
                 if (DEBUG_DATA == True):
-                    log.debug(f"⁍ DATA: Check last total month update: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")     
+                    log.warning(f"⁍ DATA: Check last total month update: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")
 
                 if(current_dts.strftime(DATEFORMAT_MONTH) != previous_dts.strftime(DATEFORMAT_MONTH)):
                     # new month
@@ -199,7 +199,7 @@ class Calculator:
 
                 # check update last total for year
                 if (DEBUG_DATA == True):
-                    log.debug(f"⁍ DATA: Check last year update: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
+                    log.warning(f"⁍ DATA: Check last year update: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
 
                 if(current_dts.strftime(DATEFORMAT_YEAR) != previous_dts.strftime(DATEFORMAT_YEAR)):
                     # new year
@@ -211,7 +211,7 @@ class Calculator:
                     self.cd['last_total']['year_m3']=self.pd['last_total']['year_m3']
 
             self.cd['wmbusmeter']=self.payload
-            
+
             # add periodes and timestamps
             log.debug('✔︎ update periodes and timestamps')
             self.cd['timestamp']=self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP))
