@@ -81,26 +81,26 @@ def WatermeterData():
     def on_connect(client, userdata, flags, rc):
         # The callback for when the client receives a CONNACK response from the server.
         if rc == mqtt.CONNACK_ACCEPTED:
-            appLogger.debug(f"✔︎ {MQTT_HOST} connected OK, subscribe to topic {MQTT_TOPIC}")
+            appLogger.debug(f"❖ {MQTT_HOST} connected OK, subscribe to topic {MQTT_TOPIC}")
             # Subscribing in on_connect() means that if we lose the connection and
             # reconnect then subscriptions will be renewed.
             client.subscribe(MQTT_TOPIC)
         else:
-            appLogger.error(f"✔︎ {MQTT_HOST} Bad connection, returned code= {rc}")
+            appLogger.error(f"😡 {MQTT_HOST} Bad connection, returned code= {rc}")
 
     def on_publish(client, userdata, mid):
-        appLogger.debug(f"✔︎ Message Id {str(mid)} published.")
+        appLogger.debug(f"❖ Message Id {str(mid)} published.")
 
     def on_message(client, userdata, msg):
         # The on_message callback is called for each message received ...
-        appLogger.info(f"✔︎ MQTT Message received topic {msg.topic}")
+        appLogger.info(f" ❖  MQTT Message received topic {msg.topic}")
         # application state
         if(APP_STATEINFO):
             APP_STATEINFO["timestamp"] = now.strftime(DATEFORMAT_CURRENT)
             APP_STATEINFO["time"] = time.ctime()
             APP_STATEINFO["uptime"] = up_time()
             # publish state
-            appLogger.info(f"✔︎ MQTT Publish state topic {MQTT_STATE_TOPIC}")
+            appLogger.info(f" ❖ MQTT Publish state topic {MQTT_STATE_TOPIC}")
             client.publish(MQTT_STATE_TOPIC, json.dumps(APP_STATEINFO))
             # reset state
             APP_STATEINFO["state"] = 'waiting'
@@ -118,12 +118,12 @@ def WatermeterData():
     def on_disconnect(client, userdata, rc):
         # he on_disconnect() callback is called when the client disconnects from the broker.
         if rc != 1:
-            appLogger.info(f"✔︎ Watermeter MQTT Client {MQTT_HOST} {MQTT_AVAILABILITY_TOPIC} got disconnected (code: {rc}")
+            appLogger.info(f" ❖ Watermeter MQTT Client {MQTT_HOST} {MQTT_AVAILABILITY_TOPIC} got disconnected (code: {rc}")
 
     def on_log(client, userdata, level, buf):
         appLogger.debug(f"❖ Mqtt Logmessage {level}:  {buf}")
 
-    appLogger.debug(f"✔︎ Watermeter MQTT Client {MQTT_HOST}")
+    appLogger.debug(f" ❖ Watermeter MQTT Client {MQTT_HOST}")
     mqttclient = mqtt.Client()
 
     # Assign event callbacks
@@ -134,12 +134,12 @@ def WatermeterData():
 
     # enable /disable logging
     if MQTT_ENABLE_LOGGING:
-        appLogger.info(f"✔︎ Enable Logging for {MQTT_HOST}")
+        appLogger.info(f" ❖ Enable Logging for {MQTT_HOST}")
         mqttclient.on_log = on_log
         mqttclient.enable_logger(appLogger.logger)
 
     # Connect to mqtt brocker
-    appLogger.info(f"✔︎ Watermeter connect to MQTT Client {MQTT_HOST}, {MQTT_AVAILABILITY_TOPIC}")
+    appLogger.info(f" ❖ Watermeter connect to MQTT Client {MQTT_HOST}, {MQTT_AVAILABILITY_TOPIC}")
     try:
         # To connect with a username and password, call username_pw_set() before connecting:
         mqttclient.username_pw_set(MQTT_APPID, MQTT_PASSWORD)
@@ -148,12 +148,12 @@ def WatermeterData():
         # conect to the MQTT Broker
         mqttclient.connect(MQTT_HOST, MQTT_PORT, keepalive=MQTT_KEEPALIVE)
     except:
-        appLogger.error()(f"Error Connection for {MQTT_HOST}, check your settings or mqtt installation !")
+        appLogger.error()(f"😡 Error Connection for {MQTT_HOST}, check your settings or mqtt installation !")
         sys.exit(-1)
 
     # Wait until we've connected
     while not not mqttclient.is_connected():  # wait in loop
-        appLogger.debug(f"✔︎ Waiting for connection {MQTT_HOST}")
+        appLogger.debug(f" ❖ Waiting for connection {MQTT_HOST}")
         time.sleep(1)
 
     # publish online state
@@ -165,5 +165,5 @@ def WatermeterData():
 
 
 # Start main application
-appLogger.info("✔︎ Watermeter data application start")
+appLogger.info(" ❖ Watermeter data application start  --------------------")
 WatermeterData()

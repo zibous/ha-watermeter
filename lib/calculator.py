@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 
+from operator import truediv
 import sys
 
 if sys.version_info[0] < 3:
@@ -27,7 +28,7 @@ class Calculator:
     """Calculator
     """
 
-    version = "1.0.2"
+    version = "1.0.3"
 
     def __init__(self, mqttClient):
         """Constructor Calculator
@@ -42,6 +43,7 @@ class Calculator:
         self.dayreportfile = DAYREPORTFILE
         self.elapsed_time = -1
         self.state = "waiting"
+        self.firstRun = True
 
     def getResult(self, payload: str = ''):
         self.payload = json.loads(payload)
@@ -60,6 +62,26 @@ class Calculator:
             log.debug(f'Missing key {key} - used default value {default}')
             return default
 
+    def __checkFirstRun__(self, meterM3:float=0.00):
+        """Init values for the first run
+        """
+        try:
+          if(self.firstRun==False):
+              return
+
+          if (self.pd['last_total']['hour_m3']==0.00):
+            self.pd['last_total']['hour_m3'] = meterM3
+
+          if (self.pd['last_total']['day_m3']==0.00):
+            self.pd['last_total']['day_m3'] = meterM3
+
+          if (self.pd['last_total']['month_m3']==0.00):
+            self.pd['last_total']['month_m3'] = self.cd['last_total']['month_m3']
+              
+
+        except BaseException as e:
+          log.error(f"😡 Error on  {__name__},  line: {e.__traceback__.tb_lineno}, message: {str(e)}")
+        
     def __doCalc__(self):
         """Calculate all data based on the current payload
         """
@@ -69,24 +91,29 @@ class Calculator:
         now = datetime.now()
 
         try:
-            log.info('✔︎ Start calculation')
+            log.info(' ✔︎ Start calculation')
 
             # "timestamp": "2020-07-15T07:34:17Z"
 
             current_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
             previous_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
-
             lastmonth_dts = datetime.strptime(self.__checkPayload__('last_month_measure_date', now.strftime(DATEFORMAT_DAY)), DATEFORMAT_DAY)
+
+            if (DEBUG_DATA == True):
+                log.debug("✔︎ Date current:{}, prevoius:{},last month:{}, last year:{} ".format(current_dts,previous_dts,lastmonth_dts, previous_dts.strftime(DATEFORMAT_YEAR)))
+
             self.elapsed_time = current_dts - previous_dts
 
             # watermeter display data
             self.cd['date'] = current_dts.strftime(DATEFORMAT_DAY)
             self.cd['time'] = current_dts.strftime(TIME_FORMAT)
+
             # current water meter counter value
             self.cd['total_m3'] = float(self.__checkPayload__('total_m3', 0.00))
+            # total m3
             meterM3 = float(round(self.cd['total_m3'], 3))
 
-            # the last periode data
+            # the last periode data from the meter payload
             self.cd['last_total']['month'] = lastmonth_dts.strftime(DATEFORMAT_MONTH)
             self.cd['last_total']['month_m3'] = float(self.__checkPayload__('last_month_total_m3', 0.00))
 
@@ -97,9 +124,14 @@ class Calculator:
             # calculate the m3
             if(self.pd):
 
-                log.info('✔︎ new data calculation')
-
+                log.info(' ✔︎ new data calculation m3, liter')
                 self.cd['m3']['current']=round(meterM3 - float(self.pd['total_m3']), 3)
+
+                if(self.firstRun==True):
+                    log.info(' ✔︎ Init first run, try to adjust the prevoius values.')
+
+                self.__checkFirstRun__(meterM3)
+
                 self.cd['m3']['hour']=round(meterM3 - float(self.pd['last_total']['hour_m3']), 3)
                 self.cd['m3']['day']=round(meterM3 - float(self.pd['last_total']['day_m3']), 3)
                 self.cd['m3']['month']=round(meterM3 - float(self.pd['last_total']['month_m3']), 3)
@@ -111,8 +143,20 @@ class Calculator:
                 self.cd['liter']['day']=round(float(self.cd['m3']['day']) * 1000.00, 2)
                 self.cd['liter']['month']=round(float(self.cd['m3']['month']) * 1000.00, 2)
                 self.cd['liter']['year']=round(float(self.cd['m3']['year']) * 1000.00, 2)
+                
+
+                if (DEBUG_DATA == True):
+                    log.debug("⁍ DATA: result = data[current,hour,day,month,year] - previous[current,hour,day,month,year]")
+                    log.debug("⁍ DATA: current m3   : {}={}-{}".format(self.cd['m3']['current'],meterM3, self.pd['total_m3']))
+                    log.debug("⁍ DATA: current hour : {}={}-{}".format(self.cd['m3']['hour'],meterM3, self.pd['last_total']['hour_m3']))
+                    log.debug("⁍ DATA: current day  : {}={}-{}".format(self.cd['m3']['day'],meterM3, self.pd['last_total']['day_m3']))
+                    log.debug("⁍ DATA: current month: {}={}-{}".format(self.cd['m3']['month'],meterM3, self.pd['last_total']['month_m3']))
+                    log.debug("⁍ DATA: current year : {}={}-{}".format(self.cd['m3']['year'],meterM3, self.pd['last_total']['year_m3']))
 
                 # check update last total for hour
+                if (DEBUG_DATA == True):
+                    log.debug(f"⁍ DATA: Check update last total hour: {current_dts.strftime(DATEFORMAT_HOUR)} prev: {previous_dts.strftime(DATEFORMAT_HOUR)}")
+
                 if(current_dts.strftime(DATEFORMAT_HOUR) != previous_dts.strftime(DATEFORMAT_HOUR)):
                     # new hour
                     log.debug(f"✔︎ Update last total hour: {current_dts.strftime(DATEFORMAT_HOUR)} prev: {previous_dts.strftime(DATEFORMAT_HOUR)}")
@@ -125,6 +169,9 @@ class Calculator:
                     self.cd['last_total']['hour_m3']=self.pd['last_total']['hour_m3']
 
                 # check update last total for day
+                if (DEBUG_DATA == True):
+                    log.debug(f"⁍ DATA: Check last total day update: {current_dts.strftime(DATEFORMAT_DAY)} prev: {previous_dts.strftime(DATEFORMAT_DAY)}")
+
                 if(current_dts.strftime(DATEFORMAT_DAY) != previous_dts.strftime(DATEFORMAT_DAY)):
                     # new day
                     log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_DAY)} prev: {previous_dts.strftime(DATEFORMAT_DAY)}")
@@ -136,9 +183,12 @@ class Calculator:
                     self.cd['last_total']['day_m3']=self.pd['last_total']['day_m3']
 
                 # check update last total for month
+                if (DEBUG_DATA == True):
+                    log.debug(f"⁍ DATA: Check last total month update: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")     
+
                 if(current_dts.strftime(DATEFORMAT_MONTH) != previous_dts.strftime(DATEFORMAT_MONTH)):
                     # new month
-                    log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")
+                    log.debug(f"✔︎ Update last total month: {current_dts.strftime(DATEFORMAT_MONTH)} prev: {previous_dts.strftime(DATEFORMAT_MONTH)}")
                     self.cd['last_total']['month']=current_dts.strftime(DATEFORMAT_MONTH)
                     self.cd['last_total']['month_m3']=meterM3
                     # new month, store the reportdata
@@ -148,9 +198,12 @@ class Calculator:
                     self.cd['last_total']['month_m3']=self.pd['last_total']['month_m3']
 
                 # check update last total for year
+                if (DEBUG_DATA == True):
+                    log.debug(f"⁍ DATA: Check last year update: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
+
                 if(current_dts.strftime(DATEFORMAT_YEAR) != previous_dts.strftime(DATEFORMAT_YEAR)):
                     # new year
-                    log.debug(f"✔︎ Update last total day: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
+                    log.debug(f"✔︎ Update last total year: {current_dts.strftime(DATEFORMAT_YEAR)} prev: {previous_dts.strftime(DATEFORMAT_YEAR)}")
                     self.cd['last_total']['year']=current_dts.strftime(DATEFORMAT_YEAR)
                     self.cd['last_total']['year_m3']=meterM3
                 else:
@@ -158,25 +211,25 @@ class Calculator:
                     self.cd['last_total']['year_m3']=self.pd['last_total']['year_m3']
 
             self.cd['wmbusmeter']=self.payload
-
+            
             # add periodes and timestamps
-            log.debug('update periodes and timestamps')
+            log.debug('✔︎ update periodes and timestamps')
             self.cd['timestamp']=self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP))
             self.cd['periode']=now.strftime(DATEFORMAT_DAY)
             self.cd['month']=now.strftime(DATEFORMAT_MONTH)
             self.cd['year']=now.strftime(DATEFORMAT_YEAR)
             self.cd['elapsed_time']=str(self.elapsed_time)
             self.cd['last_update']=now.strftime(DATEFORMAT_CURRENT)
+            self.cd['first_run']=self.firstRun
             self.cd['data_provider']=APP_STATEINFO['hostname']
 
             # water leak status
-            log.debug('update water leak status')
-
+            log.debug('✔︎ update water leak status')
             self.cd['alarm']=self.__checkPayload__('current_alarms', 'no alarm')
             self.cd['last_alarm']=self.__checkPayload__('previous_alarms', 'no alarm')
 
             # publish the new data
-            log.info(f'✔︎ Publish the new data {MQTT_PUBLISH_TOPIC}')
+            log.info(f' ✔︎ Publish the new data {MQTT_PUBLISH_TOPIC}')
             self.mqttClient.publish(MQTT_PUBLISH_TOPIC, json.dumps(self.cd))
 
             # save logging data
@@ -185,11 +238,11 @@ class Calculator:
             return True
 
         except BaseException as e:
-            log.error(f"Error on calculation: {__name__},  line: {e.__traceback__.tb_lineno}, message: {str(e)}")
+            log.error(f"😡 Error on calculation: {__name__},  line: {e.__traceback__.tb_lineno}, message: {str(e)}")
             return False
 
     def __loaddata__(self):
-        log.info(f"✔︎ get previous data from {self.cdfilename}")
+        log.info(f" ✔︎ get previous data from {self.cdfilename}")
         try:
             if (self.cdfilename):
                 if os.path.isfile(self.cdfilename):
@@ -197,13 +250,15 @@ class Calculator:
                         _prevdat=f.read()
                         log.debug(f"✔︎ previous data loaded {self.cdfilename}")
                         self.pd=json.loads(_prevdat)
+                        self.firstRun = False
                     return True
                 else:
                     log.debug(f"✔︎ init previous data, datafile not found!")
                     self.pd=self.cd
+                    self.firstRun = True
                     return True
         except BaseException:
-            log.error(f"Error reading file {self.cdfilename}")
+            log.error(f"😡 Error reading file {self.cdfilename}")
         return None
 
     def __savedata__(self):
@@ -219,7 +274,7 @@ class Calculator:
                 log.debug(f'✔︎ saved current data to {self.cdfilename}')
                 return True
             except BaseException:
-                log.error(f"Error save history data to file {self.cdfilename}")
+                log.error(f"😡 Error save history data to file {self.cdfilename}")
                 return False
         return False
 
@@ -246,7 +301,7 @@ class Calculator:
                     f.write(output + '\n')
                 log.debug(f'✔︎ saved report data to {self.reportdatafile}')
             except BaseException:
-                log.error(f"Error save report data to file {self.reportdatafile}")
+                log.error(f"😡 Error save report data to file {self.reportdatafile}")
                 return False
         return True
 
@@ -270,7 +325,7 @@ class Calculator:
                     f.write(output + '\n')
                 log.debug(f'✔︎ saved report data to {self.reportdatafile}')
             except BaseException:
-                log.error(f"Error save report data to file {self.reportdatafile}")
+                log.error(f"😡 Error save report data to file {self.reportdatafile}")
                 return False
         return True
 

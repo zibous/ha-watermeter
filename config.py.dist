@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+from asyncio import FastChildWatcher
 import sys
 
 # simple check if python 3 is used 
@@ -71,6 +72,12 @@ LOG_LEVEL = 10  # DEBUG: 10
 # LOG_LEVEL = 50  # CRITICAL: 50
 # LOG_LEVEL = 100 # DISABLED: 100
 LOG_DIR = './logs/'
+
+DEBUG_DATA = False
+
+# use colorlog
+# pip3 install colorlog
+COLOR_LOG_ENABLED = False
 
 # write summary data to console
 DATALOG_ENABLED = True  # enable True | False, writes datalog to console
