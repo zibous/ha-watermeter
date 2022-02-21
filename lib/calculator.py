@@ -28,7 +28,7 @@ class Calculator:
     """Calculator
     """
 
-    version = "1.0.3"
+    version = "1.0.4"
 
     def __init__(self, mqttClient):
         """Constructor Calculator
