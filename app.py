@@ -136,7 +136,7 @@ def WatermeterData():
     if MQTT_ENABLE_LOGGING:
         appLogger.logger.info(f" ❖ Enable Logging for {MQTT_HOST}")
         mqttclient.on_log = on_log
-        mqttclient.enable_logger(appLogger.logger.logger)
+        # mqttclient.enable_logger(appLogger.logger.logger)
 
     # Connect to mqtt brocker
     appLogger.logger.info(f" ❖ Watermeter connect to MQTT Client {MQTT_HOST}, {MQTT_AVAILABILITY_TOPIC}")

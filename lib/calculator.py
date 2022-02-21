@@ -92,11 +92,8 @@ class Calculator:
 
         try:
             log.logger.info(' ✔︎ Start calculation')
-
-            # "timestamp": "2020-07-15T07:34:17Z"
-
             current_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
-            previous_dts = datetime.strptime(self.__checkPayload__('timestamp', now.strftime(DATEFORMAT_TIMESTAMP)), DATEFORMAT_TIMESTAMP)
+            previous_dts = datetime.strptime(self.pd['timestamp'] ,DATEFORMAT_TIMESTAMP)
             lastmonth_dts = datetime.strptime(self.__checkPayload__('last_month_measure_date', now.strftime(DATEFORMAT_DAY)), DATEFORMAT_DAY)
 
             if (DEBUG_DATA == True):
