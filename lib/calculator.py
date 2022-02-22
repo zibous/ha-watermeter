@@ -100,6 +100,8 @@ class Calculator:
                 log.logger.warning("✔︎ Date current:{}, prevoius:{},last month:{}, last year:{} ".format(current_dts,previous_dts,lastmonth_dts, previous_dts.strftime(DATEFORMAT_YEAR)))
 
             self.elapsed_time = current_dts - previous_dts
+            if (DEBUG_DATA == True):
+                log.logger.warning("✔︎ Elapsed Time:{} ".format(self.elapsed_time))
 
             # watermeter display data
             self.cd['date'] = current_dts.strftime(DATEFORMAT_DAY)
