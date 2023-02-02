@@ -12,6 +12,19 @@
 
 After Wemos D1 Min, CUL + CC1101 has been wired, the application can be flashed with ESPHOME
 
+```yaml
+## ---------------------------------------------------
+## WMBUS DEVICE D1MINI WEMOS
+## ---------------------------------------------------
+wmbus:
+  mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI
+  miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO
+  clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
+  gdo0_pin: GPIO04 #D2  High Impedance
+  gdo2_pin: GPIO05 #D1  High Impedance
+  
+
 [Wemos D1 Min, CUL + CC1101 configuration see](wmbus-minid1.yaml)
 
 ## Tools
