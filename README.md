@@ -3,167 +3,49 @@
 ![diehl_metering](./docs/diehl_metering.jpg)
 
 
+I did some eyperiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **Wemos D1 Min, CUL + CC1101 (esphome)**.
+
+<br>
+
+**Wemos D1 Min, CUL + CC1101 (esphome)** is the best solution for me because the resource requirement is low.
+
+With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
+
+
+![Wemos D1 Min, CUL + CC1101](./docs/d1min_cc1101.png)
 
 ### Requirements
 
 - Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL),
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
-- Supported DVB-T receiver or Nano CUL Adapter,
-  Andoer Tragbarer Mini Digitaler TV Stock USB 2.0 DVB-T + DAB + FM + RTL2832U + FC0012 Chip Unterstützung SDR Stimmer Empfänger
-  <br>
-- A computer. I’m using Raspbian Buster on a Raspberry Pi 3B+, but any Linux, macOS should work
+- [Wemos D1 Min, CUL + CC1101](https://amzn.eu/d/0WQv07I)
+[Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
 
 
 
-##  Raspbian Buster  +  DVB-T receiver
+## Installation
+[Wemos D1 Min, CUL + CC1101 Installation](./esphome/README.md)
 
-### ![RB3B_DVBT](docs/RB3B_DVBT.png)
+### What I still miss
+Only the `total_m3` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
 
+- Alarm (current_alarms, previous_alarms)
+- Water last month (last_month_total_m3)
 
 
-### Install dependencies
+## Result
 
-You need install:
+![ESPHOME-WATERMETER](./docs/esphome-watermeter.png)
 
-- `rtl-sdr`
-  Turns your Realtek RTL2832 based DVB dongle into a SDR receiver
-  https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
-  <br>
 
-- `rtl-wmbus`
-  Software defined receiver for Wireless-M-Bus with RTL-SDR. The Osmocom **RTL-SDR** library must be installed before you can build rtl-wmbus.
-  https://github.com/xaelsouth/rtl-wmbus
-  <br>
+<hr>
 
-- `wmbusmeters`
-  Program receives and decodes WMBus telegrams
-  https://github.com/weetmuts/wmbusmeters
+## Other solutions (alternatively)
 
-
-
-## Raspberry Zero - RASPIOS "buster armhf lite" with DVB dongle
-
-Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-with-rtl-sdr.md)
-
-
-
-## Raspbian Buster + wmbusmeters with NANO-CUL (mbus) 868 Mhz
-
-**NANO-CUL (mbus) 868** is a lot easier to use because it only requires `wmbusmeters`. The resources (memory) required are also less compared to the variant with RTL-SDR and rtl-wmbus.
-
-
-![nanoCUL868](docs/nanoCUL868.png)
-Please not, that you do need the NANO-CUL (mbus) 868 Mhz for `wmbusmeters` **not for** `***\*FHEM\****`!! . smart-home-komponente.net can flash the firmware for `wmbusmeters`.
-<br>
-
-
-Details and Installation see:  [wmbusmeters-with-rtl-sdr.md](docs/wmbusmeters-with-rtl-sdr.md)
-## Docker + wmbusmeters with NANO-CUL (mbus) 868 Mhz
-wmbusmeters docker is able to detect attachment and removal of wmbus dongles and to provide that functionality within docker image it must be started in privileged mode to have access to hosts /dev/ content.
-
-see: https://hub.docker.com/r/weetmuts/wmbusmeters
-![nanoCUL868](docs/nanocul_v3/nanocul.jpg)
-
-More Info see: [Testcase Flash CUL-Stick](docs/nanocul_v3/README.md)
-
-https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/
-
-
-
-
-### Install dependencies
-
-- `wmbusmeters`
-  Program receives and decodes WMBus telegrams
-  https://github.com/weetmuts/wmbusmeters,
-  build see: [build-wmbusmeters](docs/build-wmbusmeters.md)
-
-
-
-
-## Integration
-
-In the `wmbusmeters`  reporting mode, data will be published to the MQTT broker topic "`tele/wasser/verbrauch`".
-
-This data can be subscribed to and processed by other applications. From this point forward your options are endless. Example for simple mode - publish all smartmeter display data:
-
-```json
-{
-    "media": "water",
-    "meter": "izar",
-    "name": "watermeter",
-    "id": "1231150",
-    "total_m3": 166.625,
-    "last_month_total_m3": 162.614,
-    "last_month_measure_date": "2020-07-01",
-    "remaining_battery_life_y": 13,
-    "current_alarms": "no_alarm",
-    "previous_alarms": "no_alarm",
-    "timestamp": "2020-07-16T11:32:38Z"
-}
-```
-
-
-
-## ha-watermeter
-
-A simple Linux python script to query arbitrary smartmeter water sensor devices and send the data to an MQTT broker, e.g., the famous Eclipse Mosquitto.  After data made the hop to the MQTT broker it can be used by home automation software, like openHAB or Home Assistant.
-
-## Installation ha-watermeter Version 1.0.1
-
-On a modern Linux system just a few steps are needed to get the daemon working. The following example shows the installation under Debian/Raspbian below the `/opt` directory:
-
-```bash
-$ git clone https://github.com/zibous/ha-watermeter.git /opt/ha-watermeter
-$ cd /opt/ha-watermeter
-$ sudo pip3 install -r requirements.txt
-
-```
-
-To match personal needs, all operation details can be configured using the file **config.py** The file needs to be created first:
-
-```bash
-$ cd /opt/ha-watermeter
-$ cp config.py.dist config.py
-$ nano config.py
-
-$ chmod +x app.py
-$ python3 app.py  ## or ./app.py
-```
-
-### Application log
-
-![logging](docs/logging.png)
-
-
-
-### Continuous Daemon/Service
-
-You most probably want to execute the program **continuously in the background**. This can be done either by using the internal daemon or cron.
-
-**Attention:** Daemon mode must be enabled in the configuration file (default).
-
-1. Systemd service - on systemd powered systems the **recommended** option
-
-   ```bash
-   sudo cp /opt/ha-watermeter/service.template /etc/systemd/system/ha-watermeter.service
-
-   sudo systemctl daemon-reload
-   sudo systemctl start ha-watermeter.service
-   sudo systemctl status ha-watermeter.service
-
-   sudo systemctl enable ha-watermeter.service
-   ```
-
-
-
-## Results Homeassistant Card
-
-![ha-card](docs/ha-card.png)
-
-
-Sensor setting see: [smartmeter-watermeter.yaml](docs/homeassistant)
+- 1. [NANOCUL-DOCKER.md](NANOCUL-DOCKER.md)
+- 2. [NANO-CUL.md](NANO-CUL.md)
+- 3. [RB3B_DVBT - RTL232-md](RTL232-md)
 
 
 <br>
@@ -173,6 +55,8 @@ Sensor setting see: [smartmeter-watermeter.yaml](docs/homeassistant)
 ### For more information see:
 
 ```
+https://github.com/SzczepanLeon/esphome-components
+
 https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
 https://github.com/xaelsouth/rtl-wmbus
 https://github.com/weetmuts/wmbusmeters

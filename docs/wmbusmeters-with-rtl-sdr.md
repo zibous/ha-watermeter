@@ -6,7 +6,7 @@
 
 ## Hardware
 
-**Raspberry Pi Zero W** 
+**Raspberry Pi Zero W**
 
 The Raspberry Pi Zero W extends the Pi Zero family and comes with added wireless LAN and Bluetooth connectivity.
 
@@ -16,9 +16,8 @@ The Raspberry Pi Zero W extends the Pi Zero family and comes with added wireless
 
 ![SDR_STICK](SDR_STICK.png)
 
-https://www.amazon.de/gp/product/B013Q94CT6/ref=as_li_tl?ie=UTF8&tag=az-shop--21&camp=1638&creative=6742&linkCode=as2&creativeASIN=B013Q94CT6&linkId=b8e69c7c04ce7b81cea71b26ed2c110d
 
-
+Digitaler TV Stock USB 2.0 DVB-T + DAB + FM + RTL2832U + FC0012 see: [Amazon](https://amzn.eu/d/8NNDo6A).
 
 ## Workflow for wmbusmeters with rtl-sdr
 
@@ -33,9 +32,9 @@ https://www.amazon.de/gp/product/B013Q94CT6/ref=as_li_tl?ie=UTF8&tag=az-shop--21
 
 ## Install System RASPIOS
 
-`Raspberry Pi Imager v1.6` has an advanced menu which is hidden away from general users just looking to write an operating system for the Pi Raspios 
+`Raspberry Pi Imager v1.6` has an advanced menu which is hidden away from general users just looking to write an operating system for the Pi Raspios
 
-To activate the menu we need to press CTRL + SHIFT + X and we then gain access to advanced options that enable advanced users to customize the OS to meet their needs before they write the software to a micro SD card. 
+To activate the menu we need to press CTRL + SHIFT + X and we then gain access to advanced options that enable advanced users to customize the OS to meet their needs before they write the software to a micro SD card.
 
 ```bash
 # 1. flash buster armhf lite to sd card 2021-05-07-raspios-buster-armhf-lite.zip
@@ -87,7 +86,7 @@ root@rbzero: sudo apt install \
                       nfs-common cifs-utils parted dosfstools \
                       samba samba-common-bin python3-pip \
                       mosquitto mosquitto-clients libmosquitto-dev libmosquitto1 -y
-root@rbzero: sudo reboot now                      
+root@rbzero: sudo reboot now
 ```
 
 
@@ -106,7 +105,7 @@ root@rbzero: sudo apt install ncurses-dev cmake librtlsdr-dev \
              cmake libusb-1.0-0-dev build-essential libtool-bin  \
              automake make info libc6-dev libgmp-dev \
              libgmp3-dev gawk qpdf bison -y
-root@rbzero: sudo reboot now              
+root@rbzero: sudo reboot now
 ```
 
 
@@ -125,13 +124,13 @@ All the installation instructions below were derived from the following links:
 - https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
 - http://www.rtlsdr.org
 - https://github.com/steve-m/librtlsdr
-- 
+-
 
 ## Build rtl-sdr (git.osmocom.org)
 
 The Osmocom RTL-SDR library must be installed before you can build rtl-wmbus. See http://sdr.osmocom.org/trac/wiki/rtl-sdr for more information.
 
-Here, we will provide you with binaries and basic installation that  will enable you to get tune to a frequency and get samples into Matlab or GNU Octave. If you are bold, you can go  to the aove websites and follow the installation instructions. There are instructions there to install additional software, such as  GNU-radio or SDR.  To install rtl-wmbus, download, unpack the source code and go to the top level directory. 
+Here, we will provide you with binaries and basic installation that  will enable you to get tune to a frequency and get samples into Matlab or GNU Octave. If you are bold, you can go  to the aove websites and follow the installation instructions. There are instructions there to install additional software, such as  GNU-radio or SDR.  To install rtl-wmbus, download, unpack the source code and go to the top level directory.
 
 ```bash
 pi@raspberrypi: su -
@@ -199,7 +198,7 @@ https://gist.github.com/floehopper/99a0c8931f9d779b0998
 
 
 
-#### Prevent the default RTL-SDR drivers from being loaded automatically. 
+#### Prevent the default RTL-SDR drivers from being loaded automatically.
 
 Open the file raspi-blacklist, Blacklists DVB-T kernel modules provided by the Linux kernel
 
@@ -237,7 +236,7 @@ Connect your USB dongle to your computer and run the rtl_test. You should get th
 pi@raspberrypi: su -
 password: *******
 
-## Check usb dongle and rtl-sdr 
+## Check usb dongle and rtl-sdr
 root@rbzero: lsusb
 - Bus 001 Device 002: ID 0bda:2838 Realtek Semiconductor Corp. RTL2838 DVB-T
 - Bus 001 Device 001: ID 1d6b:0002 Linux Foundation 2.0 root hub
@@ -294,7 +293,7 @@ root@rbzero: rtl_test -p
   real sample rate: 2048016 current PPM: 8 cumulative PPM: -166
   real sample rate: 2048079 current PPM: 39 cumulative PPM: -114
   real sample rate: 2048038 current PPM: 19 cumulative PPM: -87
-  
+
 root@rbzero: rtl_test -t
  - Found 1 device(s):
    0:  Realtek, RTL2838UHIDIR, SN: 00000001
@@ -332,7 +331,7 @@ root@rbzero: cp ~/rtl-wmbus/build/rtl_wmbus /usr/bin/rtl_wmbus
 	-V show version
 	-s receive S1 and T1/C1 datagrams simultaneously. rtl_sdr _MUST_ be set to 868.625MHz (-f 868.625M)
 	-p [T,S] to disable processing T1/C1 or S1 mode.
-	
+
 # test rtl-wmbus
 root@rbzero: rtl_sdr samples.bin -f 868.95M -s 1600000
 - Found 1 device(s):
@@ -412,7 +411,7 @@ root@rbzero: sudo wmbusmeters --debug --t1 rtlwmbus
   (wmbus) 09: 07 dll-type (Water meter)
   (wmbus) 0a: a2 tpl-ci-field (Mfct specific)
   telegram=||1944A511780743434418A2111800133C11CB2861BAFB1CCBD0DB|+71
-  
+
 root@rbzero: wmbusmeters --logtelegrams --format=json auto:t1 watermeter2 izar 18444343 NOKEY
 - Started auto rtlwmbus[00000001] listening on t1
   telegram=|1944A511780743434418A2|111800133C10CB2861BAFB1CCBD0DB|+93
@@ -549,7 +548,7 @@ WantedBy=multi-user.target
 ## Check Installation
 
 ```bash
-## Check usb dongle and rtl-sdr 
+## Check usb dongle and rtl-sdr
 pi@raspberrypi: su -
 password: *******
 
@@ -626,7 +625,7 @@ root@rbzero: sudo systemctl daemon-reload
 ## test wmbusmeters service
 root@rbzero: sudo systemctl start wmbusmeters
 root@rbzero: sudo systemctl status wmbusmeters
- 
+
 ## check logging
 root@rbzero: sudo tail -f /var/log/syslog
 root@rbzero: sudo tail -f /var/log/wmbusmeters/wmbusmeters.log
@@ -658,7 +657,7 @@ root@rbzero: sudo systemctl status wmbusmeters
 
 ## check services
 root@rbzero: sudo systemctl list-units --type=service --state=active
-root@rbzero: sudo systemctl list-units --type=service --state=running 
+root@rbzero: sudo systemctl list-units --type=service --state=running
 
 ```
 
@@ -693,7 +692,7 @@ root@rbzero: ls -l /usr/bin/pip
 
 
 
-## Install SAMBA 
+## Install SAMBA
 
 The main Samba configuration file is located in `/etc/samba/smb.conf`. The default configuration file has a significant number of comments in order to document various configuration directives.
 
