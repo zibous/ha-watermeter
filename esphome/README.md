@@ -1,8 +1,8 @@
-# Wemos D1 Mini, CUL + CC1101 (esphome)
+# Wemos D1 Mini + CC1101 (esphome)
 
 
 
-![Wemos D1 Min, CUL + CC1101](../docs/d1min_cc1101.png)
+![Wemos D1 Mini + CC1101](../docs/d1min_cc1101.png)
 
 ### Requirements
 - ESPHOME Docker
@@ -10,7 +10,7 @@
 - CC1101
 
 
-After Wemos D1 Min, CUL + CC1101 has been wired, the application can be flashed with ESPHOME
+After Wemos D1 Mini, CUL + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ```yaml
 ## ---------------------------------------------------
@@ -26,11 +26,11 @@ wmbus:
 ```  
 <hr>
 
-[Wemos D1 Min, CUL + CC1101 configuration see](wmbus-minid1.yaml)
+[Wemos D1 Mini + CC1101 configuration see](wmbus-minid1.yaml)
 
 ## Tools
 
-The easiest way to use the D! To create mini is to use ESPHOME as a docker application.
+The easiest way to use the Wemos D1 Mini + CC1101 To create mini is to use ESPHOME as a docker application.
 
 ### DOCKER ESPHOME
 
