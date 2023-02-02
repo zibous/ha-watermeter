@@ -88,8 +88,10 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 
 ## Tools
 Analyze wmbus or mbus telegrams using wmbusmeters.
-[Telegram Decoder]([wmbus-minid1.yaml](https://wmbusmeters.org/))
+[Telegram Decoder]([wmbus-minid1.yaml](https://wmbusmeters.org/)
+<br>
 [esphome-flasher, a tool to flash ESPs over USB](https://github.com/esphome/esphome-flasher))
+<br>
 [Self-contained NodeMCU flasher with GUI based on esptool.py and wxPython](https://github.com/marcelstoer/nodemcu-pyflasher)
 
 
