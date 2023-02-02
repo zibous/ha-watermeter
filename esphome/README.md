@@ -60,7 +60,7 @@ echo "Docker container ${CONTAINERLABEL} ready."
 echo "Run WEBGUI: ${CURRENTURL}:6052"
 ```
 
-###Log
+### Log
 ```
 14:29:56	[I]	[main:314]	 -------  SET NEW VALUES !!!!!
 14:30:05	[I]	[wmbus:054]	Using driver 'izar' for ID [0x43430778] RSSI: -55 dBm T: 1944A511780743434418A241150013CE0766324C94EE48EEF6C8 (26)
@@ -79,6 +79,41 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 14:32:13	[I]	[wmbus:054]	Using driver 'izar' for ID [0x43430778] RSSI: -55 dBm T: 1944A511780743434418A231150013CE62AACE1D71D545EFB9C5 (26)
 14:32:31	[I]	[wmbus:054]	Using driver 'izar' for ID [0x43430778] RSSI: -55 dBm T: 1944A511780743434418A251150013CE13497BE7B53D9135EFCA (26)
 .....
+```
+
+## Decoded
+
+```
+Auto driver  : izar
+Best driver  : unknown 00/00
+Using driver : izar 00/00
+000   : 19 length (25 bytes)
+001   : 44 dll-c (from meter SND_NR)
+002   : a511 dll-mfct (DME)
+004   : 43434418 dll-id (18444343)
+008   : 78 dll-version
+009   : 07 dll-type (Water meter)
+010   : a2 tpl-ci-field (Mfct specific)
+011 C?: 71150013CE3C17E8B1F69A2283DDCF mfct specific
+
+{
+    "media":"water",
+    "meter":"izar",
+    "name":"",
+    "id":"18444343",
+    "total_m3":451.399,
+    "last_month_total_m3":451.114,
+    "last_month_measure_date":"2023-02-01",
+    "remaining_battery_life_y":10.5,
+    "current_alarms":"no_alarm",
+    "previous_alarms":"no_alarm",
+    "transmit_period_s":8,
+    "timestamp":"2023-02-02T13:49:16Z"
+}
+
+
+Using: wmbusmeters: 1.11.0-60-g89c42ab
+89c42ab27dc8e7ac566e8b3a7810243a3bebd84b
 ```
 
 <hr>
