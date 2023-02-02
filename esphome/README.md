@@ -62,7 +62,7 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 
 <hr>
 
-##Homeassitant Device
+## Homeassitant Device
 ![Homeassistant](docs/ha-Device.png)
 
 ## Tools
