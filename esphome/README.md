@@ -10,7 +10,7 @@
 - CC1101
 
 
-After Wemos D1 Mini, CUL + CC1101 has been wired, the application can be flashed with ESPHOME
+After Wemos D1 Mini + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ```yaml
 ## ---------------------------------------------------
