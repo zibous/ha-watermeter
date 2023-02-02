@@ -32,6 +32,9 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 
 - Alarm (current_alarms, previous_alarms)
 - Water last month (last_month_total_m3)
+- Last Month date (last_month_measure_date)
+- Battery (remaining_battery_life_y)
+- Periode (transmit_period_s)
 
 
 ## Result
