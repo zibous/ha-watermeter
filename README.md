@@ -20,7 +20,7 @@ With the NANOCUL solutions, I always had problems with the USB input and with th
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
 - [Wemos D1 Min, CUL + CC1101](https://amzn.eu/d/0WQv07I)
-[Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
+- [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
 
 
 
