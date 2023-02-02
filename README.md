@@ -3,29 +3,29 @@
 ![diehl_metering](./docs/diehl_metering.jpg)
 
 
-I did some eyperiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **Wemos D1 Min, CUL + CC1101 (esphome)**.
+I did some experiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **Wemos D1 Min, CUL + CC1101 (esphome)**.
 
 <br>
 
-**Wemos D1 Min, CUL + CC1101 (esphome)** is the best solution for me because the resource requirement is low.
+**Wemos D1 Mini + CC1101 (esphome)** is the best solution for me because the resource requirement is low.
 
 With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
 
 
-![Wemos D1 Min, CUL + CC1101](./docs/d1min_cc1101.png)
+![Wemos D1 Mini + CC1101](./docs/d1min_cc1101.png)
 
 ### Requirements
 
 - Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL),
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
-- [Wemos D1 Min, CUL + CC1101](https://amzn.eu/d/0WQv07I)
+- [Wemos D1 Mini CC1101](https://amzn.eu/d/0WQv07I)
 - [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
 
 
 
 ## Installation
-[Wemos D1 Min, CUL + CC1101 Installation](./esphome/README.md)
+[Wemos D1 Mini + CC1101 Installation](./esphome/README.md)
 
 ### What I still miss
 Only the `total_m3` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
@@ -58,11 +58,11 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 ### For more information see:
 
 ```
+https://github.com/weetmuts/wmbusmeters
 https://github.com/SzczepanLeon/esphome-components
 
 https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
 https://github.com/xaelsouth/rtl-wmbus
-https://github.com/weetmuts/wmbusmeters
 https://github.com/ZeWaren/izar-prios-smart-meter-collector
 
 ## DVB-T receiver or Nano CUL Adapter
