@@ -23,7 +23,8 @@ wmbus:
   cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
   gdo0_pin: GPIO04 #D2  High Impedance
   gdo2_pin: GPIO05 #D1  High Impedance
-  
+```  
+<hr>
 
 [Wemos D1 Min, CUL + CC1101 configuration see](wmbus-minid1.yaml)
 
