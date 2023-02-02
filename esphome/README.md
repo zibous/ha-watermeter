@@ -81,7 +81,9 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 .....
 ```
 
-## Decoded
+## Decoded telegram
+
+`1944A511780743434418A241150013CE0766324C94EE48EEF6C8
 
 ```
 Auto driver  : izar
