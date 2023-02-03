@@ -23,7 +23,7 @@ wmbus:
   cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
   gdo0_pin: GPIO04 #D2  High Impedance
   gdo2_pin: GPIO05 #D1  High Impedance
-```  
+```
 <hr>
 
 [Wemos D1 Mini + CC1101 configuration see](wmbus-minid1.yaml)
@@ -32,7 +32,7 @@ wmbus:
 
 The easiest way to use the Wemos D1 Mini + CC1101 To create mini is to use ESPHOME as a docker application.
 
-### DOCKER ESPHOME
+### DOCKER - Install ESPHOME
 
 ```bash
 #!/bin/bash
@@ -73,6 +73,15 @@ docker run --detach \
 echo "Docker container ${CONTAINERLABEL} ready."
 echo "Run WEBGUI: ${CURRENTURL}:6052"
 ```
+
+
+## Preparation and creating the application
+- Download the repository
+- Copy the reporitory content to `/docker/app/esphome/config`
+- Start Docker ESPHOME
+- Create secrets.yaml and adjust the entries
+- Create and deploy the application to the connected Wemos D1 Mini
+
 
 ### Log
 ```
@@ -139,12 +148,38 @@ Using: wmbusmeters: 1.11.0-60-g89c42ab
 
 ## Tools
 
-[Telegram Decoder](https://wmbusmeters.org/)
+### WMBUS - Telegram Decoder
+Analyze wmbus or mbus telegrams using wmbusmeters.
+Source code https://github.com/weetmuts/wmbusmeters/
+
+The wmbusmeters software acquires utility meter readings through wmbus or plain mbus.
+The readings can then be published using MQTT, curled to a REST api,
+inserted into a database or stored in a log file. Wiki
+
+This service is identical to running locally: wmbusmeters --analyze=<driver>:<key> <hex>
+[Online Telegram Decoder](https://wmbusmeters.org/)
+
+
 <br>
-[esphome-flasher, a tool to flash ESPs over USB](https://github.com/esphome/esphome-flasher)
-<br>
+
+### ESPHome-Flasher
+ESPHome-Flasher is a utility app for the ESPHome framework and is designed to make flashing ESPs with ESPHome as simple as possible by:
+
+    Having pre-built binaries for most operating systems.
+    Hiding all non-essential options for flashing. All necessary options for flashing (bootloader, flash mode) are automatically extracted from the binary.
+
+This project was originally intended to be a simple command-line tool, but then I decided that a GUI would be nice. As I don't like writing graphical front end code, the GUI largely is based on the NodeMCU PyFlasher project.
 [Self-contained NodeMCU flasher with GUI based on esptool.py and wxPython](https://github.com/marcelstoer/nodemcu-pyflasher)
+
+
+The flashing process is done using the esptool library by espressif.
+[esphome-flasher, a tool to flash ESPs over USB](https://github.com/esphome/esphome-flasher)
 
 
 ### WMBUSMETERS custom components
 [Szczepan's esphome custom components](https://github.com/SzczepanLeon/esphome-components)
+
+### Informations
+> https://github.com/maciekn/izar-wmbus-esp
+> https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+
