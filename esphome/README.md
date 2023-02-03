@@ -83,6 +83,9 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 - Create and deploy the application to the connected Wemos D1 Mini
 
 
+![ESPHOME](docs/esphome.png)
+
+
 ### Log
 ```
 14:29:56	[I]	[main:314]	 -------  SET NEW VALUES !!!!!
