@@ -1,3 +1,9 @@
+## ------------------------------------------------------
+## Additional infos
+## ------------------------------------------------------
+## https://github.com/SzczepanLeon/esphome-components
+## https://github.com/zdzichu6969/esphome-components
+## ------------------------------------------------------
 
 substitutions:
   device_name_short: "water-meter"
@@ -40,8 +46,11 @@ esphome:
 # ----------------------------------------------------------------
 # External components for wmbusmeter
 # ----------------------------------------------------------------
+#external_components:
+#  - source: github://SzczepanLeon/esphome-components@main
+#    components: [wmbus]
+
 external_components:
-  # - source: github://SzczepanLeon/esphome-components@main
   - source:
       type: local
       path: custom_components
@@ -256,12 +265,25 @@ time:
 ## WMBUS DEVICE D1MINI WEMOS
 ## ---------------------------------------------------
 wmbus:
+
+  ## connction to CC1101
   mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI
   miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO
   clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK
   cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
   gdo0_pin: GPIO04 #D2  High Impedance
   gdo2_pin: GPIO05 #D1  High Impedance
+
+  ## Component to receive wMBus frame (via CC1101) and send it via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format).
+  ## On client side you can use netcat to receive packets: nc -lku 7337
+  ## wmbusmeters.conf: device=rtlwmbus:CMD(nc -lk 7227)
+
+  clients:
+    - name: "wmbusmeters"
+      ip_address: !secret wmbus_server
+      port: !secret wmbus_server_port
+      format: rtlwMBus
+      transport: UDP
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -305,7 +327,7 @@ sensor:
     meter_id: !secret watermeterId
     type: izar
     unit_of_measurement: "㎥"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     accuracy_decimals: 3
     on_value:
@@ -350,7 +372,7 @@ sensor:
     id: "waterhour"
     accuracy_decimals: 3
     unit_of_measurement: "㎥"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     lambda: |-
       return (id(hour_value));
@@ -361,7 +383,7 @@ sensor:
     accuracy_decimals: 3
     unit_of_measurement: "㎥"
     device_class: "water"
-    state_class: "measurement"
+    state_class: total_increasing
     lambda: |-
       return (id(daily_value));
 
@@ -371,7 +393,7 @@ sensor:
     accuracy_decimals: 3
     unit_of_measurement: "㎥"
     device_class: "water"
-    state_class: "measurement"
+    state_class: total_increasing
     lambda: |-
       return (id(week_value));
 
@@ -380,7 +402,7 @@ sensor:
     id: "watermonth"
     accuracy_decimals: 3
     unit_of_measurement: "㎥"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     lambda: |-
       return (id(month_value));
@@ -390,7 +412,7 @@ sensor:
     id: "wateryear"
     accuracy_decimals: 3
     unit_of_measurement: "㎥"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     lambda: |-
       return (id(year_value));
