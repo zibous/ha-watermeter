@@ -4,7 +4,7 @@ substitutions:
   friendly_name: "Wasserzähler"
   update_interval: 60s
   log_level: "INFO"
-  appversion: "1.1.1"
+  appversion: "1.1.2"
   device_description: "Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL)"
 
 esphome:
@@ -322,6 +322,9 @@ sensor:
               id(watermonth).publish_state(id(month_value));
               id(year_value)+=id(waterdisplay).state-id(last_value);
               id(wateryear).publish_state(id(year_value));
+            }else{
+              id(current_value) = 0.00;
+              id(watercurrent).publish_state(id(current_value));
             }
             id(last_value)=id(waterdisplay).state;
 
@@ -470,9 +473,6 @@ text_sensor:
   - platform: template
     id: watermeterdata
     update_interval: ${update_interval}
-    # http://water-meter.siebler.home/text_sensor/watermeterdata
-    # http://water-meter.siebler.home/text_sensor/online_seit
-    # http://water-meter.siebler.home/sensor/wasser_aktuell
     lambda: |-
         char buf[512];
         sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
