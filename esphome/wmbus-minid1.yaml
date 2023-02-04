@@ -41,7 +41,10 @@ esphome:
 # External components for wmbusmeter
 # ----------------------------------------------------------------
 external_components:
-  - source: github://SzczepanLeon/esphome-components@main
+  # - source: github://SzczepanLeon/esphome-components@main
+  - source:
+      type: local
+      path: custom_components
     components: [wmbus]
 
 # ----------------------------------------------------------------
