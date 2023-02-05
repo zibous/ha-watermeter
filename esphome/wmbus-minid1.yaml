@@ -285,11 +285,11 @@ wmbus:
   #     format: rtlwMBus
   #     transport: UDP
 
-# Save your ESPHome device configuration in firmware and and recover it if you lost source files. 
+# Save your ESPHome device configuration in firmware and and recover it if you lost source files.
 # Just download it from `http://yourdevice.local/config.yaml`.
-# WARNING: You should backup your all your files, this solution only for emergency purpose. 
+# WARNING: You should backup your all your files, this solution only for emergency purpose.
 # I am not responsible for the loss or inability to recover data.
-# WARNING: Stored configuration is the same as shown by `esphome config` command. 
+# WARNING: Stored configuration is the same as shown by `esphome config` command.
 # It is fully worked but not the same as your original sources.
 # WARNING: Command line substitutions, custom components and includes are not supported yet!
 backup:
@@ -343,7 +343,7 @@ sensor:
     id: "waterdisplay"
     meter_id: !secret watermeterId
     type: izar
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: total_increasing
     device_class: "water"
     accuracy_decimals: 3
@@ -378,7 +378,7 @@ sensor:
     name: Wasser Aktuell
     id: "watercurrent"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: "measurement"
     device_class: "water"
     lambda: |-
@@ -388,7 +388,7 @@ sensor:
     name: Wasser Stunde
     id: "waterhour"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: total_increasing
     device_class: "water"
     lambda: |-
@@ -398,7 +398,7 @@ sensor:
     name: Wasser Tag
     id: "waterday"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     device_class: "water"
     state_class: total_increasing
     lambda: |-
@@ -408,7 +408,7 @@ sensor:
     name: Wasser Woche
     id: "waterweek"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     device_class: "water"
     state_class: total_increasing
     lambda: |-
@@ -418,7 +418,7 @@ sensor:
     name: Wasser Monat
     id: "watermonth"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: total_increasing
     device_class: "water"
     lambda: |-
@@ -428,7 +428,7 @@ sensor:
     name: Wasser Jahr
     id: "wateryear"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: total_increasing
     device_class: "water"
     lambda: |-
@@ -438,7 +438,7 @@ sensor:
     name: Wasser letzer Monat
     id: "waterlastmonth"
     accuracy_decimals: 3
-    unit_of_measurement: "㎥"
+    unit_of_measurement: "m³"
     state_class: "measurement"
     device_class: "water"
     lambda: |-
