@@ -55,6 +55,10 @@ external_components:
       type: local
       path: custom_components
     components: [wmbus]
+  - source:
+      type: local
+      path: custom_components
+    components: [backup]
 
 # ----------------------------------------------------------------
 # Global variables
@@ -265,7 +269,6 @@ time:
 ## WMBUS DEVICE D1MINI WEMOS
 ## ---------------------------------------------------
 wmbus:
-
   ## connction to CC1101
   mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI
   miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO
@@ -275,15 +278,25 @@ wmbus:
   gdo2_pin: GPIO05 #D1  High Impedance
 
   ## Component to receive wMBus frame (via CC1101) and send it via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format).
-  ## On client side you can use netcat to receive packets: nc -lku 7337
-  ## wmbusmeters.conf: device=rtlwmbus:CMD(nc -lk 7227)
+  # clients:
+  #   - name: "wmbusmeters"
+  #     ip_address: "10.1.1.217"
+  #     port: 7227
+  #     format: rtlwMBus
+  #     transport: UDP
 
-  clients:
-    - name: "wmbusmeters"
-      ip_address: !secret wmbus_server
-      port: !secret wmbus_server_port
-      format: rtlwMBus
-      transport: UDP
+# Save your ESPHome device configuration in firmware and and recover it if you lost source files. 
+# Just download it from `http://yourdevice.local/config.yaml`.
+# WARNING: You should backup your all your files, this solution only for emergency purpose. 
+# I am not responsible for the loss or inability to recover data.
+# WARNING: Stored configuration is the same as shown by `esphome config` command. 
+# It is fully worked but not the same as your original sources.
+# WARNING: Command line substitutions, custom components and includes are not supported yet!
+backup:
+  auth:
+    username: !secret web_username
+    password: !secret web_password
+  force_update: false
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -315,6 +328,10 @@ switch:
   - platform: restart
     name: "Restart"
     id: restart_switch
+
+## The debug component can be used to debug problems with ESPHome.
+## debug:
+##  update_interval: 5s
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -468,7 +485,6 @@ binary_sensor:
     id: statusled
     entity_category: "diagnostic"
     lambda: 'return id(current_value) > 0;'
-
 
 ## ---------------------------------------------------
 ## TEXT SENSOR
