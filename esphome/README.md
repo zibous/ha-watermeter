@@ -149,6 +149,20 @@ Using: wmbusmeters: 1.11.0-60-g89c42ab
 ## Homeassitant Device
 ![Homeassistant](docs/ha-Device.png)
 
+### Update Values HA Service
+
+```yaml
+service: esphome.water_meter_set_water_val
+data:
+  water_val_hour: 0.03
+  water_val_day: 0.248
+  water_val_yesterday: 0.178
+  water_val_week: 0.248
+  water_val_month: 1.94
+  water_val_year: 14.256
+  water_val_lastmonth: 9.59
+```
+
 ## Tools
 
 ### WMBUS - Telegram Decoder
