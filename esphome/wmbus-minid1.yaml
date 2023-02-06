@@ -60,6 +60,11 @@ external_components:
       path: custom_components
     components: [backup]
 
+#  - source:
+#      type: local
+#      path: custom_components
+#    components: [water_statistics]
+#    refresh: 0s
 # ----------------------------------------------------------------
 # Global variables
 # ----------------------------------------------------------------
@@ -89,6 +94,10 @@ globals:
     restore_value: yes
     initial_value: "0.00"
 
+  - id: yesterday_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
   - id: week_value
     type: float
     restore_value: yes
@@ -127,7 +136,9 @@ captive_portal:
 logger:
   id: appslogger
   level: ${log_level}
-  # wmbus.component: DEBUG
+  logs:
+     wmbus_sensor.component: ${log_level}
+     wmbus.component: ${log_level}
 
 ## ---------------------------------------------------
 # Enable Home Assistant API
@@ -141,6 +152,7 @@ api:
       variables:
         water_val_hour: float
         water_val_day: float
+        water_val_yesterday: float
         water_val_week: float
         water_val_month: float
         water_val_year: float
@@ -152,6 +164,9 @@ api:
         - globals.set:
             id: daily_value
             value: !lambda 'return (water_val_day);'
+        - globals.set:
+            id: yesterday_value
+            value: !lambda 'return (water_val_yesterday);'            
         - globals.set:
             id: week_value
             value: !lambda 'return (water_val_week);'
@@ -215,17 +230,18 @@ time:
               id: hour_value
               value: "0.00"
           - lambda: id(waterhour).publish_state(id(hour_value));
-          - logger.log: Reset value hour
+          - logger.log: Reset value hour, starting next hour
 
       - seconds: 0
         minutes: 0
         hours: 0
-        then:
-          - globals.set:
-              id: daily_value
-              value: "0.00"
-          - lambda: id(waterday).publish_state(id(daily_value));
-          - logger.log: Reset value daily
+        then:                    
+          - lambda: id(yesterday_value)=id(daily_value);
+          - lambda: id(wateryesterday).publish_state(id(yesterday_value));
+          - logger.log: set value water yesterday
+          - lambda: id(daily_value)=0.00;
+          - lambda: id(waterday).publish_state(id(daily_value));          
+          - logger.log: Reset value daily, starting new day
 
       - seconds: 0
         minutes: 0
@@ -236,7 +252,7 @@ time:
               id: week_value
               value: "0.00"
           - lambda: id(waterweek).publish_state(id(week_value));
-          - logger.log: Reset value weekly
+          - logger.log: Reset value weekly, starting new week
 
       - seconds: 0
         minutes: 0
@@ -251,7 +267,7 @@ time:
               if(id(waterdisplay).state){
                 id(lastmonth_value)=id(waterdisplay).state;
               }
-          - logger.log: Reset value monthly
+          - logger.log: Reset value monthly, starting new month
 
       - seconds: 0
         minutes: 0
@@ -263,21 +279,28 @@ time:
               id: year_value
               value: "0.00"
           - lambda: id(wateryear).publish_state(id(year_value));
-          - logger.log: Reset value yearly
+          - logger.log: Reset value yearly, starting new year
 
 ## ---------------------------------------------------
 ## WMBUS DEVICE D1MINI WEMOS
 ## ---------------------------------------------------
 wmbus:
   ## connction to CC1101
-  mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI
-  miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO
-  clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
-  gdo0_pin: GPIO04 #D2  High Impedance
+  mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK 
+  cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS SPI Interface 10k Pull-Down
+  gdo0_pin: GPIO04 #D2  High Impedance 
   gdo2_pin: GPIO05 #D1  High Impedance
 
+  led_pin: GPIO02  ## D4 Build_in LED
+  ## led_blink_time (Optional): How long LED will stay ON. Defaults to 300 ms.
+  led_blink_time: "200ms" 
+
   ## Component to receive wMBus frame (via CC1101) and send it via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format).
+  ## On client side you can use netcat to receive packets: nc -lku 7337
+  ## wmbusmeters.conf: device=rtlwmbus:CMD(nc -lku 7337)
+  ## HA_ADDON: https://github.com/SzczepanLeon/esphome-components/blob/main/docs/wmbusgw.md
   # clients:
   #   - name: "wmbusmeters"
   #     ip_address: "10.1.1.217"
@@ -285,13 +308,15 @@ wmbus:
   #     format: rtlwMBus
   #     transport: UDP
 
-# Save your ESPHome device configuration in firmware and and recover it if you lost source files.
-# Just download it from `http://yourdevice.local/config.yaml`.
-# WARNING: You should backup your all your files, this solution only for emergency purpose.
-# I am not responsible for the loss or inability to recover data.
-# WARNING: Stored configuration is the same as shown by `esphome config` command.
-# It is fully worked but not the same as your original sources.
-# WARNING: Command line substitutions, custom components and includes are not supported yet!
+
+
+## Save your ESPHome device configuration in firmware and and recover it if you lost source files.
+## Just download it from `http://yourdevice.local/config.yaml`
+## WARNING: You should backup your all your files, this solution only for emergency purpose. 
+## I am not responsible for the loss or inability to recover data.
+## WARNING: Stored configuration is the same as shown by `esphome config` command. 
+## It is fully worked but not the same as your original sources.
+## WARNING: Command line substitutions, custom components and includes are not supported yet!
 backup:
   auth:
     username: !secret web_username
@@ -372,6 +397,7 @@ sensor:
 
   - platform: wifi_signal
     name: WiFi Signal
+    id: "wifisignal"
     update_interval: 30s
 
   - platform: template
@@ -403,6 +429,15 @@ sensor:
     state_class: total_increasing
     lambda: |-
       return (id(daily_value));
+  - platform: template
+    name: Wasser Gestern
+    id: "wateryesterday"
+    accuracy_decimals: 3
+    unit_of_measurement: "m³"
+    device_class: "water"
+    state_class: total_increasing
+    lambda: |-
+      return (id(yesterday_value));
 
   - platform: template
     name: Wasser Woche
@@ -455,6 +490,7 @@ sensor:
   - platform: uptime
     name: Uptime
     id: uptime_sensor
+    internal: true
     update_interval: ${update_interval}
     on_raw_value:
       then:
