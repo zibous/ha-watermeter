@@ -143,6 +143,17 @@ logger:
 ## ---------------------------------------------------
 # Enable Home Assistant API
 ## ---------------------------------------------------
+# Homeassistant service call:
+# service: esphome.water_meter_set_water_val
+# data:
+#  water_val_hour: 0.03
+#  water_val_day: 0.248
+#  water_val_yesterday: 0.178
+#  water_val_week: 0.248
+#  water_val_month: 1.94
+#  water_val_year: 14.256
+#  water_val_lastmonth: 9.59
+## ---------------------------------------------------
 api:
   id: espapiwm
   port: 6053
@@ -160,25 +171,82 @@ api:
       then:
         - globals.set:
             id: hour_value
-            value: !lambda 'return (water_val_hour);'
+            value: !lambda |-
+              if((water_val_hour) and (water_val_hour)>0.001){
+                ESP_LOGI("main", "Set hourly value to: %f", water_val_hour);
+                return (water_val_hour);
+              }else{  
+                ESP_LOGI("main", "Skip setting hourly value");
+                return id(hour_value);
+              };
+              id(waterhour).publish_state(id(hour_value));
         - globals.set:
             id: daily_value
-            value: !lambda 'return (water_val_day);'
+            value: !lambda |-
+              if((water_val_day) and (water_val_day)>0.001){
+                ESP_LOGI("main", "Set daily value to: %f", water_val_day);
+                return (water_val_day);
+              }else{  
+                ESP_LOGI("main", "Skip setting hourly value");
+                return id(hour_value);
+              };
+              id(waterhour).publish_state(id(daily_value));
         - globals.set:
             id: yesterday_value
-            value: !lambda 'return (water_val_yesterday);'            
+            value: !lambda |-
+              if((water_val_yesterday) and (water_val_yesterday)>0.001){
+                ESP_LOGI("main", "Set yesterday value to: %f", water_val_yesterday);
+                return (water_val_yesterday);
+              }else{  
+                ESP_LOGI("main", "Skip setting yesterday value");
+                return id(yesterday_value);
+              };
+              id(waterhour).publish_state(id(hour_value));
         - globals.set:
             id: week_value
-            value: !lambda 'return (water_val_week);'
+            value: !lambda |-
+              if((water_val_week) and (water_val_week)>0.001){
+                ESP_LOGI("main", "Set weekly value to: %f", water_val_week);
+                return (water_val_week);
+              }else{  
+                ESP_LOGI("main", "Skip setting weekly value"); 
+                return id(week_value);
+              };
+              id(waterhour).publish_state(id(week_value));
         - globals.set:
             id: month_value
-            value: !lambda 'return (water_val_month);'
-        - globals.set:
-            id: year_value
-            value: !lambda 'return (water_val_year);'
+            value: !lambda |-
+              if((water_val_month) and (water_val_month)>0.001){
+                ESP_LOGI("main", "Set last montj value to: %f", water_val_month);
+                return (water_val_month);
+              }else{  
+                ESP_LOGI("main", "Skip setting monthly value"); 
+                return id(week_value);
+              };
+              id(waterhour).publish_state(id(month_value));
         - globals.set:
             id: lastmonth_value
-            value: !lambda 'return (water_val_lastmonth);'
+            value: !lambda |-
+              if((water_val_lastmonth) and (water_val_lastmonth)>0.001){
+                ESP_LOGI("main", "Set last month value to: %f", water_val_lastmonth);
+                return (water_val_lastmonth);
+              }else{  
+                ESP_LOGI("main", "Skip setting last month value"); 
+                return id(lastmonth_value);
+              };
+              id(waterhour).publish_state(id(lastmonth_value));
+        - globals.set:
+            id: year_value
+            value: !lambda |-
+              if((water_val_year) and (water_val_year)>0.001){
+                ESP_LOGI("main", "Set last yearly value to: %f", water_val_year);
+                return (water_val_year);
+              }else{  
+                ESP_LOGI("main", "Skip setting last yearly value"); 
+                return id(week_value);
+              };
+              id(waterhour).publish_state(id(year_value));                           
+        
         - logger.log:
             format: "All new Values set: hour: %.1f, day: %.1f, week: %.1f, month: %.1f, lastmonth: %.1f, year: %.1f"
             args: [ 'id(hour_value)', 'id(daily_value)', 'id(week_value)', 'id(month_value)', 'id(lastmonth_value)', 'id(year_value)']
@@ -293,10 +361,10 @@ wmbus:
   gdo0_pin: GPIO04 #D2  High Impedance 
   gdo2_pin: GPIO05 #D1  High Impedance
 
-  led_pin: GPIO02  ## D4 Build_in LED
   ## led_blink_time (Optional): How long LED will stay ON. Defaults to 300 ms.
-  led_blink_time: "200ms" 
-
+  led_pin: GPIO02  ## D4 Build_in LED
+  led_blink_time: "1s" 
+  
   ## Component to receive wMBus frame (via CC1101) and send it via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format).
   ## On client side you can use netcat to receive packets: nc -lku 7337
   ## wmbusmeters.conf: device=rtlwmbus:CMD(nc -lku 7337)
@@ -375,8 +443,7 @@ sensor:
     on_value:
       then:
         - lambda: |-
-            if (id(last_value) > 0.00 && (id(last_value)!=id(waterdisplay).state)) {
-              ESP_LOGI("main", " -------  SET NEW VALUES !!!!!");
+            if (id(last_value) > 0.00 && (id(last_value)!=id(waterdisplay).state)) {                          
               id(current_value)=id(waterdisplay).state-id(last_value);
               id(watercurrent).publish_state(id(current_value));
               id(hour_value)+=id(waterdisplay).state-id(last_value);
@@ -389,9 +456,11 @@ sensor:
               id(watermonth).publish_state(id(month_value));
               id(year_value)+=id(waterdisplay).state-id(last_value);
               id(wateryear).publish_state(id(year_value));
+              ESP_LOGI("main", "Set current value to: %f", id(watercurrent));
             }else{
               id(current_value) = 0.00;
               id(watercurrent).publish_state(id(current_value));
+              ESP_LOGI("main", "Reset current value to: %f", id(watercurrent));
             }
             id(last_value)=id(waterdisplay).state;
 
@@ -429,6 +498,7 @@ sensor:
     state_class: total_increasing
     lambda: |-
       return (id(daily_value));
+      
   - platform: template
     name: Wasser Gestern
     id: "wateryesterday"
