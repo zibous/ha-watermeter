@@ -431,7 +431,7 @@ switch:
 ## ---------------------------------------------------
 sensor:
 
-  - platform: wmbus
+   - platform: wmbus
     name: "Wasseruhr Anzeige"
     id: "waterdisplay"
     meter_id: !secret watermeterId
@@ -443,7 +443,8 @@ sensor:
     on_value:
       then:
         - lambda: |-
-            if (id(last_value) > 0.00 && (id(last_value)!=id(waterdisplay).state)) {                          
+            ESP_LOGI("main", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
+            if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {                          
               id(current_value)=id(waterdisplay).state-id(last_value);
               id(watercurrent).publish_state(id(current_value));
               id(hour_value)+=id(waterdisplay).state-id(last_value);
@@ -463,7 +464,7 @@ sensor:
               ESP_LOGI("main", "Reset current value to: %f", id(watercurrent));
             }
             id(last_value)=id(waterdisplay).state;
-
+            
   - platform: wifi_signal
     name: WiFi Signal
     id: "wifisignal"
