@@ -197,9 +197,10 @@ The flashing process is done using the esptool library by espressif.
 
 
 ### WMBUSMETERS custom components
-[Szczepan's esphome custom components](https://github.com/SzczepanLeon/esphome-components)
+- [Szczepan's esphome custom components](https://github.com/SzczepanLeon/esphome-components)
 
 ### Informations
-> https://github.com/maciekn/izar-wmbus-esp
-> https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+  
+- https://github.com/maciekn/izar-wmbus-esp 
+- https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
 
