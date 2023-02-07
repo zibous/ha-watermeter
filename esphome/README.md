@@ -28,6 +28,9 @@ wmbus:
 
 [Wemos D1 Mini + CC1101 configuration see](wmbus-minid1.yaml)
 
+![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
+
+
 ## Tools
 
 The easiest way to use the Wemos D1 Mini + CC1101 To create mini is to use ESPHOME as a docker application.
