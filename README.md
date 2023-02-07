@@ -36,6 +36,8 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 - Battery (remaining_battery_life_y)
 - Periode (transmit_period_s)
 
+> see: https://github.com/weetmuts/wmbusmeters/discussions/835
+
 
 ## Result
 
