@@ -4,15 +4,13 @@
 
 
 I did some experiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **Wemos D1 Min, CUL + CC1101 (esphome)**.
+With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
 
 <br>
 
 **Wemos D1 Mini + CC1101 (esphome)** is the best solution for me because the resource requirement is low.
 
-With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
-
-
-![Wemos D1 Mini + CC1101](./docs/d1min_cc1101.png)
+![Wemos D1 Mini + CC1101](./esphome/docs/d1mini_CC1101.jpg)
 
 ### Requirements
 
