@@ -1,5 +1,27 @@
 # Easy Watermeter Integration for Home Assistant
 
+[![License][license-shield]][license]
+[![ESPHome release][esphome-release-shield]][esphome-release]
+[![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
+[![Support author][donate-me-shield]][donate-me]
+
+
+[license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
+[license]: https://opensource.org/licenses/MIT
+
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.2.4&color=green&logo=esphome
+[esphome-release]: https://GitHub.com/esphome/esphome/releases/
+
+[open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
+[open-in-vscode]: https://open.vscode.dev/zibous/ha-watermeter
+
+[donate-me-shield]: https://img.shields.io/static/v1?label=+&color=orange&message=Buy+me+a+coffee
+[donate-me]: https://www.buymeacoff.ee/zibous
+
+<br>
+
+## Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL)
+
 ![diehl_metering](./docs/diehl_metering.jpg)
 
 
@@ -21,6 +43,25 @@ With the NANOCUL solutions, I always had problems with the USB input and with th
 - [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
 
 
+### Meter types:
+
+Currently supported meter types:
+
+  - amiplus 
+  - apator08 
+  - apator162
+  - bmeters 
+  - elf 
+  - evo868 
+  - hydrocalm3 
+  - izar 
+  - mkradio3 
+  - mkradio4 
+  - ultrimis
+  - unismart
+  - fhkvdataiii 
+
+  see: `https://github.com/SzczepanLeon/esphome-components`
 
 ## Installation
 [Wemos D1 Mini + CC1101 Installation](./esphome/README.md)
@@ -51,14 +92,15 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 - 3. [RB3B_DVBT - RTL232-md](RTL232-md)
 
 
-<br>
-<a href="https://www.buymeacoff.ee/zibous" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
-
 
 ### For more information see:
 
 ```
 https://github.com/weetmuts/wmbusmeters
+
+https://github.com/maciekn/izar-wmbus-esp 
+https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+
 https://github.com/SzczepanLeon/esphome-components
 
 https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
