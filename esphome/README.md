@@ -1,6 +1,22 @@
 # Wemos D1 Mini + CC1101 (esphome)
 
+[![License][license-shield]][license]
+[![ESPHome release][esphome-release-shield]][esphome-release]
+[![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
+[![Support author][donate-me-shield]][donate-me]
 
+
+[license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
+[license]: https://opensource.org/licenses/MIT
+
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.2.4&color=green&logo=esphome
+[esphome-release]: https://GitHub.com/esphome/esphome/releases/
+
+[open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
+[open-in-vscode]: https://open.vscode.dev/zibous/ha-watermeter
+
+[donate-me-shield]: https://img.shields.io/static/v1?label=+&color=orange&message=Buy+me+a+coffee
+[donate-me]: https://www.buymeacoff.ee/zibous
 
 ![Wemos D1 Mini + CC1101](../docs/d1min_cc1101.png)
 
