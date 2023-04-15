@@ -3,16 +3,17 @@
 #
 # usage:  1. Using Homassistant API (discovery + devices)
 #         2. Using HTTP Post to service server
-#         3. Using wmbusmeters i a pipe 
-#            
+#         3. Using wmbusmeters i a pipe
+#
 # ------------------------------------------------------------------
 substitutions:
   device_name_short: "water-meter-izar"
   update_interval: 60s
-  log_level: "INFO"           # use VERBOSE mode to find the meterId 0x43430778
-  appversion: "1.1.5"  
+  log_level: "info"           # use VERBOSE mode to find the meterId 0x43430778
+  appversion: "1.1.5"
   domain: !secret domain
   service_url: !secret service_host
+  service_enabled: "false"
   service: "izar.watermeter"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL)"
 
@@ -32,7 +33,7 @@ esphome:
 # External components for wmbusmeter
 # ----------------------------------------------------------------
   on_boot:
-    priority: -500
+    priority: 700
     then:
       - logger.log:
           level: info
@@ -135,15 +136,21 @@ globals:
     initial_value: '0'
 
 
+
 ## ---------------------------------------------------
-## WIFI Settings 2 wifis 
+## WIFI Settings 2 wifis
 ## ---------------------------------------------------
 wifi:
   networks:
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 1
     - ssid: !secret ssid1_name
       password: !secret ssid1_pswd
+      priority: 2
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
+      priority: 3
   domain: !secret domain
 
 # The captive portal component in ESPHome is a fallback mechanism for
@@ -153,6 +160,7 @@ captive_portal:
 logger:
   id: appslogger
   level: ${log_level}
+  baud_rate: 0 #disable logging over uart
 
 ## ---------------------------------------------------
 # Enable Home Assistant API
@@ -293,7 +301,7 @@ time:
 
   - platform: sntp
     id: sntp_time
-    
+
     timezone: Europe/Berlin
     servers:
       - 0.at.pool.ntp.org
@@ -311,7 +319,7 @@ time:
         then:
           - globals.set:
               id: hour_value
-              value: "0.00"                   
+              value: "0.00"
           - lambda: id(waterhour).publish_state(id(hour_value));
           - logger.log: Reset value hour, starting next hour
 
@@ -321,7 +329,7 @@ time:
         hours: 0
         then:
           - lambda: id(yesterday_value)=id(daily_value);
-          - lambda: id(wateryesterday).publish_state(id(yesterday_value));          
+          - lambda: id(wateryesterday).publish_state(id(yesterday_value));
           - lambda: id(daily_value)=0.00;
           - lambda: id(waterday).publish_state(id(daily_value));
           - logger.log: Set yesterday value and reset value daily, starting new day
@@ -383,9 +391,9 @@ script:
     then:
       - if:
           condition:
-            lambda: return '${service_url} && id(waterdisplay).has_state()';
+            lambda: return "${service_enabled} =='true'";
           then:
-            - logger.log: "Post new data to the ${service_url}${device_name_short}"
+            - logger.log: "Post new data to the ${service_url}${device_name_short}, service enabled: ${service_enabled}"
             - http_request.post:
                 url: "${service_url}/${device_name_short}"
                 verify_ssl: false
@@ -395,7 +403,7 @@ script:
                     root["device"] = "${device_name_short}";
                     root["waterdisplay"] = id(waterdisplay).state;
                     root["current"] = id(id(watercurrent)).state;
-                    root["hour"] = id(waterhour).state;                    
+                    root["hour"] = id(waterhour).state;
                     root["day"] = id(waterday).state;
                     root["yesterday"] = id(wateryesterday).state;
                     root["week"] = id(waterweek).state;
@@ -404,7 +412,7 @@ script:
                     root["year"] = id(wateryear).state;
                     root["bootcounter"] = id(bootcounter).state;
                     root["version"] = "${device_name_short} ${appversion}";
-                    root["time"] = id(sntp_time).now().strftime("%Y-%m-%d %H:%M:%S");                    
+                    root["time"] = id(sntp_time).now().strftime("%Y-%m-%d %H:%M:%S");
                 on_response:
                     then:
                     - lambda: |-
@@ -419,29 +427,21 @@ script:
 ## ---------------------------------------------------
 wmbus:
   ## connction to CC1101
-  mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  mosi_pin: GPIO13 #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12 #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14  #D5  SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15   #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+
   gdo0_pin: GPIO04 #D2  High Impedance
   gdo2_pin: GPIO05 #D1  High Impedance
 
-  ## led_blink_time (Optional): How long LED will stay ON. Defaults to 300 ms.
-  led_pin: GPIO02  ## D4 Build_in LED
-  led_blink_time: "100ms"
-
-  ## Component to receive wMBus frame (via CC1101) and send it via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format).
-  ## On client side you can use netcat to receive packets: nc -lku 7337
-  ## HA_ADDON: https://github.com/SzczepanLeon/esphome-components/blob/main/docs/wmbusgw.md
-  
   # Using wmbusmeters i a pipe
-
-  # clients:
-  #   - name: "wmbusmeters"
-  #     ip_address: !secret wmbusmeter_host
-  #     port: 7227
-  #     format: rtlwMBus
-  #     transport: UDP
+  clients:
+    - name: "wmbusmeters"
+      ip_address: !secret wmbusmeter_host
+      port: 7227
+      format: rtlwMBus
+      transport: UDP
 
   ## setting: wmbusmeters.conf
   ## loglevel: normal
@@ -452,6 +452,8 @@ wmbus:
   ## logfile: /dev/stdout
   ## shell: /wmbusmeters/mosquitto_pub.sh "wmbusmeters/$METER_NAME" "$METER_JSON"
 
+  # led_pin: GPIO02  ## D4 Build_in LED
+  # led_blink_time: "100ms"
 
 ## Save your ESPHome device configuration in firmware and and recover it if you lost source files.
 ## Just download it from `http://yourdevice.local/config.yaml`
@@ -506,13 +508,13 @@ switch:
 ## ---------------------------------------------------
 sensor:
 
-  # water display 
+  # water display
   - platform: wmbus
     name: "Wasseruhr Anzeige"
     id: "waterdisplay"
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only he is working !
-    meter_id: !secret watermeterId 
+    meter_id: !secret watermeterId
     type: izar
     unit_of_measurement: "m³"
     state_class: total_increasing
@@ -523,29 +525,29 @@ sensor:
         - lambda: |-
             ESP_LOGI("main", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
             if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
-            
+
               id(current_value) = (id(waterdisplay).state-id(last_value)) * id(m3toliter);
               id(watercurrent).publish_state(id(current_value));
 
               id(hour_value)+=id(current_value);
               id(waterhour).publish_state(id(hour_value));
-              
+
               id(daily_value)+=id(current_value);
               id(waterday).publish_state(id(daily_value));
-              
+
               id(week_value)+=id(current_value);
               id(waterweek).publish_state(id(week_value));
-              
+
               id(month_value)+=id(current_value);
               id(watermonth).publish_state(id(month_value));
-              
+
               id(year_value)+=id(current_value);
               id(wateryear).publish_state(id(year_value));
-              
+
               ESP_LOGI("main", "Set current value to %f litre and publish the data", id(watercurrent));
-            
+
               id(post_device_state).execute();
-              
+
             }else{
               id(current_value) = 0.00;
               id(watercurrent).publish_state(id(current_value));
@@ -664,6 +666,7 @@ sensor:
     id: uptime_sensor
     internal: true
     update_interval: ${update_interval}
+    unit_of_measurement: seconds
     on_raw_value:
       then:
         - text_sensor.template.publish:
@@ -734,7 +737,7 @@ text_sensor:
     name: Zählerstand aktualisiert
     id: watermeter_lastupdate
     icon: mdi:clock-start
-    entity_category: "diagnostic"  
+    entity_category: "diagnostic"
 
   # device timestamp
   - platform: template
@@ -747,9 +750,11 @@ text_sensor:
       return (std::string) str;
 
   # simple rest get message for all watermeter data
+  # TODO: how to get the state as json
   - platform: template
     id: watermeterdata
     update_interval: ${update_interval}
+    internal: true
     lambda: |-
         char buf[512];
         sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
