@@ -1,6 +1,6 @@
 /*
-  Based on: https://github.com/weetmuts/wmbusmeters/blob/master/src/driver_hydrocalm3.cc
-  Copyright (C) 2017-2022 Fredrik Öhrström (gpl-3.0-or-later)
+  Based on: https://github.com/wmbusmeters/wmbusmeters/blob/master/src/driver_qwater.cc
+  Copyright (C) 2022 Fredrik Öhrström (gpl-3.0-or-later)
 */
 
 #pragma once
@@ -10,21 +10,20 @@
 #include <vector>
 #include <string>
 
-struct Hydrocalm3: Driver
+struct Qwater: Driver
 {
-  Hydrocalm3() : Driver(std::string("hydrocalm3")) {};
+  Qwater() : Driver(std::string("qwater")) {};
   bool get_value(std::vector<unsigned char> &telegram, float &total_usage) override {
     bool ret_val = false;
     uint32_t usage = 0;
-    size_t i = 17;
-    uint32_t total_register = 0x0C0E;
+    size_t i = 15;
+    uint32_t total_register = 0x0C13;
     while (i < telegram.size()) {
       uint32_t c = (((uint32_t)telegram[i+0] << 8) | ((uint32_t)telegram[i+1]));
       if (c == total_register) {
         i += 2;
         usage = bcd_2_int(telegram, i, 4);
-        // in kWh
-        total_usage = usage / 3600000;
+        total_usage = usage / 1000.0;
         ret_val = true;
         break;
       }
