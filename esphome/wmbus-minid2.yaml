@@ -51,10 +51,7 @@ esphome:
 # https://github.com/SzczepanLeon/esphome-components
 # ----------------------------------------------------------------
 external_components:
-  - source:
-      type: local
-      path: custom_components
-    components: [wmbus]
+   - source: github://SzczepanLeon/esphome-components@main
 
 # ----------------------------------------------------------------
 # Global variables
