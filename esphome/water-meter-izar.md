@@ -153,7 +153,7 @@ data:
 
 ### Backup
 
-Save your ESPHome device configuration in firmware and and recover it if you lost source files. Just download it from `http://water-meter-izar.local/config.yaml``
+Save your ESPHome device configuration in firmware and and recover it if you lost source files. Just download it from `http://water-meter-izar.local/config.yaml`
 
 
     WARNING: You should backup your all your files, this solution only for 
