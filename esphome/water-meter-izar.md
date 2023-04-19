@@ -62,8 +62,30 @@ see: https://github.com/maciekn/izar-wmbus-esp#cc1101-868mhz-pinout
     - syslog https://github.com/TheStaticTurtle/esphome_syslog
     - backup  https://github.com/dentra/esphome-components
 
+<br>
 
-## Setup:
+## Maciekn vs. SzczepanLeon
+
+Below is a list to compare the two custom components. At the moment SzczepanLeon's component is my favorite because it provides the most information and is easy and flexible to configure.
+
+| Option                | component.maciekn | component.SzczepanLeon |
+| --------------------- | ---|---|
+| `Devices` | Only izar |Currently amiplus, apator08, apator162, apatoreitn, bmeters ,elf,evo868, fhkvdataiii, hydrocalm3, itron, izar, mkradio3, mkradio4, qheat, qwater, ultrimis, unismart, vario451 are supported.|
+| `Watermeter ID` | Filter by script | Filter by sensor parmeter|
+| `Watermeter Key` | No | sensor parameter (key)|
+| `Watermeter data`  | Liter (l) | Cubic metre (m³)|
+| `Multi Watermeters`  | No | Yes (more than one) |
+| `CC1101 Config` | via component (hard coded) | with component.config|
+| `Telegram data` | No | Yes |
+| `wMBus Gateway`  | no | via TCP or UDP to wmbusmeters (as HEX or rtl-wmbus format or Homeassistant ADDOn) |
+| `LED control`  | No | with component.config |
+| `CC1101 RSSI, LQI Info` | no | Yes (Using driver 'izar' for ID [0x82720778] RSSI: -36 dBm LQI: 128 T)|
+| `Scan Intervall`  | 300ms | device based |
+| `Debug Log`  | limited | all important messages: telegram, rssi, lqi, timestamps, configdata |
+
+<br>
+
+## Setup Version `maciekn`:
 
 ```
  # my watermeter id
@@ -195,6 +217,10 @@ Apr 19 09:53:36 water-meter-izar SENSOR [D][SENSOR:649]: New Values: current:0.0
 
 ### Rest Service
 
+Simple query of the data with a CURL command, but can also be done with the help of a REST command in the home assistant or e.g. with a simple Python script.
+
+***Beispiel `CURL` Aufruf:***
+
 ```bash
 curl -i http://water-meter-izar.local/text_sensor/watermeterdata
 HTTP/1.1 200 OK
@@ -205,4 +231,35 @@ Connection: close
 Accept-Ranges: none
 
 {"id":"text_sensor-watermeterdata","value":"467458.000|0.000|47.000|59.000|54.000|113.000|113.000|0.000|37.000|2023-04-19T09:53:11","state":"467458.000|0.000|47.000|59.000|54.000|113.000|113.000|0.000|37.000|2023-04-19T09:53:11"}#
+```
+
+## Homeassitant watch reboot device:
+
+With a HA automation I monitor whether an ESPHome device reboots:
+
+
+```yaml
+# -------------------------
+  automation:
+# -------------------------
+
+    - id: esp_check_bootstate
+      alias: Überprüft den Neustart der ESP Geräte
+      description: "Wird ausgeführt wenn eines der EPS Geräte neu startet"
+      initial_state: true
+      trigger:
+          - platform: state
+            entity_id:
+              - sensor.boot_counter
+              - sensor.flower_care_boot_counter
+              - sensor.heizung_boot_counter
+              - sensor.umweltsensor_boot_counter      
+      action:
+        - service: script.notify_message
+          data:
+            title: "Watchman"
+            message: "ESP Gerät {{ state_attr(trigger.entity_id, 'friendly_name') }} wurde neu gestartet !"
+            targetlogger:
+              - system
+              - gotify
 ```
