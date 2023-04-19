@@ -1,0 +1,24 @@
+{
+    "name": "izar-wmbus-esp-lib",
+    "description": "This library can be used to provide readouts from IZAR water meter through CC1101 module at ESP8266 and ESP32 platforms",
+    "keywords": "",
+    "authors": {
+        "name": "MaciekN"
+    },
+    "repository": {
+        "type": "git",
+        "url": "https://github.com/maciekn/izar-wmbus-esp"
+    },
+    "version": "1.0.0",
+    "frameworks": [
+        "arduino"
+    ],
+    "platforms": [
+        "espressif32",
+        "espressif8266"
+    ],
+    "dependencies": {
+        "lsatan/SmartRC-CC1101-Driver-Lib": "^2.5.7",
+        "SPI": "*"
+    }
+}
