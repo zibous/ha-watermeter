@@ -482,7 +482,7 @@ switch:
             id(watermonth).publish_state(id(month_value));
 
             id(lastmonth_value) = id(float_default);            
-            id(lastmonth_value).publish_state(id(lastmonth_value));
+            id(waterlastmonth).publish_state(id(lastmonth_value));
 
             id(year_value) = id(float_default);            
             id(wateryear).publish_state(id(year_value));
