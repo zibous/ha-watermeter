@@ -15,7 +15,6 @@ substitutions:
 
   domain: !secret domain
 
-
 esphome:
   name: ${device_name_short}
   # HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -43,8 +42,6 @@ esphome:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
-      - component.update: bootcounter
-
   on_shutdown:
     priority: 600
     then:
@@ -198,7 +195,7 @@ api:
                 return id(hour_value);
               };
               id(waterhour).publish_state(id(hour_value));
-              id(waterhour).update();
+
         - globals.set:
             id: daily_value
             value: !lambda |-
@@ -210,7 +207,7 @@ api:
                 return id(hour_value);
               };
               id(waterday).publish_state(id(daily_value));
-              id(waterday).update();
+
         - globals.set:
             id: yesterday_value
             value: !lambda |-
@@ -222,7 +219,7 @@ api:
                 return id(yesterday_value);
               };
               id(wateryesterday).publish_state(id(hour_value));
-              id(wateryesterday).update();
+
         - globals.set:
             id: week_value
             value: !lambda |-
@@ -234,7 +231,7 @@ api:
                 return id(week_value);
               };
               id(waterweek).publish_state(id(week_value));
-              id(waterweek).update();
+
         - globals.set:
             id: month_value
             value: !lambda |-
@@ -246,7 +243,7 @@ api:
                 return id(week_value);
               };
               id(watermonth).publish_state(id(month_value));
-              id(watermonth).update();
+
         - globals.set:
             id: lastmonth_value
             value: !lambda |-
@@ -258,7 +255,7 @@ api:
                 return id(lastmonth_value);
               };
               id(waterlastmonth).publish_state(id(lastmonth_value));
-              id(waterlastmonth).update();
+
         - globals.set:
             id: year_value
             value: !lambda |-
@@ -270,7 +267,6 @@ api:
                 return id(week_value);
               };
               id(wateryear).publish_state(id(year_value));
-              id(wateryear).update();
 
         - logger.log:
             format: "All new Values set: hour: %.1f, day: %.1f, week: %.1f, month: %.1f, lastmonth: %.1f, year: %.1f"
@@ -408,7 +404,6 @@ switch:
         - lambda: |-
             id(boot_counter) = id(int_default);
             id(bootcounter).publish_state(id(boot_counter));
-        - component.update: bootcounter
         - logger.log:
             level: INFO
             tag: "BOOT"
@@ -423,31 +418,31 @@ switch:
             id(last_value) = id(float_default);
 
             id(boot_counter) = id(int_default);
-            id(bootcounter).update();
+            id(bootcounter).publish_state(id(curreboot_counternt_value));
 
             id(current_value) = id(float_default);
-            id(watercurrent).update();
+            id(watercurrent).publish_state(id(current_value));
 
             id(hour_value) = id(float_default);
-            id(waterhour).update();
+            id(waterhour).publish_state(id(hour_value));
 
             id(daily_value) = id(float_default);
-            id(waterday).update();
+            id(waterday).publish_state(id(daily_value));
 
             id(yesterday_value) = id(float_default);
-            id(wateryesterday).update();
+            id(wateryesterday).publish_state(id(yesterday_value));
 
             id(week_value) = id(float_default);
-            id(waterweek).update();
+            id(waterweek).publish_state(id(week_value));
 
             id(month_value) = id(float_default);
-            id(watermonth).update();
+            id(watermonth).publish_state(id(month_value));
 
             id(lastmonth_value) = id(float_default);
-            id(waterlastmonth).update();
+            id(lastmonth_value).publish_state(id(lastmonth_value));
 
-            id(year_value) = id(float_default);
-            id(wateryear).update();
+            id(year_value) = id(float_default);            
+            id(wateryear).publish_state(id(year_value));
 
         - logger.log: all values reset!
 
@@ -481,34 +476,30 @@ sensor:
 
               id(current_value) = (id(waterdisplay).state-id(last_value)) * id(m3toliter);
               id(watercurrent).publish_state(id(current_value));
-              id(watercurrent).update();
 
               id(hour_value)+=id(current_value);
               id(waterhour).publish_state(id(hour_value));
-              id(waterhour).update();
 
               id(daily_value)+=id(current_value);
               id(waterday).publish_state(id(daily_value));
-              id(waterday).update();
 
               id(week_value)+=id(current_value);
               id(waterweek).publish_state(id(week_value));
-              id(waterweek).update();
 
               id(month_value)+=id(current_value);
               id(watermonth).publish_state(id(month_value));
-              id(watermonth).update();
 
               id(year_value)+=id(current_value);
               id(wateryear).publish_state(id(year_value));
-              id(wateryear).update();
 
               ESP_LOGI("SENSOR", "Set current value to %f litre and publish the data", id(watercurrent));
 
             }else{
+
               id(current_value) = 0.00;
               id(watercurrent).publish_state(id(current_value));
               ESP_LOGI("SENSOR", "Reset current value to: %f", id(watercurrent));
+
             }
             id(last_value)=id(waterdisplay).state;
 
