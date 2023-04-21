@@ -266,9 +266,21 @@ INFO Successfully uploaded program.
 .....
 ```
 
-## Decoded telegram
+## Decode telegram
 
-`1944A511780743434418A241150013CE0766324C94EE48EEF6C8`
+Analyze wmbus or mbus telegrams using wmbusmeters.
+Source code https://github.com/weetmuts/wmbusmeters/
+
+The wmbusmeters software acquires utility meter readings through wmbus or plain mbus.
+The readings can then be published using MQTT, curled to a REST api,
+inserted into a database or stored in a log file
+
+This service is identical to running locally: wmbusmeters --analyze=<driver>:<key> <hex> 
+
+### Testcase:
+https://wmbusmeters.org/analyze/1944A511780743434418A241150013CE0766324C94EE48EEF6C8
+
+### Result
 
 ```
 Auto driver  : izar
@@ -281,26 +293,26 @@ Using driver : izar 00/00
 008   : 78 dll-version
 009   : 07 dll-type (Water meter)
 010   : a2 tpl-ci-field (Mfct specific)
-011 C?: 71150013CE3C17E8B1F69A2283DDCF mfct specific
+011 C?: 41150013CE0766324C94EE48EEF6C8 mfct specific
 
 {
     "media":"water",
     "meter":"izar",
     "name":"",
     "id":"18444343",
-    "total_m3":451.399,
+    "total_m3":451.397,
     "last_month_total_m3":451.114,
     "last_month_measure_date":"2023-02-01",
     "remaining_battery_life_y":10.5,
     "current_alarms":"no_alarm",
     "previous_alarms":"no_alarm",
     "transmit_period_s":8,
-    "timestamp":"2023-02-02T13:49:16Z"
+    "timestamp":"2023-04-21T07:11:05Z"
 }
 
 
-Using: wmbusmeters: 1.11.0-60-g89c42ab
-89c42ab27dc8e7ac566e8b3a7810243a3bebd84b
+Using: wmbusmeters: 1.12.0-28-g5e548ce
+5e548ce3abadd7b84eca9dad3c4f87839e11c07c
 ```
 
 <hr>

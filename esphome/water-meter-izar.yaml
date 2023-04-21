@@ -36,7 +36,7 @@ esphome:
   arduino_version: recommended
   comment: ${device_description}
   project:
-    name: "OE9psj.watermeter2"
+    name: "OE9psj.watermeter-izar"
     version: ${appversion}
   includes:
     - custom_components/izar_meter.h
@@ -218,7 +218,7 @@ wifi:
 #  water_val_lastmonth: 9.59
 ## ---------------------------------------------------
 api:
-  id: espapiwm2
+  id: espapiwm_izar
   port: 6053
   reboot_timeout: 0s
   services:
@@ -447,6 +447,7 @@ switch:
         - lambda: |-
             id(boot_counter) = id(int_default);
             id(bootcounter).publish_state(id(boot_counter));
+
         - logger.log:
             level: INFO
             tag: "BOOT"
@@ -623,22 +624,22 @@ sensor:
                       if ((id(last_value) > id(float_default)) and (id(waterdisplay).state)>(id(last_value)) ) {
 
                         id(current_value) = (id(waterdisplay).state-id(last_value));
-                        id(watercurrent).publish_state(id(current_value));
-
+                        // id(watercurrent).publish_state(id(current_value));
+                        
                         id(hour_value)+=id(current_value);
-                        id(waterhour).publish_state(id(hour_value));
-
+                        // id(waterhour).publish_state(id(hour_value));
+                        
                         id(daily_value)+=id(current_value);
-                        id(waterday).publish_state(id(daily_value));
-
+                        // id(waterday).publish_state(id(daily_value));
+                        
                         id(week_value)+=id(current_value);
-                        id(waterweek).publish_state(id(week_value));
+                        // id(waterweek).publish_state(id(week_value));                        
 
                         id(month_value)+=id(current_value);
-                        id(watermonth).publish_state(id(month_value));
+                        // id(watermonth).publish_state(id(month_value));                        
 
                         id(year_value)+=id(current_value);
-                        id(wateryear).publish_state(id(year_value));
+                        // id(wateryear).publish_state(id(year_value));                        
 
                         ESP_LOGD("DEBUG", "Set current value to %f litre and publish the data", id(watercurrent));
 
@@ -646,7 +647,7 @@ sensor:
 
                       }else{
                         id(current_value) = id(float_default);
-                        id(watercurrent).publish_state(id(current_value));
+                        id(watercurrent).publish_state(id(current_value));                        
                         ESP_LOGI("SENSOR", "Reset current value to: %.1f", id(watercurrent));
                       };
 

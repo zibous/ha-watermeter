@@ -10,7 +10,7 @@ substitutions:
   device_name_short: "water-meter-izar"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon)"
 
-  update_interval: 60s
+  update_interval: 60s # Set to never to disable updates. Defaults to 60s.
   log_level: "info" # use VERBOSE mode to find the meterId 0x43430778
   appversion: "1.1.7"
 
@@ -26,10 +26,10 @@ esphome:
   platform: ESP8266
   board: d1_mini
   esp8266_restore_from_flash: true
-  arduino_version: recommended
+  # arduino_version: recommended
   comment: ${device_description}
   project:
-    name: "OE9psj.watermeter2"
+    name: "OE9psj.wmbus-minid1"
     version: ${appversion}
   build_path: ./build/${device_name_short}
 
@@ -47,6 +47,7 @@ esphome:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
+
   on_shutdown:
     priority: 600
     then:
@@ -181,6 +182,8 @@ ota:
 ## LOCAL WEBSERVER Settings, local settings - no internet
 ## Include supporting javascript locally allowing it to work
 ## without internet access.
+## local: true  ## without internet access.
+## local: false ## with internet access.
 ## ----------------------------------------------------------------------
 web_server:
   port: 80
@@ -202,7 +205,7 @@ web_server:
 #  water_val_lastmonth: 9.59
 ## ---------------------------------------------------
 api:
-  id: espapiwm2
+  id: espapiwm2_d1
   port: 6053
   reboot_timeout: 0s
   services:
@@ -506,7 +509,7 @@ switch:
             id(last_value) = id(float_default);
 
             id(boot_counter) = id(int_default);
-            id(boot_counter).publish_state(id(boot_counter));
+            id(bootcounter).publish_state(id(boot_counter));
 
             id(current_value) = id(float_default);            
             id(watercurrent).publish_state(id(current_value));
@@ -696,6 +699,7 @@ sensor:
     name: Boot counter
     id: bootcounter
     accuracy_decimals: 0
+    state_class: "measurement"
     entity_category: "diagnostic"
     lambda: |-
       return (id(boot_counter));
@@ -761,11 +765,9 @@ binary_sensor:
 ## ---------------------------------------------------
 text_sensor:
   # device version
-  # disabled for api (memory ??)
   - platform: version
     name: Version
     id: appver
-    internal: true
     entity_category: "diagnostic"
 
   # device online time
@@ -785,11 +787,9 @@ text_sensor:
     entity_category: "diagnostic"
 
   # device timestamp
-  # disabled for api (memory ??)
   - platform: template
     name: Timestamp
     id: systime
-    internal: true
     entity_category: "diagnostic"
     lambda: char str[20];
       time_t currTime = id(sntp_time).now().timestamp;
