@@ -40,16 +40,15 @@ esphome:
     # At this priority, pretty much everything should already be initialized.
     priority: -100.0
     then:
+      - globals.set:
+          id: boot_counter
+          value: !lambda "return id(boot_counter)+=1;"
       - logger.log:
           level: INFO
           tag: "BOOT"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
-
   on_shutdown:
-    priority: 600
+    priority: 700
     then:
       - logger.log:
           level: INFO
@@ -72,6 +71,28 @@ external_components:
       type: local
       path: custom_components
     components: [backup]
+  # use local component from
+  # https://github.com/TheStaticTurtle/esphome_syslog
+  - source:
+      type: local
+      path: custom_components
+    components: [syslog]
+
+  # use local component from
+  # https://github.com/ssieb/custom_components/tree/master/components/heapmon
+  # - source:
+  #     type: local
+  #     path: custom_components
+  #   components: [heapmon]
+
+## ---------------------------------------------------
+## syslog service
+## ---------------------------------------------------
+syslog:
+  ip_address: !secret syslog_server
+  port: !secret syslog_port
+  min_level: DEBUG
+  enable_logger: true
 
 ## ----------------------------------------------------------------
 ## Global variables
@@ -511,10 +532,10 @@ switch:
             id(boot_counter) = id(int_default);
             id(bootcounter).publish_state(id(boot_counter));
 
-            id(current_value) = id(float_default);            
+            id(current_value) = id(float_default);
             id(watercurrent).publish_state(id(current_value));
 
-            id(hour_value) = id(float_default);            
+            id(hour_value) = id(float_default);
             id(waterhour).publish_state(id(hour_value));
 
             id(daily_value) = id(float_default);
@@ -523,16 +544,16 @@ switch:
             id(yesterday_value) = id(float_default);
             id(wateryesterday).publish_state(id(yesterday_value));
 
-            id(week_value) = id(float_default);            
+            id(week_value) = id(float_default);
             id(waterweek).publish_state(id(week_value));
 
-            id(month_value) = id(float_default);            
+            id(month_value) = id(float_default);
             id(watermonth).publish_state(id(month_value));
 
-            id(lastmonth_value) = id(float_default);            
+            id(lastmonth_value) = id(float_default);
             id(waterlastmonth).publish_state(id(lastmonth_value));
 
-            id(year_value) = id(float_default);            
+            id(year_value) = id(float_default);
             id(wateryear).publish_state(id(year_value));
 
         - logger.log: all values reset!
@@ -566,25 +587,25 @@ sensor:
 
               id(current_value) = (id(waterdisplay).state-id(last_value)) * id(m3toliter);
               id(watercurrent).publish_state(id(current_value));
-              
+
               id(hour_value)+=id(current_value);
               id(waterhour).publish_state(id(hour_value));
-              
+
               id(daily_value)+=id(current_value);
-              id(waterday).publish_state(id(daily_value));              
+              id(waterday).publish_state(id(daily_value));
 
               id(week_value)+=id(current_value);
-              id(waterweek).publish_state(id(week_value));              
+              id(waterweek).publish_state(id(week_value));
 
               id(month_value)+=id(current_value);
               id(watermonth).publish_state(id(month_value));
 
               id(year_value)+=id(current_value);
-              id(wateryear).publish_state(id(year_value));              
+              id(wateryear).publish_state(id(year_value));
 
               ESP_LOGI("SENSOR", "Set current value to %f litre and publish the data", id(watercurrent));
 
-              if (${service_enabled} =='true'){
+              if ( ${service_enabled} == true){
                  id(post_device_state).execute();
               }
 
@@ -749,6 +770,13 @@ sensor:
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
 
+  #  Shows free space ESP.getFreeHeap
+  # - platform: heapmon
+  #   id: heapspace
+  #   name: "Free Space"
+  #   state_class: "measurement"
+  #   entity_category: "diagnostic"
+
 ## ---------------------------------------------------
 ## BINARY SENSOR
 ## ---------------------------------------------------
@@ -765,9 +793,11 @@ binary_sensor:
 ## ---------------------------------------------------
 text_sensor:
   # device version
+  # disabled for api (memory ??)
   - platform: version
     name: Version
     id: appver
+    internal: true
     entity_category: "diagnostic"
 
   # device online time
@@ -787,10 +817,12 @@ text_sensor:
     entity_category: "diagnostic"
 
   # device timestamp
+  # disabled for api (memory ??)
   - platform: template
     name: Timestamp
     id: systime
     entity_category: "diagnostic"
+    internal: true
     lambda: char str[20];
       time_t currTime = id(sntp_time).now().timestamp;
       strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));

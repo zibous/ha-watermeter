@@ -461,31 +461,31 @@ switch:
         - lambda: |-
             id(last_value) = id(float_default);
 
-            id(boot_counter) = id(int_default);            
+            id(boot_counter) = id(int_default);
             id(bootcounter).publish_state(id(boot_counter));
 
             id(current_value) = id(float_default);
             id(watercurrent).publish_state(id(current_value));
 
-            id(hour_value) = id(float_default);            
+            id(hour_value) = id(float_default);
             id(waterhour).publish_state(id(hour_value));
 
-            id(daily_value) = id(float_default);            
+            id(daily_value) = id(float_default);
             id(waterday).publish_state(id(daily_value));
 
-            id(yesterday_value) = id(float_default);            
+            id(yesterday_value) = id(float_default);
             id(wateryesterday).publish_state(id(yesterday_value));
 
-            id(week_value) = id(float_default);            
+            id(week_value) = id(float_default);
             id(waterweek).publish_state(id(week_value));
 
             id(month_value) = id(float_default);
             id(watermonth).publish_state(id(month_value));
 
-            id(lastmonth_value) = id(float_default);            
+            id(lastmonth_value) = id(float_default);
             id(waterlastmonth).publish_state(id(lastmonth_value));
 
-            id(year_value) = id(float_default);            
+            id(year_value) = id(float_default);
             id(wateryear).publish_state(id(year_value));
 
         - logger.log: all values reset!
@@ -618,28 +618,28 @@ sensor:
 
                       if(id(waterdisplay).state > id(float_default)){
                         id(watermeter_display_m3) = x * 0.001;
-                        id(watermeterdisplay).publish_state(id(watermeter_display_m3));                        
+                        id(watermeterdisplay).publish_state(id(watermeter_display_m3));
                       }
 
                       if ((id(last_value) > id(float_default)) and (id(waterdisplay).state)>(id(last_value)) ) {
 
                         id(current_value) = (id(waterdisplay).state-id(last_value));
                         // id(watercurrent).publish_state(id(current_value));
-                        
+
                         id(hour_value)+=id(current_value);
                         // id(waterhour).publish_state(id(hour_value));
-                        
+
                         id(daily_value)+=id(current_value);
                         // id(waterday).publish_state(id(daily_value));
-                        
+
                         id(week_value)+=id(current_value);
-                        // id(waterweek).publish_state(id(week_value));                        
+                        // id(waterweek).publish_state(id(week_value));
 
                         id(month_value)+=id(current_value);
-                        // id(watermonth).publish_state(id(month_value));                        
+                        // id(watermonth).publish_state(id(month_value));
 
                         id(year_value)+=id(current_value);
-                        // id(wateryear).publish_state(id(year_value));                        
+                        // id(wateryear).publish_state(id(year_value));
 
                         ESP_LOGD("DEBUG", "Set current value to %f litre and publish the data", id(watercurrent));
 
@@ -647,7 +647,7 @@ sensor:
 
                       }else{
                         id(current_value) = id(float_default);
-                        id(watercurrent).publish_state(id(current_value));                        
+                        id(watercurrent).publish_state(id(current_value));
                         ESP_LOGI("SENSOR", "Reset current value to: %.1f", id(watercurrent));
                       };
 
