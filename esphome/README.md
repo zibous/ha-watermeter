@@ -143,8 +143,7 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 - Copy the files and directories to `/docker/app/esphome/config`
 - Start Docker ESPHOME
 - Create secrets.yaml based on `template_secrets.yaml` and adjust the entries
-- Create and deploy the application to the connected Wemos D1 Mini
-
+- Create and deploy the application to the connected device
 
 ## Compile Info
 
