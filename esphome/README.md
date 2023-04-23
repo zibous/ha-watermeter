@@ -54,7 +54,7 @@ wmbus:
 
 <hr>
 
-[ESP32 + CC1101 configuration see](wmbus-minid1.yaml)
+[ESP32 + CC1101 configuration see](wmbus-esp32.yaml)
 
 ![ESPHOME water-meter-esp](docs/eshome_webui.png)
 
