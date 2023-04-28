@@ -56,9 +56,10 @@ esphome:
 ## External components for wmbusmeter
 ## ----------------------------------------------------------------
 external_components:
-  # use exterbal component from
+  # use external component from
   # https://github.com/SzczepanLeon/esphome-components
   - source: github://SzczepanLeon/esphome-components@main
+    refresh: 0d
     components: [ wmbus ]
 
 ## ----------------------------------------------------------------
