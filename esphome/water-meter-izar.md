@@ -58,7 +58,7 @@ see: https://github.com/maciekn/izar-wmbus-esp#cc1101-868mhz-pinout
     - SPI
     - izar-wmbus  https://github.com/maciekn/izar-wmbus-esp
     - ArduinoJson https://github.com/bblanchon
-    - custom_components/izar_meter.h  
+    - custom_components/izar_meter.h
     - syslog https://github.com/TheStaticTurtle/esphome_syslog
     - backup  https://github.com/dentra/esphome-components
 
@@ -90,14 +90,14 @@ Below is a list to compare the two custom components. At the moment SzczepanLeon
 ```
  # my watermeter id
   myWaterMeterID: "add your meter id here"
-  
+
   # log settings
   log_level: "DEBUG" # use VERBOSE mode to find the meterId 0x43430778
-  
+
   # syslog
   syslogserver: add host adress here
   syslogport: "add syslog port here"
-  
+
 ```
 
 ## Device Services
@@ -112,10 +112,14 @@ If the device is integrated in the Home Assistant, the error message:
   Could not allocate memory for JSON document!
   Requested 184 bytes, largest free heap block: 184 bytes`
 ```
- 
-Since this message does not appear without integration in the Home Assistant ***Version Home Assistant 2023.4.5 Frontend 20230411.1 - latest***, it is probably due to the Home Assistant or the ESPHOME API.
+
+Since this message does not appear without integration in the Home Assistant ***Version Home Assistant 2023.4.5 Frontend 20230411.1 - latest***.
 
 So far I haven't found a solution for this, but the message isn't understandable either ?
+
+The only workaround I found is to reduce (turn off) the some sensor values (text_sensor) with the attribute "internal: true".
+There is still enough memory on the D1Mini, so I don't understand this (error) message.
+Didn't find any troubleshooting on Discord or in Bugtrace by ESPHome either.
 
 
 <br>
@@ -156,14 +160,14 @@ data:
 Save your ESPHome device configuration in firmware and and recover it if you lost source files. Just download it from `http://water-meter-izar.local/config.yaml`
 
 
-    WARNING: You should backup your all your files, this solution only for 
-             emergency purpose. I am not responsible for the loss or 
+    WARNING: You should backup your all your files, this solution only for
+             emergency purpose. I am not responsible for the loss or
              inability to recover data.
-             
-    WARNING: Stored configuration is the same as shown by esphome config command. 
+
+    WARNING: Stored configuration is the same as shown by esphome config command.
              It is fully worked but not the same as your original sources.
-             
-    WARNING: Command line substitutions, custom components and 
+
+    WARNING: Command line substitutions, custom components and
              includes are not supported yet!
 
 
@@ -253,7 +257,7 @@ With a HA automation I monitor whether an ESPHome device reboots:
               - sensor.boot_counter
               - sensor.flower_care_boot_counter
               - sensor.heizung_boot_counter
-              - sensor.umweltsensor_boot_counter      
+              - sensor.umweltsensor_boot_counter
       action:
         - service: script.notify_message
           data:

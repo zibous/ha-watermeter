@@ -25,21 +25,27 @@
 ![diehl_metering](./docs/diehl_metering.jpg)
 
 
-I did some experiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **Wemos D1 Min, CUL + CC1101 (esphome)**.
+I did some experiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **ESPHome - ESP32 (v4) + CC1101**.
 With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
 
 <br>
 
-**Wemos D1 Mini + CC1101 (esphome)** is the best solution for me because the resource requirement is low.
+## ESPHome + ESP32 (v4) + CC1101
 
-![Wemos D1 Mini + CC1101](./esphome/docs/d1mini_CC1101.jpg)
+ESPHome - ESP32 (v4) + CC1101 is the best solution for me because the resource requirement is low.
+
+The version with WEMOS D1MINI was my first version, but it was not stable when integrated into Homeassistant.
+
+As it looks, the `JSON` integration for the WEMOS D1MINI at ESP Home is not very good and so the device reboots or has memory errors occur again and again. The ESP32 variant works w/o theese errors.
+
+![ESPHome - ESP32 (v4) + CC1101](./esphome/docs/esp32_cc1101.png)
 
 ### Requirements
 
 - Water meter with IZAR module (Diehl IZAR RC 868 I R4 PL),
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
-- [Wemos D1 Mini CC1101](https://amzn.eu/d/0WQv07I)
+- [ ESP32 Dev Kit C V4 NodeMCU](https://amzn.eu/d/eUNLyYc)
 - [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
 
 
@@ -47,24 +53,24 @@ With the NANOCUL solutions, I always had problems with the USB input and with th
 
 Currently supported meter types:
 
-  - amiplus 
-  - apator08 
+  - amiplus
+  - apator08
   - apator162
-  - bmeters 
-  - elf 
-  - evo868 
-  - hydrocalm3 
-  - izar 
-  - mkradio3 
-  - mkradio4 
+  - bmeters
+  - elf
+  - evo868
+  - hydrocalm3
+  - izar
+  - mkradio3
+  - mkradio4
   - ultrimis
   - unismart
-  - fhkvdataiii 
+  - fhkvdataiii
 
   see: `https://github.com/SzczepanLeon/esphome-components`
 
-## Installation
-[Wemos D1 Mini + CC1101 Installation](./esphome/README.md)
+## Installation / Details
+[ESPHome - ESP32 (v4) + CC1101](./esphome/README.md)
 
 ### What I still miss
 Only the `total_m3` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
@@ -80,7 +86,7 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 
 ## Result
 
-![ESPHOME-WATERMETER](./docs/esphome-watermeter.png)
+![ESPHOME-WATERMETER](./esphome/docs/eshome_webui.png)
 
 
 <hr>
@@ -98,7 +104,7 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 ```
 https://github.com/weetmuts/wmbusmeters
 
-https://github.com/maciekn/izar-wmbus-esp 
+https://github.com/maciekn/izar-wmbus-esp
 https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
 
 https://github.com/SzczepanLeon/esphome-components
