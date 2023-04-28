@@ -26,6 +26,7 @@
 
 
 I did some experiments with **wmbusmeters**, **DVT SDR_STICK**, **NANOCUL** and ended up with: **ESPHome - ESP32 (v4) + CC1101**.
+
 With the NANOCUL solutions, I always had problems with the USB input and with the high resource consumption on the NUC or Raspberry computers.
 
 <br>
@@ -34,9 +35,26 @@ With the NANOCUL solutions, I always had problems with the USB input and with th
 
 ESPHome - ESP32 (v4) + CC1101 is the best solution for me because the resource requirement is low.
 
-The version with WEMOS D1MINI was my first version, but it was not stable when integrated into Homeassistant.
+<br>
 
-As it looks, the `JSON` integration for the WEMOS D1MINI at ESP Home is not very good and so the device reboots or has memory errors occur again and again. The ESP32 variant works w/o theese errors.
+## WEMOS D1MINI  vs ESP32 (v4)
+The version with WEMOS D1MINI was my first version, but it was not stable when integrated into Homeassistant. When i disable the `api`
+both D1MINI are working.  It looks like the 2nd D1MINI has a memory problem.
+
+|  Device | Remarks   | State  | 
+|---------|-----------|--------|
+| D1MINI 1 |  CC1101   |  ✔︎ works |
+| D1MINI 2 |  CC1101   |  ✕ JSON Error and keeps rebooting      |
+| ESP32    |  CC1101   |  ✔︎ works      |
+
+> Note: Both D1MINI are wired indent and have the same hardware and
+from the same supplier and same order. One works fine and the other always boots with a JSON error.
+
+The ESP32 variant works w/o theese errors.
+
+<br>
+
+## ESP32 (v4) Variante
 
 ![ESPHome - ESP32 (v4) + CC1101](./esphome/docs/esp32_cc1101.png)
 

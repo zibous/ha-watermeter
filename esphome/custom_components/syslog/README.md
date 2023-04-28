@@ -6,11 +6,21 @@ This component uses the https://github.com/arcao/Syslog library version 2.0 at i
 
 ## How to
 
+### Manually
 To install, locate your `esphome` folder, create a folder named `custom_components` got into it and execute 
 ```shell
-git clone https://github.com/TheStaticTurtle/esphome_syslog.git syslog
+git clone https://github.com/TheStaticTurtle/esphome_syslog.git
+mv esphome_syslog/components/syslog .
+rm -rf esphome_syslog
+```
+### YAML
+```yaml
+external_components:
+  - source: github://TheStaticTurtle/esphome_syslog
+    components: [syslog]
 ```
 
+### Configuration
 Simply add this to the configuration of your esphome node: 
 ```yaml
 syslog:
