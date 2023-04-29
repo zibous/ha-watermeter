@@ -136,3 +136,4 @@ dmypy.json
 # Pyre type checker
 .pyre/
 data/43430778.json
+esphome/develop_esphome.code-workspace
