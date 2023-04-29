@@ -1,3 +1,4 @@
+---
 ## ------------------------------------------------------------------
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
 ##
@@ -5,14 +6,19 @@
 ##         2. Using HTTP Post to service server
 ##         3. Using wmbusmeters i a pipe
 ##
-# ------------------------------------------------------------------
+## this version shows all watermeters. Use this for the first test
+##
+## Remark:
+##   Some Wemos D1 Min has memory problems, for me one is working
+##   another one (same order) reboots with JSON Errors.
+## ------------------------------------------------------------------
 substitutions:
   device_name_short: "water-meter-izar"
-  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon)"
+  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
 
   update_interval: 60s # Set to never to disable updates. Defaults to 60s.
-  log_level: "info" # use VERBOSE mode to find the meterId 0x43430778
-  appversion: "1.1.7"
+  log_level: "INFO" # use VERBOSE mode to find the meterId 0x43430778
+  appversion: "2.0.3"
 
   domain: !secret domain
 
@@ -59,12 +65,13 @@ esphome:
 ## External components
 ## ----------------------------------------------------------------
 external_components:
-  # use local component from
+  # uses the latest version from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
-  - source:
-      type: local
-      path: custom_components
+  # You can make ESPHome check the repository every time by setting this option to 0s
+  - source: github://SzczepanLeon/esphome-components@main
+    refresh: 0s
     components: [wmbus]
+
   # use local component from
   # https://github.com/zdzichu6969/esphome-components
   - source:
@@ -73,10 +80,10 @@ external_components:
     components: [backup]
   # use local component from
   # https://github.com/TheStaticTurtle/esphome_syslog
-  - source:
-      type: local
-      path: custom_components
-    components: [syslog]
+  # - source:
+  #     type: local
+  #     path: custom_components
+  #   components: [syslog]
 
   # use local component from
   # https://github.com/ssieb/custom_components/tree/master/components/heapmon
@@ -88,11 +95,11 @@ external_components:
 ## ---------------------------------------------------
 ## syslog service
 ## ---------------------------------------------------
-syslog:
-  ip_address: !secret syslog_server
-  port: !secret syslog_port
-  min_level: DEBUG
-  enable_logger: true
+# syslog:
+#   ip_address: !secret syslog_server
+#   port: !secret syslog_port
+#   min_level: DEBUG
+#   enable_logger: true
 
 ## ----------------------------------------------------------------
 ## Global variables
@@ -465,13 +472,15 @@ script:
 ## WMBUS DEVICE D1MINI WEMOS
 ## ---------------------------------------------------
 wmbus:
-  ## connction to CC1101
+  ## ------------------------------------
+  ## connction to CC1101 --> D1MINI WEMOS
+  ## ------------------------------------
   mosi_pin: GPIO13 #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
   miso_pin: GPIO12 #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
   clk_pin: GPIO14 #D5  SCK  Attached to Hardware SPI controller CLK
   cs_pin: GPIO15 #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO04 #D2  High Impedance
-  gdo2_pin: GPIO05 #D1  High Impedance
+  gdo0_pin: GPIO04 #D2  High Impedance !
+  gdo2_pin: GPIO05 #D1  High Impedance !
 
   # Using wmbusmeters i a pipe
   # clients:
@@ -567,65 +576,70 @@ switch:
 ## ---------------------------------------------------
 sensor:
   # water display
+
   - platform: wmbus
-    name: "Wasseruhr Anzeige"
-    id: "waterdisplay"
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only hex is working for my watermeter !
+    # see: https://github.com/SzczepanLeon/esphome-components/issues/6
+    # edit watermeterid in the secrets file
     meter_id: !secret watermeterId
     type: izar
-    unit_of_measurement: "m³"
-    state_class: total_increasing
-    device_class: "water"
-    accuracy_decimals: 3
-    on_value:
-      then:
-        - lambda: |-
-            ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
-
-            if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
-
-              id(current_value) = (id(waterdisplay).state-id(last_value)) * id(m3toliter);
-              id(watercurrent).publish_state(id(current_value));
-
-              id(hour_value)+=id(current_value);
-              id(waterhour).publish_state(id(hour_value));
-
-              id(daily_value)+=id(current_value);
-              id(waterday).publish_state(id(daily_value));
-
-              id(week_value)+=id(current_value);
-              id(waterweek).publish_state(id(week_value));
-
-              id(month_value)+=id(current_value);
-              id(watermonth).publish_state(id(month_value));
-
-              id(year_value)+=id(current_value);
-              id(wateryear).publish_state(id(year_value));
-
-              ESP_LOGI("SENSOR", "Set current value to %f litre and publish the data", id(watercurrent));
-
-              if ( ${service_enabled} == true){
-                 id(post_device_state).execute();
+    add_prefix: false
+    # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
+    # Note that a lower value indicates a better link.
+    # The LQI of a received packet will be bad (higher number) when there is lot of interference.
+    lqi:
+      id: wmbus_cc1101_lqi
+      name: "Wlan CC1101 LQI"
+      entity_category: "diagnostic"
+    # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
+    # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
+    # RSSI stands for received signal strength (power) indication (in dBm).
+    # A higher value indicates higher power.
+    rssi:
+      id: wmbus_cc1101_rssi
+    total_water_m3:
+      name: "Wasseruhr Anzeige"
+      id: "waterdisplay"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      on_value:
+        then:
+          - lambda: |-
+              ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
+              if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
+                id(current_value) = (id(waterdisplay).state-id(last_value)) * id(m3toliter);
+                id(watercurrent).publish_state(id(current_value));
+                id(hour_value)+=id(current_value);
+                id(waterhour).publish_state(id(hour_value));
+                id(daily_value)+=id(current_value);
+                id(waterday).publish_state(id(daily_value));
+                id(week_value)+=id(current_value);
+                id(waterweek).publish_state(id(week_value));
+                id(month_value)+=id(current_value);
+                id(watermonth).publish_state(id(month_value));
+                id(year_value)+=id(current_value);
+                id(wateryear).publish_state(id(year_value));
+                ESP_LOGI("SENSOR", "Set current value to %f litre and publish the data", id(watercurrent));
+                if ( ${service_enabled} == true){
+                  id(post_device_state).execute();
+                }
+              }else{
+                id(current_value) = 0.00;
+                id(watercurrent).publish_state(id(current_value));
+                ESP_LOGI("SENSOR", "Reset current value to: %f", id(watercurrent));
               }
+              id(last_value)=id(waterdisplay).state;
 
-            }else{
-
-              id(current_value) = 0.00;
-              id(watercurrent).publish_state(id(current_value));
-              ESP_LOGI("SENSOR", "Reset current value to: %f", id(watercurrent));
-
-            }
-
-            id(last_value)=id(waterdisplay).state;
-
-        - text_sensor.template.publish:
-            id: watermeter_lastupdate
-            state: !lambda |-
-              char str[20];
-              time_t currTime = id(sntp_time).now().timestamp;
-              strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
-              return (std::string) str;
+          - text_sensor.template.publish:
+              id: watermeter_lastupdate
+              state: !lambda |-
+                char str[20];
+                time_t currTime = id(sntp_time).now().timestamp;
+                strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
+                return (std::string) str;
 
   # water current
   - platform: template
@@ -753,7 +767,7 @@ sensor:
               ).c_str();
 
   # Wifi quality RSSI
-  # only internal used (memory ??)
+  # only internal used (memory bug D1MINI ??)
   - platform: wifi_signal
     name: Wlan Signal
     id: wifi_signal_db
@@ -762,9 +776,20 @@ sensor:
     entity_category: "diagnostic"
 
   # Wifi quality RSSI in percentage
+  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Wlan Qualität"
+    name: "Wlan ESP32 Qualität"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+
+  # CC1101 quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy
+    source_id: wmbus_cc1101_rssi
+    name: "Wlan CC1101 RSSI"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "Signal %"

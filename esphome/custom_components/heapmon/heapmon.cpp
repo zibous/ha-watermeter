@@ -22,6 +22,11 @@ void HeapMonitor::update() {
 #elif defined(USE_ESP_IDF)
   free_heap = heap_caps_get_free_size(MALLOC_CAP_INTERNAL);
 #endif
+  
+  // ESP.getFreeHeap() - returns total amount of available memory
+  // ESP.getHeapFragmentation() - returns an indication of how badly the heap is fragmented. The bigger, the worse - over 50 is very bad.
+  // ESP.getMaxFreeBlockSize() - the biggest block you can allocate.
+  
   ESP_LOGD(TAG, "Free Heap Size: %u bytes", free_heap);
   this->publish_state(free_heap);
 }

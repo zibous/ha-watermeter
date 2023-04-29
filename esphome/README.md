@@ -58,6 +58,16 @@ wmbus:
 
 ![ESPHOME water-meter-esp](docs/eshome_webui.png)
 
+### Used components
+
+ - wmbus lib (SzczepanLeon)
+    https://github.com/SzczepanLeon/esphome-components
+
+ - optional backup (zdzichu6969)
+   https://github.com/zdzichu6969/esphome-components
+
+ - optional syslog (TheStaticTurtle)
+   https://github.com/TheStaticTurtle/esphome_syslog
 
 ## Workaraound and tips
 
@@ -79,15 +89,23 @@ wmbus:
      - source: github://SzczepanLeon/esphome-components@main
   ```
 
-  To use the local components from Szczepan's esphome custom components   use:
+  To use the latest components from Szczepan's esphome custom components:
 
   ```yaml
-	external_components:
-	  - source:
-	      type: local
-	      path: custom_components
+	  # uses the latest version from SzczepanLeon
+	  #
+	  # You can make ESPHome check the repository every time by setting this option to 0s
+	  - source: github://SzczepanLeon/esphome-components@main
+	    refresh: 0s
 	    components: [wmbus]
   ```
+
+  see: `https://github.com/SzczepanLeon/esphome-components`
+
+  <br>
+
+  Be shure that you use the latest version for the build:
+  Use **`Clean build files`** before you install the selected esp-home device version.
 
 <br>
 
@@ -257,6 +275,13 @@ INFO Successfully connected to water-meter-esp.siebler.home
 [13:35:54][I][SENSOR:643]: Reset current value to: 0.000
 .....
 ```
+
+## Homeassistant Device
+
+<img src="docs/homeassistat-water-meter-izar.png" width="90%"></img>
+<img src="docs/ha_waterdisplay.png" width="45%"> </img> <img src="docs/ha_water.png" width="45%"></img> <img src="docs/ha_water_day.png" width="45%"></img> <img src="docs/ha_water_year.png" width="45%"> <img src="docs/ha_rssi.png" width="45%"></img>  </img><img src="docs/ha_wlan.png" width="45%"></img>
+
+<br>
 
 ## Decode telegram
 
