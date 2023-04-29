@@ -13,16 +13,19 @@ substitutions:
   device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon)"
   projectname: "OE9psj.wmbus-esp"
+  appversion: "2.0.3"
   domain: !secret domain
 
   update_interval: 60s # Set to never to disable updates. Defaults to 60s.
   log_level: "INFO" # use VERBOSE mode to find the meterId 0x43430778
-  appversion: "2.0.3"
 
   ## data service
   service_url: !secret service_host
   service_enabled: "false"
   service: "izar.watermeter"
+
+  ## internal flag for optional sensors
+  use_notall: "true"
 
 esphome:
   name: ${device_name_short}
@@ -42,6 +45,9 @@ esphome:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
+      - globals.set:
+          id: send_millisecond
+          value: !lambda "return millis();"
       - logger.log:
           level: INFO
           tag: "BOOT"
@@ -107,6 +113,7 @@ syslog:
 ## Global variables
 ## ----------------------------------------------------------------
 globals:
+
   - id: boot_counter
     type: int
     restore_value: yes
@@ -171,6 +178,11 @@ globals:
     type: float
     restore_value: yes
     initial_value: "0.00"
+
+  - id: send_millisecond
+    type: int
+    restore_value: false
+    initial_value: '0'
 
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
@@ -478,7 +490,9 @@ script:
 ##
 ##                                        | 3.3V
 ##    - - - - - - - - - - - - - - - - - - x
-##   | 5v           ESP32                 | ANT
+##   |                                    |
+## - | 5v           ESP32                 | -- ANT
+##   |                                    |
 ##    - - - - x - x x x x x x - - - - - x x
 ##                | | | | |             | |
 ##                | | | | |             | | GND
@@ -508,7 +522,7 @@ wmbus:
   #    transport: UDP
 
   ## -------------------------------------------------
-  ## setting: wmbusmeters.conf wbusmeters server
+  ## setting: wmbusmeters.conf on wbusmeters server
   ## -------------------------------------------------
   ## loglevel: normal
   ## device: rtlwmbus:CMD(nc -lku 7227)
@@ -551,6 +565,17 @@ switch:
             level: INFO
             tag: "BOOT"
             format: "${device_name_short} reset boot counter o.k!"
+
+  # optional used switches, only for develop not for production
+  # - platform: safe_mode
+  #   name: "Restart (Safe Mode)"
+
+  # - platform: restart
+  #   name: "Restart"
+  #   id: restart_switch
+
+  # - platform: factory_reset
+  #   name: Restart with Factory Default Settings
 
   # reset all global vars
   - platform: template
@@ -609,14 +634,21 @@ sensor:
     # A higher value indicates higher power.
     rssi:
       id: wmbus_cc1101_rssi
+    # reports the watermeter display value
     total_water_m3:
-      # name: "Wasseruhr Anzeige"
       id: "waterdisplay"
       name: "Wasseruhr Anzeige"
       unit_of_measurement: "m³"
       state_class: total_increasing
       device_class: "water"
       accuracy_decimals: 3
+      # Send the value periodically with the specified time interval.
+      # If the sensor value changes during the interval the interval will not reset.
+      # The last value of the sensor will be sent. 60s means, that every minute the
+      # last state will be published.
+      filters:
+        - heartbeat: 60s
+      # update and calulatet all watermeter data values
       on_value:
         then:
           - lambda: |-
@@ -647,6 +679,7 @@ sensor:
               }
               id(last_value)=id(waterdisplay).state;
 
+          # update the timestamp for the last waterdisplay state
           - text_sensor.template.publish:
               id: watermeter_lastupdate
               state: !lambda |-
@@ -654,6 +687,15 @@ sensor:
                 time_t currTime = id(sntp_time).now().timestamp;
                 strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
                 return (std::string) str;
+
+          # update the reading timeout for the watermeter display
+          - sensor.template.publish:
+              id: watermeter_read_timeout
+              state: !lambda |-
+                int time_used = ( millis() - id(send_millisecond) );
+                ESP_LOGI("WATERDISPLAY", "Diff millisecond is: %d", time_used);
+                id(send_millisecond) = millis();
+                return float(time_used)/1000;
 
   # water current
   - platform: template
@@ -753,12 +795,21 @@ sensor:
     lambda: |-
       return (id(boot_counter));
 
+  # service call delay
+  - platform: template
+    name: Zählerstand Aktualisierung
+    id: watermeter_read_timeout
+    icon: mdi:clock-start
+    accuracy_decimals: 2
+    unit_of_measurement: "sec"
+    state_class: "measurement"
+    entity_category: "diagnostic"
+
   # device uptime human reading format
-  # only internal used (memory bug D1MINI ??)
   - platform: uptime
     name: Uptime
     id: uptime_sensor
-    internal: true
+    internal: ${use_notall}
     update_interval: ${update_interval}
     unit_of_measurement: seconds
     on_raw_value:
@@ -780,8 +831,7 @@ sensor:
                 (String(seconds) + "s")
               ).c_str();
 
-  # Wifi quality RSSI
-  # only internal used (memory bug D1MINI ??)
+  # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
   - platform: wifi_signal
     name: Wlan Signal
     id: wifi_signal_db
@@ -810,6 +860,7 @@ sensor:
     entity_category: "diagnostic"
 
   # Shows free space ESP.getFreeHeap
+  # used only for developers, heapmon component must be installed
   # only for logging
   # - platform: heapmon
   #   id: heapspace
@@ -833,20 +884,18 @@ binary_sensor:
 ## TEXT SENSOR
 ## ---------------------------------------------------
 text_sensor:
-  # device version
-  # only internal used (memory bug D1MINI ??)
+  # optional device version
   - platform: version
     name: Version
     id: appver
-    internal: true
+    internal: ${use_notall}
     entity_category: "diagnostic"
 
-  # device online time
-  # only internal used (memory bug D1MINI ??)
+  # optional device online time
   - platform: template
     name: Online seit
     id: uptime_human
-    internal: true
+    internal: ${use_notall}
     icon: mdi:clock-start
     entity_category: "diagnostic"
 
@@ -857,13 +906,12 @@ text_sensor:
     icon: mdi:clock-start
     entity_category: "diagnostic"
 
-  # device timestamp
-  # only internal used (memory bug D1MINI ??)
+  # optional device timestamp
   - platform: template
     name: Timestamp
     id: systime
     entity_category: "diagnostic"
-    internal: true
+    internal: ${use_notall}
     lambda: char str[20];
       time_t currTime = id(sntp_time).now().timestamp;
       strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
