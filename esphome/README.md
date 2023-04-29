@@ -276,11 +276,6 @@ INFO Successfully connected to water-meter-esp.siebler.home
 .....
 ```
 
-## Homeassistant Device
-
-<img src="docs/homeassistat-water-meter-izar.png" width="90%"></img>
-<img src="docs/ha_waterdisplay.png" width="45%"> </img> <img src="docs/ha_water.png" width="45%"></img> <img src="docs/ha_water_day.png" width="45%"></img> <img src="docs/ha_water_year.png" width="45%"> <img src="docs/ha_rssi.png" width="45%"></img>  </img><img src="docs/ha_wlan.png" width="45%"></img>
-
 <br>
 
 ## Decode telegram
@@ -335,7 +330,10 @@ Using: wmbusmeters: 1.12.0-28-g5e548ce
 <hr>
 
 ## Homeassitant Device
-![Homeassistant](docs/ha_water-meter-esp.png)
+
+<img src="docs/homeassistat-water-meter-izar.png" width="90%"></img>
+<img src="docs/ha_waterdisplay.png" width="45%"> </img> <img src="docs/ha_water.png" width="45%"></img> <img src="docs/ha_water_day.png" width="45%"></img> <img src="docs/ha_water_year.png" width="45%"> <img src="docs/ha_rssi.png" width="45%"></img>  </img><img src="docs/ha_wlan.png" width="45%"></img>
+
 
 ### Update Values with HA Service
 
