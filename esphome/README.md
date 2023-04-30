@@ -88,9 +88,9 @@ ____
   -  see log messages to find your `watermeterID`
   
 -  **2nd Step**: Edit the `secrets.yaml` and change the `watermeterID`
-  - Install [wm-esp32.yaml](wm-esp32.yaml)
-  - Check log messages 
-     ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
+   - Install [wm-esp32.yaml](wm-esp32.yaml)
+   - Check log messages 
+      ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
  
   <br>
 
