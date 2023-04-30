@@ -147,7 +147,7 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 
 
 ## Preparation and creating the application
-- Download the esphome config from `https://github.com/zibous/ha-watermeter/releases`
+- Download the esphome config from <https://github.com/zibous/ha-watermeter/releases>
 - Copy the files and directories to `/docker/app/esphome/config`
 - Start Docker ESPHOME
 - Create secrets.yaml based on `template_secrets.yaml` and adjust the entries
