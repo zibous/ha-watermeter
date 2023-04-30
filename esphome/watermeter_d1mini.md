@@ -9,7 +9,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.2.4&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.5.0&color=green&logo=esphome
 [esphome-release]: https://GitHub.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
@@ -20,64 +20,76 @@
 
 ![Wemos D1 Mini + CC1101](../docs/d1min_cc1101.png)
 
+___
+
 ### Requirements
-- ESPHOME Docker 2023.2.4
+- ESPHOME Docker 2023.5.0
 - Wemos D1 Mini
 - CC1101
-
 
 After Wemos D1 Mini + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ```yaml
 ## ---------------------------------------------------
-## WMBUS DEVICE D1MINI WEMOS
+## WMBUS DEVICE D1MINI WEMOS --> CC1101
 ## ---------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13 #D7  Attached to Hardware SPI controller MOSI
-  miso_pin: GPIO12 #D6  Attached to Hardware SPI controller MISO
-  clk_pin: GPIO14  #D5  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15   #D8  Controls Boot Mode; Attached to Hardware SPI controller CS
-  gdo0_pin: GPIO04 #D2  High Impedance
-  gdo2_pin: GPIO05 #D1  High Impedance
+  mosi_pin: GPIO13  #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
 ```
-<hr>
 
-[Wemos D1 Mini + CC1101 configuration see](wmbus-minid1.yaml)
+___
 
-![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
+Configuration: [Final Version for Wemos D1 Mini + CC1101 configuration](wm-d1mini.yaml)
 
+## Supported Meter types:
+
+Currently supported meter types (wmbus version 2.0.5):
+
+- amiplus
+- apator08
+- apator162
+- apatoreitn
+- bmeters
+- elf
+- evo868
+- fhkvdataiii
+- hydrocalm3
+- itron
+- izar
+- mkradio3
+- mkradio4
+- qheat
+- qwater
+- sharky774
+- topaseskr
+- ultrimis
+- unismart
+- vario451
+
+see: <https://github.com/SzczepanLeon/esphome-components>
 
 ## Workaraound and tips
 
-- Find the watermeterID
-
-  To find the `watermeterId ` you can set the watermeterId to 0 and
-  the log_level: "VERBOSE" to find your meterId.
-
-	```yaml
-	meter_id: 0 # !secret watermeterId see line 12 wmbus-minid1.yaml
-	```
-
-- External components
-
-  Use latest ESPHome with external components from Szczepan's esphome custom components, add this to your .yaml definition:
-
-  ```
-    external_components:
-     - source: github://SzczepanLeon/esphome-components@main
-  ```
-
-  To use the local components from Szczepan's esphome custom components   use:
-
-  ```yaml
-	external_components:
-	  - source:
-	      type: local
-	      path: custom_components
-	    components: [wmbus]
-  ```
+- **1st Step**: Find Watermeter ID
+  - Install [wm-d1mini-test.yaml](wm-d1mini-test.yaml)
+    To find the `watermeterId ` you can set the watermeterId to 0 and
+	 the log_level: "VERBOSE" to find your meterId.
+  -  see log messages to find your `watermeterID`
+  
+-  **2nd Step**: Edit secrets.yaml and edit the `watermeterID`
+  - Install [wm-d1mini.yaml](wm-d1mini.yaml)
+  - Check log messages 
+     ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
  
 <br>
+
+___
+
 
 ## Tools
 
@@ -138,83 +150,13 @@ echo "Run WEBGUI: ${CURRENTURL}:6052"
 ## Compile Info
 
 ```
-INFO Reading configuration /config/water-meter-izar.yaml...
+INFO Reading configuration /config/wm-d1mini-test.yaml...
+INFO Updating https://github.com/SzczepanLeon/esphome-components.git@main
 INFO Generating C++ source...
 INFO Compiling app...
-Processing water-meter-izar (board: d1_mini; framework: arduino; platform: platformio/espressif8266 @ 3.2.0)
+Processing water-meter-d1mini (board: d1_mini; framework: arduino; platform: platformio/espressif8266@3.2.0)
 --------------------------------------------------------------------------------
-Platform Manager: Installing platformio/espressif8266 @ 3.2.0
-INFO Installing platformio/espressif8266 @ 3.2.0
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Platform Manager: espressif8266@3.2.0 has been installed!
-INFO espressif8266@3.2.0 has been installed!
-Tool Manager: Installing platformio/toolchain-xtensa @ ~2.100300.0
-INFO Installing platformio/toolchain-xtensa @ ~2.100300.0
-Downloading  [####################################]  100%          
-Unpacking  [####################################]  100%          
-Tool Manager: toolchain-xtensa@2.100300.220621 has been installed!
-INFO toolchain-xtensa@2.100300.220621 has been installed!
-Tool Manager: Installing platformio/framework-arduinoespressif8266 @ ~3.30002.0
-INFO Installing platformio/framework-arduinoespressif8266 @ ~3.30002.0
-Downloading  [####################################]  100%          
-Unpacking  [####################################]  100%          
-Tool Manager: framework-arduinoespressif8266@3.30002.0 has been installed!
-INFO framework-arduinoespressif8266@3.30002.0 has been installed!
-Tool Manager: Installing platformio/tool-esptool @ <2
-INFO Installing platformio/tool-esptool @ <2
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Tool Manager: tool-esptool@1.413.0 has been installed!
-INFO tool-esptool@1.413.0 has been installed!
-Tool Manager: Installing platformio/tool-esptoolpy @ ~1.30000.0
-INFO Installing platformio/tool-esptoolpy @ ~1.30000.0
-Downloading  [####################################]  100%          
-Unpacking  [####################################]  100%
-Tool Manager: tool-esptoolpy@1.30000.201119 has been installed!
-INFO tool-esptoolpy@1.30000.201119 has been installed!
-Library Manager: Installing ottowinter/ESPAsyncTCP-esphome @ 1.2.3
-INFO Installing ottowinter/ESPAsyncTCP-esphome @ 1.2.3
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Library Manager: ESPAsyncTCP-esphome@1.2.3 has been installed!
-INFO ESPAsyncTCP-esphome@1.2.3 has been installed!
-Library Manager: Installing esphome/ESPAsyncWebServer-esphome @ 2.1.0
-INFO Installing esphome/ESPAsyncWebServer-esphome @ 2.1.0
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Library Manager: ESPAsyncWebServer-esphome@2.1.0 has been installed!
-INFO ESPAsyncWebServer-esphome@2.1.0 has been installed!
-Library Manager: Resolving dependencies...
-INFO Resolving dependencies...
-Library Manager: Installing bblanchon/ArduinoJson @ 6.18.5
-INFO Installing bblanchon/ArduinoJson @ 6.18.5
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Library Manager: ArduinoJson@6.18.5 has been installed!
-INFO ArduinoJson@6.18.5 has been installed!
-Library Manager: Installing git+https://github.com/SzczepanLeon/wMbus-lib @ 0.9.15
-INFO Installing git+https://github.com/SzczepanLeon/wMbus-lib @ 0.9.15
-git version 2.30.2
-Cloning into '/config/.esphome/platformio/cache/tmp/pkg-installing-_923diyc'...
-Library Manager: wMbus-lib@0.9.15+sha.25dfb37 has been installed!
-INFO wMbus-lib@0.9.15+sha.25dfb37 has been installed!
-Library Manager: Resolving dependencies...
-INFO Resolving dependencies...
-Library Manager: Installing lsatan/SmartRC-CC1101-Driver-Lib @ ^2.5.7
-INFO Installing lsatan/SmartRC-CC1101-Driver-Lib @ ^2.5.7
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Library Manager: SmartRC-CC1101-Driver-Lib@2.5.7 has been installed!
-INFO SmartRC-CC1101-Driver-Lib@2.5.7 has been installed!
-Tool Manager: Installing platformio/tool-scons @ ~4.40400.0
-INFO Installing platformio/tool-scons @ ~4.40400.0
-Downloading  [####################################]  100%
-Unpacking  [####################################]  100%
-Tool Manager: tool-scons@4.40400.0 has been installed!
-INFO tool-scons@4.40400.0 has been installed!
 HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
-LDF: Library Dependency Finder -> https://bit.ly/configure-pio-ldf
 Dependency Graph
 |-- ESPAsyncTCP-esphome @ 1.2.3
 |-- ESPAsyncWebServer-esphome @ 2.1.0
@@ -225,20 +167,18 @@ Dependency Graph
 |-- ESP8266WiFi @ 1.0
 |-- ESP8266mDNS @ 1.2
 |-- ArduinoJson @ 6.18.5
-|-- ESP8266HTTPClient @ 1.2
-|-- wMbus-lib @ 0.9.15+sha.25dfb37
+|-- wMbus-lib @ 1.1.1+sha.da2558f
 |   |-- SPI @ 1.0
 |   |-- SmartRC-CC1101-Driver-Lib @ 2.5.7
-Compiling .pioenvs/water-meter-izar/src/esphome/components....
-
-======================== [SUCCESS] Took 203.35 seconds ========================
+....
+Compiling .pioenvs/water-meter-d1mini/src/main.cpp.o
+Linking .pioenvs/water-meter-d1mini/firmware.elf
+RAM:   [=====     ]  45.4% (used 37232 bytes from 81920 bytes)
+Flash: [=====     ]  47.9% (used 500785 bytes from 1044464 bytes)
+Building .pioenvs/water-meter-d1mini/firmware.bin
+esp8266_copy_factory_bin([".pioenvs/water-meter-d1mini/firmware.bin"], [".pioenvs/water-meter-d1mini/firmware.elf"])
+========================= [SUCCESS] Took 12.98 seconds =========================
 INFO Successfully compiled program.
-INFO Uploading /config/./build/water-meter-izar/.pioenvs/water-meter-izar/firmware.bin (627776 bytes)
-INFO Compressed to 443249 bytes
-Uploading: [============================================================] 100% Done...
-INFO Waiting for result...
-INFO OTA successful
-INFO Successfully uploaded program.
 ```
 
 ![ESPHOME](docs/esphome.png)
@@ -278,7 +218,7 @@ inserted into a database or stored in a log file
 This service is identical to running locally: wmbusmeters --analyze=<driver>:<key> <hex> 
 
 ### Testcase:
-https://wmbusmeters.org/analyze/1944A511780743434418A241150013CE0766324C94EE48EEF6C8
+<https://wmbusmeters.org/analyze/1944A511780743434418A241150013CE0766324C94EE48EEF6C8>
 
 ### Result
 
@@ -369,6 +309,6 @@ The flashing process is done using the esptool library by espressif.
 
 ### Informations
   
-- https://github.com/maciekn/izar-wmbus-esp 
-- https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+- <https://github.com/maciekn/izar-wmbus-esp> 
+- <https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader>
 

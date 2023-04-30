@@ -20,6 +20,8 @@
 
 ![Wemos D1 Mini + CC1101](docs/esp32_cc1101.png)
 
+____
+
 ### Requirements
 - ESPHOME Docker v2023.5.0-dev
 - ESP32 240MHz, 520KB RAM, 4MB Flash (ESP32 AZ-DELIVERY-DEVKIT-V4)
@@ -30,10 +32,14 @@ After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ```yaml
 ## ---------------------------------------------------
+## WMBUS CC1101 --> ESP32
+## ---------------------------------------------------
 ##
 ##                                        | 3.3V
 ##    - - - - - - - - - - - - - - - - - - x
-##   | 5v           ESP32                 | ANT
+##   |                                    |
+## - | 5v           ESP32                 | -- ANT
+##   |                                    |
 ##    - - - - x - x x x x x x - - - - - x x
 ##                | | | | |             | |
 ##                | | | | |             | | GND
@@ -44,67 +50,51 @@ After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 ##                        MISO
 ## -------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23   ## SI     brown
-  miso_pin: GPIO19   ## SO     green
-  clk_pin: GPIO18    ## SCLK   violet
-  cs_pin: GPIO05     ## CSN    orange
-  gdo0_pin: GPIO16   ## GD00   yellow(rx)
-  gdo2_pin: GPIO17   ## GD02   white (tx)
+  mosi_pin: GPIO23    ## SI:   braun
+  miso_pin: GPIO19    ## SO:   grün
+  clk_pin: GPIO18     ## SCLK: violett
+  cs_pin: GPIO05      ## CSN:  orange
+  gdo0_pin: GPIO16    ## GD00: gelb (rx)
+  gdo2_pin: GPIO17    ## GD02: weiss (tx)
+  
+# https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/img/Esp32_CC1101.png
 ```
 
-<hr>
-
-[ESP32 + CC1101 configuration see](wmbus-esp32.yaml)
+Configuration see: [ESP32 + CC1101 configuration see](wm-esp32.yaml)
 
 ![ESPHOME water-meter-esp](docs/eshome_webui.png)
+
+____
 
 ### Used components
 
  - wmbus lib (SzczepanLeon)
-    https://github.com/SzczepanLeon/esphome-components
+    <https://github.com/SzczepanLeon/esphome-components>
 
  - optional backup (zdzichu6969)
-   https://github.com/zdzichu6969/esphome-components
+   <https://github.com/zdzichu6969/esphome-components>
 
  - optional syslog (TheStaticTurtle)
-   https://github.com/TheStaticTurtle/esphome_syslog
+   <https://github.com/TheStaticTurtle/esphome_syslog>
+
+<br>
 
 ## Workaraound and tips
 
-- Find the watermeterID
-
-  To find the `watermeterId ` you can set the watermeterId to 0 and
-  the log_level: "VERBOSE" to find your meterId.
-
-	```yaml
-	meter_id: 0 # !secret watermeterId see line 12 wmbus-minid1.yaml
-	```
-
-- External components
-
-  Use latest ESPHome with external components from Szczepan's esphome custom components, add this to your .yaml definition:
-
-  ```
-    external_components:
-     - source: github://SzczepanLeon/esphome-components@main
-  ```
-
-  To use the latest components from Szczepan's esphome custom components:
-
-  ```yaml
-	  # uses the latest version from SzczepanLeon
-	  #
-	  # You can make ESPHome check the repository every time by setting this option to 0s
-	  - source: github://SzczepanLeon/esphome-components@main
-	    refresh: 0s
-	    components: [wmbus]
-  ```
-
-  see: `https://github.com/SzczepanLeon/esphome-components`
-
+- **1st Step**: Find Watermeter ID
+  - Install [wm-esp32_test.yaml](wm-esp32_test.yaml)
+    To find the `watermeterId ` you can set the watermeterId to 0 and
+	 the log_level: "VERBOSE" to find your meterId.
+  -  see log messages to find your `watermeterID`
+  
+-  **2nd Step**: Edit the `secrets.yaml` and change the `watermeterID`
+  - Install [wm-esp32.yaml](wm-esp32.yaml)
+  - Check log messages 
+     ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
+ 
   <br>
 
-  Be shure that you use the latest version for the build:
+  > Be shure that you use the latest version for the build:
   Use **`Clean build files`** before you install the selected esp-home device version.
 
 <br>
@@ -290,7 +280,7 @@ inserted into a database or stored in a log file
 This service is identical to running locally: wmbusmeters --analyze=<driver>:<key> <hex>
 
 ### Testcase:
-https://wmbusmeters.org/analyze/1944A511780743434418A241150013CE0766324C94EE48EEF6C8
+<https://wmbusmeters.org/analyze/1944A511780743434418A241150013CE0766324C94EE48EEF6C8>
 
 ### Result
 
@@ -355,7 +345,7 @@ data:
 
 ### WMBUS - Telegram Decoder
 Analyze wmbus or mbus telegrams using wmbusmeters.
-Source code https://github.com/weetmuts/wmbusmeters/
+Source code <https://github.com/weetmuts/wmbusmeters/>
 
 The wmbusmeters software acquires utility meter readings through wmbus or plain mbus.
 The readings can then be published using MQTT, curled to a REST api,
@@ -386,6 +376,8 @@ The flashing process is done using the esptool library by espressif.
 
 ### Informations
 
-- https://github.com/maciekn/izar-wmbus-esp
-- https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+- <https://github.com/maciekn/izar-wmbus-esp>
 
+- <https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader>
+
+- <https://github.com/LSatan/SmartRC-CC1101-Driver-Lib>

@@ -1,0 +1,282 @@
+## ------------------------------------------------------------------
+## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
+##
+## this version shows all watermeters. Use this for the first test
+##
+## Remark:
+##   Some Wemos D1 Mini has memory problems, for me one is working
+##   another one (same order) reboots with JSON Errors.
+##   ESP8266-12F Mini NodeMcu mit ESP8266-12F
+## ------------------------------------------------------------------
+substitutions:
+  device_name_short: "water-meter-d1mini"
+  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
+  appversion: "2.0.5"
+  domain: !secret domain
+  update_interval: 60s
+
+  ## all watermeters watch logmessages to find the watermeterid in hex
+  wmid: "0"   # !secret watermeterId
+
+  # wmid: !secret watermeterId ## my watermeter
+  log_level: "VERBOSE"
+
+# ----------------------------------------------------------------
+# HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
+# ----------------------------------------------------------------
+esp8266:
+  board: d1_mini
+  restore_from_flash: true
+
+esphome:
+  name: ${device_name_short}
+  comment: ${device_description}
+  project:
+    name: "OE9psj.wmbus-minid1"
+    version: ${appversion}
+  build_path: ./build/${device_name_short}
+  on_boot:
+    # At this priority, pretty much everything should already be initialized.
+    priority: -100.0
+    then:
+      - globals.set:
+          id: boot_counter
+          value: !lambda "return id(boot_counter)+=1;"
+      - logger.log:
+          level: INFO
+          tag: "BOOT"
+          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+  on_shutdown:
+    priority: 700
+    then:
+      - logger.log:
+          level: INFO
+          tag: "BOOT"
+          format: "BOOTMESSAGE:${device_name_short} is down!"
+
+## ----------------------------------------------------------------
+## External components
+## ----------------------------------------------------------------
+external_components:
+  # uses the latest version from SzczepanLeon
+  # https://github.com/SzczepanLeon/esphome-components
+  # You can make ESPHome check the repository every time by setting this option to 0s
+  - source: github://SzczepanLeon/esphome-components@main
+    refresh: 0s
+    components: [wmbus]
+
+  # use local component from
+  # enable this if you have a syslog server
+  # https://github.com/TheStaticTurtle/esphome_syslog
+  # - source:
+  #     type: local
+  #     path: custom_components
+  #   components: [syslog]
+
+
+## ---------------------------------------------------
+## syslog service
+## ---------------------------------------------------
+# syslog:
+#   ip_address: !secret syslog_server
+#   port: !secret syslog_port
+#   min_level: DEBUG
+#   enable_logger: true
+
+
+## ----------------------------------------------------------------
+## Global variables
+## ----------------------------------------------------------------
+globals:
+  - id: boot_counter
+    type: int
+    restore_value: yes
+    initial_value: "0"
+  - id: last_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+## ---------------------------------------------------
+## WIFI Settings 3 wifis
+## ---------------------------------------------------
+wifi:
+  networks:
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 0
+    - ssid: !secret ssid1_name
+      password: !secret ssid1_pswd
+      priority: 1
+    - ssid: !secret ssid2_name
+      password: !secret ssid2_pswd
+      priority: 2
+  domain: !secret domain
+
+# The captive portal component in ESPHome is a fallback mechanism for
+# when connecting to the configured WiFi fails.
+captive_portal:
+
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: 0 #disable logging over uart
+
+## ---------------------------------------------------
+## OTA Updates
+## ---------------------------------------------------
+ota:
+  password: !secret ota_pswd
+  on_error:
+    then:
+      - logger.log:
+          format: "OTA update error %d"
+          args: ["x"]
+
+## ---------------------------------------------------
+## LOCAL WEBSERVER Settings
+## ---------------------------------------------------
+web_server:
+  port: 80
+  version: 2
+  local: true
+
+## ---------------------------------------------------
+# Enable Home Assistant API
+## ---------------------------------------------------
+api:
+  id: espapiwm2_d1
+  port: 6053
+  reboot_timeout: 0s
+
+## ---------------------------------------------------
+## SNTP Time server
+## ---------------------------------------------------
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers:
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+    on_time_sync:
+      then:
+        - logger.log: "Synchronized sntp clock"
+
+## ---------------------------------------------------
+## WMBUS DEVICE D1MINI WEMOS --> CC1101
+## ---------------------------------------------------
+wmbus:
+  mosi_pin: GPIO13  #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+
+## ---------------------------------------------------
+## SWITCHES
+## ---------------------------------------------------
+switch:
+  # reset boot counter value
+  - platform: template
+    name: Reset Boot Counter
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: INFO
+            tag: "BOOT"
+            format: "${device_name_short} reset boot counter o.k!"
+  # restart device
+  - platform: restart
+    name: "Restart"
+    id: restart_switch
+  # save device boot (develop only)
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  # reset the device to factory reset (develop only)
+  - platform: factory_reset
+    name: Restart with Factory Default Settings
+
+## ---------------------------------------------------
+## SENSORS
+## ---------------------------------------------------
+sensor:
+  # water display
+  - platform: wmbus
+    # Meter ID (usually from sticker). Can be specified as decimal or hex.
+    # only hex is working for my watermeter !
+    # see: https://github.com/SzczepanLeon/esphome-components/issues/6
+    # edit watermeterid in the secrets file
+    meter_id: ${wmid}
+    type: izar
+    ## settings to add the watermeterid to the lqi, rssi and total_water_m3
+    add_prefix: true
+    # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
+    # Note that a lower value indicates a better link.
+    # The LQI of a received packet will be bad (higher number) when there is lot of interference.
+    lqi:
+      id: wmbus_cc1101_lqi
+      name: "Wlan CC1101 LQI"
+      entity_category: "diagnostic"
+    # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
+    # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
+    # RSSI stands for received signal strength (power) indication (in dBm).
+    # A higher value indicates higher power.
+    rssi:
+      id: wmbus_cc1101_rssi
+    total_water_m3:
+      name: "Wasseruhr Anzeige"
+      id: "waterdisplay"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      on_value:
+        then:
+          - lambda: |-
+              ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
+              id(last_value)=id(waterdisplay).state;
+
+  # device boot counter
+  - platform: template
+    name: Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: |-
+      return (id(boot_counter));
+
+  # Wifi quality RSSI
+  # only internal used (memory bug D1MINI ??)
+  - platform: wifi_signal
+    name: Wlan Signal
+    id: wifi_signal_db
+    update_interval: 60s
+    internal: true
+    entity_category: "diagnostic"
+
+  # Wifi quality RSSI in percentage
+  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "Wlan ESP32 Qualität"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+
+  # CC1101 quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy
+    source_id: wmbus_cc1101_rssi
+    name: "Wlan CC1101 RSSI"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"

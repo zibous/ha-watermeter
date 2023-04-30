@@ -9,7 +9,7 @@
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
-[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.2.4&color=green&logo=esphome
+[esphome-release-shield]: https://img.shields.io/static/v1?label=ESPHome&message=2023.5.0&color=green&logo=esphome
 [esphome-release]: https://GitHub.com/esphome/esphome/releases/
 
 [open-in-vscode-shield]: https://img.shields.io/static/v1?label=+&message=Open+in+VSCode&color=blue&logo=visualstudiocode
@@ -69,23 +69,30 @@ The ESP32 variant works w/o theese errors.
 
 ### Meter types:
 
-Currently supported meter types:
+Currently supported meter types (wmbus version 2.0.5):
 
-  - amiplus
-  - apator08
-  - apator162
-  - bmeters
-  - elf
-  - evo868
-  - hydrocalm3
-  - izar
-  - mkradio3
-  - mkradio4
-  - ultrimis
-  - unismart
-  - fhkvdataiii
+- amiplus
+- apator08
+- apator162
+- apatoreitn
+- bmeters
+- elf
+- evo868
+- fhkvdataiii
+- hydrocalm3
+- itron
+- izar
+- mkradio3
+- mkradio4
+- qheat
+- qwater
+- sharky774
+- topaseskr
+- ultrimis
+- unismart
+- vario451
 
-  see: `https://github.com/SzczepanLeon/esphome-components`
+see: <https://github.com/SzczepanLeon/esphome-components>
 
 ## Installation / Details
 [ESPHome - ESP32 (v4) + CC1101](./esphome/README.md)
@@ -99,7 +106,7 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 - Battery (remaining_battery_life_y)
 - Periode (transmit_period_s)
 
-> see: https://github.com/weetmuts/wmbusmeters/discussions/835
+> see: <https://github.com/weetmuts/wmbusmeters/discussions/835>
 
 
 ## Result
@@ -119,23 +126,20 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 
 ### For more information see:
 
-```
-https://github.com/weetmuts/wmbusmeters
+- <https://github.com/weetmuts/wmbusmeters>
 
-https://github.com/maciekn/izar-wmbus-esp
-https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader
+- <https://github.com/maciekn/izar-wmbus-esp>
+- <https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader>
 
-https://github.com/SzczepanLeon/esphome-components
+- <https://github.com/SzczepanLeon/esphome-components>
 
-https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr
-https://github.com/xaelsouth/rtl-wmbus
-https://github.com/ZeWaren/izar-prios-smart-meter-collector
+- <https://osmocom.org/projects/rtl-sdr/wiki/Rtl-sdr>
+- <https://github.com/xaelsouth/rtl-wmbus>
+- <https://github.com/ZeWaren/izar-prios-smart-meter-collector>
 
-## DVB-T receiver or Nano CUL Adapter
-https://www.amazon.de/Tragbarer-Mini-Digitaler-TV-Stock-Unterst%C3%BCtzung-SDR-Stimmer-Empf%C3%A4nger/dp/B013Q94CT6/ref=sr_1_2?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3F9GCJKEPPNO7&dchild=1&keywords=dvbt+dongle&qid=1594904776&sprefix=dvbt+dong%2Caps%2C184&sr=8-2
-https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/
+#### DVB-T receiver or Nano CUL Adapter
+- <https://www.amazon.de/Tragbarer-Mini-Digitaler-TV-Stock-Unterst%C3%BCtzung-SDR-Stimmer-Empf%C3%A4nger/dp/B013Q94CT6/ref=sr_1_2?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3F9GCJKEPPNO7&dchild=1&keywords=dvbt+dongle&qid=1594904776&sprefix=dvbt+dong%2Caps%2C184&sr=8-2>
+<https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/>
 
-https://www.diehl.com/metering/en/portfolio/software-system-components/software-system-components-products/software-system-components-product/izar-radio-compact-hall/74843/
-
-```
+- <https://www.diehl.com/metering/en/portfolio/software-system-components/software-system-components-products/software-system-components-product/izar-radio-compact-hall/74843/>
 

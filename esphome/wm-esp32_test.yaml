@@ -1,0 +1,353 @@
+---
+## ---------------------------------------------------------------------------
+## WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
+##
+## this version shows all watermeters. Use this for the first test
+##
+## ---------------------------------------------------------------------------
+substitutions:
+  ## device settings
+  device_name_short: "water-meter-esp"
+  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
+  projectname: "OE9psj.wmbus-esp"
+  appversion: "2.0.5"
+  domain: !secret domain
+  update_interval: 60s
+
+  ## all watermeters   wmid: "0"   
+  ## watch logmessages to find the watermeterid in hex
+  wmid: "0"   
+
+  # wmid: !secret watermeterId ## my watermeter
+  log_level: "VERBOSE"
+
+  ## data service
+  service_url: !secret service_host
+  service_enabled: "false"
+  service: "izar.watermeter"
+
+  ## internal flag for optional sensors
+  use_notall: "true"
+
+## ----------------------------------------------------------------
+## APPLICATION ESPHOME
+## ----------------------------------------------------------------
+esphome:
+  name: ${device_name_short}
+  comment: ${device_description}
+  project:
+    name: ${projectname}
+    version: ${appversion}
+  build_path: ./build/${device_name_short}
+  on_boot:
+    # At this priority, pretty much everything should already be initialized.
+    priority: -100.0
+    then:
+      - globals.set:
+          id: boot_counter
+          value: !lambda "return id(boot_counter)+=1;"
+      - logger.log:
+          level: INFO
+          tag: "BOOT"
+          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+  on_shutdown:
+    priority: 700
+    then:
+      - logger.log:
+          level: INFO
+          tag: "BOOT"
+          format: "BOOTMESSAGE:${device_name_short} is down!"
+
+## ----------------------------------------------------------------
+## HARDWARE az-delivery-devkit-v4
+## ----------------------------------------------------------------
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: arduino
+
+## ----------------------------------------------------------------
+## External components
+## ----------------------------------------------------------------
+external_components:
+  # uses the latest version from SzczepanLeon
+  # https://github.com/SzczepanLeon/esphome-components
+  # You can make ESPHome check the repository every time by setting this option to 0s
+  - source: github://SzczepanLeon/esphome-components@main
+    refresh: 0s
+    components: [wmbus]
+
+  # use local component from
+  # https://github.com/TheStaticTurtle/esphome_syslog
+  # - source:
+  #     type: local
+  #     path: custom_components
+  #   components: [syslog]
+
+  # use local component from
+  # https://github.com/ssieb/custom_components/tree/master/components/heapmon
+  # - source:
+  #     type: local
+  #     path: custom_components
+  #   components: [heapmon]
+
+## ---------------------------------------------------
+## syslog service
+## ---------------------------------------------------
+syslog:
+  ip_address: !secret syslog_server
+  port: !secret syslog_port
+  min_level: DEBUG
+  enable_logger: true
+
+## ----------------------------------------------------------------
+## Global variables
+## ----------------------------------------------------------------
+globals:
+
+  - id: boot_counter
+    type: int
+    restore_value: yes
+    initial_value: "0"
+
+  - id: int_default
+    type: int
+    restore_value: no
+    initial_value: "0"
+
+  - id: last_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+## ---------------------------------------------------
+## WIFI Settings 3 wifis
+## ---------------------------------------------------
+wifi:
+  networks:
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 0
+    - ssid: !secret ssid1_name
+      password: !secret ssid1_pswd
+      priority: 1
+    - ssid: !secret ssid2_name
+      password: !secret ssid2_pswd
+      priority: 2
+  domain: !secret domain
+
+## ---------------------------------------------------
+##  The captive portal component in ESPHome is a
+## fallback mechanism for when connecting to the
+## configured WiFi fails.
+## ---------------------------------------------------
+captive_portal:
+
+## ---------------------------------------------------
+## LOGGER
+## ---------------------------------------------------
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: 0 #disable logging over uart
+
+## ---------------------------------------------------
+## OTA Updates
+## ---------------------------------------------------
+ota:
+  password: !secret ota_pswd
+  on_error:
+    then:
+      - logger.log:
+          level: INFO
+          format: "OTA update error %d"
+          args: ["x"]
+
+## ---------------------------------------------------
+## LOCAL WEBSERVER - local settings - no internet
+## Include supporting javascript locally allowing
+## it to work without internet access.
+## local: true  ## without internet access.
+## local: false ## with internet access.
+## ---------------------------------------------------
+web_server:
+  port: 80
+  version: 2
+  local: true
+
+## ---------------------------------------------------
+# Enable Home Assistant API
+## ---------------------------------------------------
+api:
+  id: espapi_wmbus_esp32
+  port: 6053
+  reboot_timeout: 0s
+
+## ---------------------------------------------------
+## SNTP Time server
+## ---------------------------------------------------
+time:
+  - platform: sntp
+    id: sntp_time
+    timezone: Europe/Berlin
+    servers:
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+
+    on_time_sync:
+      then:
+        - logger.log: "Synchronized sntp clock"
+
+
+## ---------------------------------------------------
+## WMBUS CC1101 --> ESP32
+## https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/img/Esp32_CC1101.png
+## ---------------------------------------------------
+##
+##                                        | 3.3V
+##    - - - - - - - - - - - - - - - - - - x
+##   |                                    |
+## - | 5v           ESP32                 | -- ANT
+##   |                                    |
+##    - - - - x - x x x x x x - - - - - x x
+##                | | | | |             | |
+##                | | | | |             | | GND
+##           GD00 | | | | |             |
+##               GD02                  M0SI
+##                   CSN
+##                      SCK
+##                        MISO
+## -------------------------------------------------
+wmbus:
+  mosi_pin: GPIO23    ## SI:   braun
+  miso_pin: GPIO19    ## SO:   grün
+  clk_pin: GPIO18     ## SCLK: violett
+  cs_pin: GPIO05      ## CSN:  orange
+  gdo0_pin: GPIO16    ## GD00: gelb (rx)
+  gdo2_pin: GPIO17    ## GD02: weiss (tx)
+
+
+## ---------------------------------------------------
+## SWITCHES
+## ---------------------------------------------------
+switch:
+  # reset boot counter value
+  - platform: template
+    name: Reset Boot Counter
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(boot_counter) = id(int_default);
+            id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: INFO
+            tag: "BOOT"
+            format: "${device_name_short} reset boot counter o.k!"
+
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+
+  - platform: restart
+    name: "Restart"
+    id: restart_switch
+
+  - platform: factory_reset
+    name: Restart with Factory Default Settings
+
+## ---------------------------------------------------
+## SENSORS
+## ---------------------------------------------------
+sensor:
+  # water display
+  - platform: wmbus
+    # Meter ID (usually from sticker). Can be specified as decimal or hex.
+    # only hex is working for my watermeter !
+    # see: https://github.com/SzczepanLeon/esphome-components/issues/6
+    # edit watermeterid in the secrets file
+    meter_id: ${wmid}
+    type: izar
+    add_prefix: true
+    # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
+    # Note that a lower value indicates a better link.
+    # The LQI of a received packet will be bad (higher number) when there is lot of interference.
+    lqi:
+      id: wmbus_cc1101_lqi
+      name: "Watermeter CC1101 LQI"
+      entity_category: "diagnostic"
+    # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
+    # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
+    # RSSI stands for received signal strength (power) indication (in dBm).
+    # A higher value indicates higher power.
+    rssi:
+      id: wmbus_cc1101_rssi
+    # reports the watermeter display value
+    total_water_m3:
+      id: "waterdisplay"
+      name: "Watermeter Display"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      # Send the value periodically with the specified time interval.
+      # If the sensor value changes during the interval the interval will not reset.
+      # The last value of the sensor will be sent. 60s means, that every minute the
+      # last state will be published.
+      filters:
+        - heartbeat: 60s
+      # update and calulatet all watermeter data values
+      on_value:
+        then:
+          - lambda: |-
+              ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
+              id(last_value)=id(waterdisplay).state;
+
+
+  # device boot counter
+  - platform: template
+    name: Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: |-
+      return (id(boot_counter));
+
+  # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
+  - platform: wifi_signal
+    name: Wlan Signal
+    id: wifi_signal_db
+    update_interval: 60s
+    internal: true
+    entity_category: "diagnostic"
+
+  # Wifi quality RSSI in percentage
+  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "Watermeter ESP32 WLAN Qualität"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+
+  # CC1101 quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy
+    source_id: wmbus_cc1101_rssi
+    name: "Watermeter CC1101 RSSI"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "Signal %"
+    entity_category: "diagnostic"
+
+  # Shows free space ESP.getFreeHeap
+  # used only for developers, heapmon component must be installed
+  # only for logging
+  # - platform: heapmon
+  #   id: heapspace
+  #   internal: true
+  #   name: "Free Space"
+  #   state_class: "measurement"
+  #   entity_category: "diagnostic"
+
