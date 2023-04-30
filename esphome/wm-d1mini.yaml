@@ -6,7 +6,8 @@
 ##         2. Using HTTP Post to service server
 ##         3. Using wmbusmeters i a pipe
 ##
-## this version shows all watermeters. Use this for the first test
+## this version shows the data for the selected watermeter
+## based on the watermeterid (secrets.yaml).
 ##
 ## Remark:
 ##   Some Wemos D1 Min has memory problems, for me one is working
