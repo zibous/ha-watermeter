@@ -137,9 +137,9 @@ Only the `total_m3` are currently decoded from the telegram. I am still looking 
 - <https://github.com/ZeWaren/izar-prios-smart-meter-collector>
 
 #### DVB-T receiver or Nano CUL Adapter
-- <https://www.amazon.de/Tragbarer-Mini-Digitaler-TV-Stock-Unterst%C3%BCtzung-SDR-Stimmer-Empf%C3%A4nger/dp/B013Q94CT6/ref=sr_1_2?__mk_de_DE=%C3%85M%C3%85%C5%BD%C3%95%C3%91&crid=3F9GCJKEPPNO7&dchild=1&keywords=dvbt+dongle&qid=1594904776&sprefix=dvbt+dong%2Caps%2C184&sr=8-2>
+- DVB-T receiver: <https://amzn.eu/d/8AsinRu>
 
-- <https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/>
+- nano-cul: <https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/>
 
-- <https://www.diehl.com/metering/en/portfolio/software-system-components/software-system-components-products/software-system-components-product/izar-radio-compact-hall/74843/>
+- diehl watermeter: <https://www.diehl.com/metering/en/portfolio/software-system-components/software-system-components-products/software-system-components-product/izar-radio-compact-hall/74843/>
 
