@@ -1,6 +1,7 @@
 # Wemos D1 Mini + CC1101 (esphome)
 
 [![License][license-shield]][license]
+[![ESP32 Release](https://img.shields.io/github/v/release/zibous/ha-watermeter.svg?style=flat-square)](https://github.com/zibous/ha-watermeter/releases)
 [![ESPHome release][esphome-release-shield]][esphome-release]
 [![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 [![Support author][donate-me-shield]][donate-me]
