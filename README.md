@@ -43,12 +43,12 @@ both D1MINI are working.  It looks like the 2nd D1MINI has a memory problem.
 
 |  Device | Remarks   | State  | 
 |---------|-----------|--------|
-| **Wemos D1 Mini** ![d1Mini-wemos](./esphome/docs/d1Mini-wemos.png) |  CC1101, board: d1_mini   |  ✔︎ works |
+| **Wemos D1 Mini** ![d1Mini-wemos](./esphome/docs/d1Mini-wemos.png) |  CC1101, board: d1_mini   |  ✕ JSON Error, Software/System restart after 12h |
 | **Wemos D1 Mini Board** ![d1mini-esp8266MOD-12F](./esphome/docs/d1mini-esp8266MOD-12F.png) |  CC1101, board: esp12e (board: d1_mini )   |  ✕ JSON Error and keeps rebooting, can'nt use this !      |
 | **ESP32 Dev Kit C V4 NodeMCU** ![d1mini-esp8266MOD-12F](./esphome/docs/az-delivery-devkit-v4.png)   |  CC1101, board: az-delivery-devkit-v4  |  ✔︎ The ESP32 variant works w/o theese errors.      |
 
-
-see: <https://github.com/esphome/issues/issues/4472>
+### Memory Usage D1 Mini
+![memory_usage](https://user-images.githubusercontent.com/30198737/235585457-895bb25f-47a6-4901-a403-96a115caac3d.png)
 
 
 <br>
