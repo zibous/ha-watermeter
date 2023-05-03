@@ -26,16 +26,19 @@ void WMBusComponent::setup() {
   this->add_driver(new Apator162());
   this->add_driver(new ApatorEITN());
   this->add_driver(new Bmeters());
+  this->add_driver(new Compact5());
   this->add_driver(new Elf());
   this->add_driver(new Evo868());
   this->add_driver(new FhkvdataIII());
   this->add_driver(new Hydrocalm3());
+  this->add_driver(new Hydrus());
   this->add_driver(new Itron());
   this->add_driver(new Izar());
   this->add_driver(new Mkradio3());
   this->add_driver(new Mkradio4());
   this->add_driver(new Qheat());
   this->add_driver(new Qwater());
+  this->add_driver(new Sharky774());
   this->add_driver(new TopasESKR());
   this->add_driver(new Ultrimis());
   this->add_driver(new Unismart());
@@ -97,8 +100,6 @@ void WMBusComponent::loop() {
           this->wmbus_listeners_[meter_id]->sensors_["rssi"]->publish_state(mbus_data.rssi);
         }
         for (const auto &ele : mapValues.value()) {
-        }
-        for (const auto &ele : mapValues.value()) {
           if (this->wmbus_listeners_[meter_id]->sensors_.count(ele.first) > 0) {
             this->wmbus_listeners_[meter_id]->sensors_[ele.first]->publish_state(ele.second);
           }
@@ -115,7 +116,7 @@ void WMBusComponent::loop() {
         ESP_LOGE(TAG, "T : %s", not_ok_telegram.c_str());
       }
     }
-    else {
+    else if (this->log_unknown_) {
       ESP_LOGD(TAG, "Meter ID [0x%08X] RSSI: %d dBm LQI: %d Mode: %s not found in configuration T: %s",
                meter_id,
                mbus_data.rssi,
@@ -134,7 +135,7 @@ void WMBusComponent::loop() {
               case TRANSPORT_TCP:
                 {
                   if (this->tcp_client_.connect(client.ip.str().c_str(), client.port)) {
-                    // this->tcp_client_.write((const uint8_t *) this->mb_packet_, len_without_crc);
+                    this->tcp_client_.write((const uint8_t *) frame.data(), frame.size());
                     this->tcp_client_.stop();
                   }
                 }
@@ -142,7 +143,7 @@ void WMBusComponent::loop() {
               case TRANSPORT_UDP:
                 {
                   this->udp_client_.beginPacket(client.ip.str().c_str(), client.port);
-                  // this->udp_client_.write((const uint8_t *) this->mb_packet_, len_without_crc);
+                  this->udp_client_.write((const uint8_t *) frame.data(), frame.size());
                   this->udp_client_.endPacket();
                 }
                 break;
