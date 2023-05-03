@@ -1,53 +1,49 @@
 ---
 ## ------------------------------------------------------------------
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
 ## usage:  1. Using Homassistant API (discovery + devices)
-##         2. Using HTTP Post to service server
-##         3. Using wmbusmeters i a pipe
+##         2. Using Backup component
+##         3. Using Syslog component
 ##
-## this version shows the data for the selected watermeter
-## based on the watermeterid (secrets.yaml).
+## This version shows data from the defined watermeter and
+## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
-## Remark:
-##   Some Wemos D1 Min has memory problems, for me one is working
-##   another one (same order) reboots with JSON Errors.
-##   ESP8266-12F Mini NodeMcu mit ESP8266-12F
+## WEBUI:   http://water-meter-d1mini.local
+## REST:    curl -i http://water-meter-d1mini.local/text_sensor/watermeterdata
+## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
+## Backup:  http://water-meter.local/config.yaml
+##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+##
+##
 ## ------------------------------------------------------------------
 substitutions:
   device_name_short: "water-meter-d1mini"
-  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
-  update_interval: 60s
+  device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
+  projectname: "Diehl IZAR RC 868.Watermeter"
+  appversion: "2.0.6"
 
-  log_level: "DEBUG"
-  appversion: "2.0.5"
-
-  domain: !secret domain
-  service_url: !secret service_host
-  service_enabled: "false"
-  service: "izar.watermeter"
-
-  # additional sensors
-  disabled_addOns: "true"
+  # logger settings
+  log_level: "INFO"
 
 ## ----------------------------------------------------------------
-## HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ## ----------------------------------------------------------------
 esp8266:
   board: d1_mini
   restore_from_flash: true
 
+## ----------------------------------------------------------------
+## ESPHOME APPLICATION
+## ----------------------------------------------------------------
 esphome:
   name: ${device_name_short}
   comment: ${device_description}
   project:
-    name: "OE9psj.wmbus-minid1"
+    name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
-
-  # ----------------------------------------------------------------
-  # External components for wmbusmeter
-  # ----------------------------------------------------------------
   on_boot:
     # At this priority, pretty much everything should already be initialized.
     priority: -100.0
@@ -71,6 +67,7 @@ esphome:
 ## External components
 ## ----------------------------------------------------------------
 external_components:
+
   # uses the latest version from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
@@ -92,13 +89,6 @@ external_components:
   #     path: custom_components
   #   components: [syslog]
 
-  # use local component from
-  # https://github.com/ssieb/custom_components/tree/master/components/heapmon
-  # - source:
-  #     type: local
-  #     path: custom_components
-  #   components: [heapmon]
-
 ## ---------------------------------------------------
 ## syslog service
 ## ---------------------------------------------------
@@ -112,13 +102,11 @@ external_components:
 # Save your ESPHome device configuration in firmware and and
 # recover it if you lost source files.
 # ----------------------------------------------------------------
-# Just download it from http://water-meter-izar.local/config.yaml
 backup:
   auth:
     username: !secret web_username
     password: !secret web_password
   force_update: false
-
 
 ## ----------------------------------------------------------------
 ## Global variables
@@ -128,21 +116,6 @@ globals:
     type: int
     restore_value: yes
     initial_value: "0"
-
-  - id: int_default
-    type: int
-    restore_value: no
-    initial_value: "0"
-
-  - id: float_default
-    type: float
-    restore_value: no
-    initial_value: "0.00"
-
-  - id: m3toliter
-    type: float
-    initial_value: "1000.00"
-    restore_value: yes
 
   - id: last_value
     type: float
@@ -193,6 +166,7 @@ globals:
 ## WIFI Settings 3 wifis
 ## ---------------------------------------------------
 wifi:
+  id: wifi_d1mini
   networks:
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
@@ -209,6 +183,8 @@ wifi:
 ## The captive portal component in ESPHome is a
 ## fallback mechanism for when connecting to the
 ## configured WiFi fails.
+## you can manually override the WiFi settings
+## of the device
 ## ---------------------------------------------------
 captive_portal:
 
@@ -228,31 +204,28 @@ ota:
           format: "OTA update error %d"
           args: ["x"]
 
-## ----------------------------------------------------------------------
-## LOCAL WEBSERVER Settings, local settings - no internet
-## Include supporting javascript locally allowing it to work
-## without internet access.
-## local: true  ## without internet access.
-## local: false ## with internet access.
-## ----------------------------------------------------------------------
+## ---------------------------------------------------
+## LOCAL WEBSERVER, local settings - no internet
+## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
   local: true
 
 ## ---------------------------------------------------
-# Enable Home Assistant API
+## Enable Home Assistant API
 ## ---------------------------------------------------
-# Homeassistant service call:
-# service: esphome.water_meter_set_water_val
-# data:
-#  water_val_hour: 0.03
-#  water_val_day: 0.248
-#  water_val_yesterday: 0.178
-#  water_val_week: 0.248
-#  water_val_month: 1.94
-#  water_val_year: 14.256
-#  water_val_lastmonth: 9.59
+## Homeassistant service call:
+##
+## service: esphome.water_meter_set_water_val
+## data:
+##  water_val_hour: 0.03
+##  water_val_day: 0.248
+##  water_val_yesterday: 0.178
+##  water_val_week: 0.248
+##  water_val_month: 1.94
+##  water_val_year: 14.256
+##  water_val_lastmonth: 9.59
 ## ---------------------------------------------------
 api:
   id: espapiwm2_d1
@@ -370,7 +343,7 @@ api:
 ## ---------------------------------------------------
 time:
   - platform: sntp
-    id: sntp_time
+    id: time_sntp
     timezone: Europe/Berlin
     servers:
       - 0.at.pool.ntp.org
@@ -445,52 +418,6 @@ time:
           - logger.log: Reset value yearly, starting new year
 
 ## ---------------------------------------------------
-## Prepare for sending HTTP requests
-## ---------------------------------------------------
-http_request:
-  id: http_request_data
-  useragent: ${service}
-  timeout: 10s
-
-## ---------------------------------------------------
-## Post resultdata to the service url
-## ---------------------------------------------------
-script:
-  - id: post_device_state
-    then:
-      - if:
-          condition:
-            lambda: return "${service_enabled} =='true'";
-          then:
-            - logger.log: "Post new data to the ${service_url}${device_name_short}, service enabled: ${service_enabled}"
-            - http_request.post:
-                url: "${service_url}/${device_name_short}"
-                verify_ssl: false
-                headers:
-                  Content-Type: application/json
-                json: |-
-                  root["device"] = "${device_name_short}";
-                  root["waterdisplay"] = id(waterdisplay).state;
-                  root["current"] = id(id(watercurrent)).state;
-                  root["hour"] = id(waterhour).state;
-                  root["day"] = id(waterday).state;
-                  root["yesterday"] = id(wateryesterday).state;
-                  root["week"] = id(waterweek).state;
-                  root["month"] = id(watermonth).state;
-                  root["lastmonth"] = id(waterhour).state;
-                  root["year"] = id(wateryear).state;
-                  root["bootcounter"] = id(bootcounter).state;
-                  root["version"] = "${device_name_short} ${appversion}";
-                  root["time"] = id(sntp_time).now().strftime("%Y-%m-%d %H:%M:%S");
-                on_response:
-                  then:
-                    - lambda: |-
-                        if (status_code == 200) {
-                        } else {
-                            ESP_LOGI ("http_post", "HTTP POST failed");
-                        }
-
-## ---------------------------------------------------
 ## WMBUS DEVICE D1MINI WEMOS --> CC1101
 ## ---------------------------------------------------
 wmbus:
@@ -498,8 +425,11 @@ wmbus:
   miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
   clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
   cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  High Impedance !
-  gdo2_pin: GPIO04  #D2  High Impedance !
+  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+
+  # log_unknown (Optional): Show telegrams from not configured meters in log.
+  log_unknown: False
 
   ## ---------------------------------------------------
   ## Using wmbusmeters i a pipe
@@ -532,11 +462,11 @@ wmbus:
 switch:
   # reset boot counter value
   - platform: template
-    name: Reset Boot Counter
+    name: "Reset Boot Counter"
     turn_on_action:
       then:
         - lambda: |-
-            id(boot_counter) = id(int_default);
+            id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
             level: INFO
@@ -545,31 +475,32 @@ switch:
 
   # reset all global vars
   - platform: template
-    name: Reset values
+    name: "Reset values"
     turn_on_action:
       then:
         - lambda: |-
-            id(last_value) = id(float_default);
-            id(boot_counter) = id(int_default);
+            id(last_value) = 0.00;
+            id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
-            id(current_value) = id(float_default);
+            id(current_value) = 0.00;
             id(watercurrent).publish_state(id(current_value));
-            id(hour_value) = id(float_default);
+            id(hour_value) = 0.00;
             id(waterhour).publish_state(id(hour_value));
-            id(daily_value) = id(float_default);
+            id(daily_value) = 0.00;
             id(waterday).publish_state(id(daily_value));
-            id(yesterday_value) = id(float_default);
+            id(yesterday_value) = 0.00;
             id(wateryesterday).publish_state(id(yesterday_value));
-            id(week_value) = id(float_default);
+            id(week_value) = 0.00;
             id(waterweek).publish_state(id(week_value));
-            id(month_value) = id(float_default);
+            id(month_value) = 0.00;
             id(watermonth).publish_state(id(month_value));
-            id(lastmonth_value) = id(float_default);
+            id(lastmonth_value) = 0.00;
             id(waterlastmonth).publish_state(id(lastmonth_value));
-            id(year_value) = id(float_default);
+            id(year_value) = 0.00;
             id(wateryear).publish_state(id(year_value));
         - logger.log: all values reset!
 
+  # restarts the device
   - platform: restart
     name: "Restart"
     id: restart_switch
@@ -578,30 +509,38 @@ switch:
 ## SENSORS
 ## ---------------------------------------------------
 sensor:
-  # water display
-
   - platform: wmbus
+
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only hex is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
+    ## add_prefix settings to add the watermeterid to the lqi, rssi and total_water_m3
     meter_id: !secret watermeterId
     type: izar
-    ## settings to add the watermeterid to the lqi, rssi and total_water_m3
     add_prefix: false
+
     # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
     # Note that a lower value indicates a better link.
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
       id: wmbus_cc1101_lqi
-      name: "Wlan CC1101 LQI"
+      name: "Watermeter CC1101 LQI"
       entity_category: "diagnostic"
+      unit_of_measurement: "lqi"
+      state_class: "measurement"
+
     # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
     # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
     # RSSI stands for received signal strength (power) indication (in dBm).
-    # A higher value indicates higher power.
+    # A higher value indicates higher power. (internal only)
     rssi:
       id: wmbus_cc1101_rssi
+
+    # get the total watermter m3 from the wmbus telegram, log the timestamp
+    # for the last reading  and calculates the statitics value
+    # and update all sensors: last_value, watercurrent, hour_value, daily_value
+    # week_value, month_value, year_value and watermeter_lastupdate
     total_water_m3:
       name: "Wasseruhr Anzeige"
       id: "waterdisplay"
@@ -614,7 +553,7 @@ sensor:
           - lambda: |-
               ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
               if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
-                id(current_value) = float( id(waterdisplay).state - id(last_value) ) * id(m3toliter);
+                id(current_value) = float( id(waterdisplay).state - id(last_value) ) * 1000.00;
                 id(watercurrent).publish_state(id(current_value));
                 id(hour_value)+=id(current_value);
                 id(waterhour).publish_state(id(hour_value));
@@ -627,9 +566,6 @@ sensor:
                 id(year_value)+=id(current_value);
                 id(wateryear).publish_state(id(year_value));
                 ESP_LOGI("SENSOR", "Set current value to %f litre and publish the data", id(watercurrent));
-                if ( ${service_enabled} == true){
-                  id(post_device_state).execute();
-                }
               }else{
                 id(current_value) = 0.00;
                 id(watercurrent).publish_state(id(current_value));
@@ -637,13 +573,10 @@ sensor:
               }
               id(last_value)=id(waterdisplay).state;
 
+          # update the timestamp for the last waterdisplay state
           - text_sensor.template.publish:
               id: watermeter_lastupdate
-              state: !lambda |-
-                char str[20];
-                time_t currTime = id(sntp_time).now().timestamp;
-                strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
-                return (std::string) str;
+              state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S");
 
   # water current
   - platform: template
@@ -653,8 +586,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: "measurement"
     device_class: "water"
-    lambda: |-
-      return (id(current_value));
+    lambda: return (id(current_value));
 
   # water current hour
   - platform: template
@@ -664,8 +596,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(hour_value));
+    lambda: return (id(hour_value));
 
   # water today
   - platform: template
@@ -675,8 +606,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(daily_value));
+    lambda: return (id(daily_value));
 
   # water yesterday
   - platform: template
@@ -686,8 +616,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(yesterday_value));
+    lambda: return (id(yesterday_value));
 
   # water current week
   - platform: template
@@ -697,8 +626,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(week_value));
+    lambda: return (id(week_value));
 
   # water current month
   - platform: template
@@ -708,8 +636,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(month_value));
+    lambda: return (id(month_value));
 
   # water current year
   - platform: template
@@ -719,8 +646,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(year_value));
+    lambda: return (id(year_value));
 
   # water last month
   - platform: template
@@ -730,8 +656,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: "measurement"
     device_class: "water"
-    lambda: |-
-      return (id(lastmonth_value));
+    lambda: return (id(lastmonth_value));
 
   # device boot counter
   - platform: template
@@ -740,17 +665,41 @@ sensor:
     accuracy_decimals: 0
     state_class: "measurement"
     entity_category: "diagnostic"
-    lambda: |-
-      return (id(boot_counter));
+    lambda: return (id(boot_counter));
 
-  # device uptime human reading format
-  # only internal used
+  # Wifi quality RSSI used by wifi_signal_db
+  - platform: wifi_signal
+    id: wifi_signal_db
+    update_interval: 60s
+    internal: true
+    disabled_by_default: true
+
+  # Wifi quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "Watermeter WLAN RSSI"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+
+  # CC1101 quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy
+    source_id: wmbus_cc1101_rssi
+    name: "Watermeter WLAN CC1101 RSSI"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+
+  # update the uptime_human with the uptime
   - platform: uptime
-    name: Uptime
     id: uptime_sensor
-    internal: ${disabled_addOns}
-    update_interval: ${update_interval}
-    unit_of_measurement: seconds
+    update_interval: 60s
+    internal: True
+    disabled_by_default: true
     on_raw_value:
       then:
         - text_sensor.template.publish:
@@ -764,47 +713,12 @@ sensor:
               int minutes = seconds /  60;
               seconds = seconds % 60;
               return (
-                (days ? String(days) + "d " : "") +
-                (hours ? String(hours) + "h " : "") +
-                (minutes ? String(minutes) + "m " : "") +
-                (String(seconds) + "s")
+                (days ? to_string(days) + "d " : "") +
+                (hours ? to_string(hours) + "h " : "") +
+                (minutes ? to_string(minutes) + "m " : "") +
+                (to_string(seconds) + "s")
               ).c_str();
 
-  # Wifi quality RSSI
-  # only internal used (memory bug D1MINI ??)
-  - platform: wifi_signal
-    name: Wlan Signal
-    id: wifi_signal_db
-    update_interval: 60s
-    internal: true
-    entity_category: "diagnostic"
-
-  # Wifi quality RSSI in percentage
-  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "Wlan ESP32 Qualität"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
-
-  # CC1101 quality RSSI in percentage
-  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy
-    source_id: wmbus_cc1101_rssi
-    name: "Wlan CC1101 RSSI"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
-
-  #  Shows free space ESP.getFreeHeap
-  # - platform: heapmon
-  #   id: heapspace
-  #   name: "Free Space"
-  #   state_class: "measurement"
-  #   entity_category: "diagnostic"
 
 ## ---------------------------------------------------
 ## BINARY SENSOR
@@ -812,7 +726,7 @@ sensor:
 binary_sensor:
   # simulate led state
   - platform: template
-    name: Status Led
+    name: "Watermeter Status Led"
     id: statusled
     entity_category: "diagnostic"
     lambda: "return id(current_value) > 0;"
@@ -821,50 +735,37 @@ binary_sensor:
 ## TEXT SENSOR
 ## ---------------------------------------------------
 text_sensor:
-  # device version
-  # disabled for api (memory ??)
-  - platform: version
-    name: Version
-    id: appver
-    internal: ${disabled_addOns}
-    entity_category: "diagnostic"
-
-  # device online time
-  # disabled for api (memory ??)
+  # online time for the device, only for the gui
   - platform: template
-    name: Online seit
+    name: "Watermeter Online seit"
+    disabled_by_default: true
     id: uptime_human
-    internal: ${disabled_addOns}
     icon: mdi:clock-start
-    entity_category: "diagnostic"
 
-  # waterdisplay last update
+  # waterdisplay timestamp last update
   - platform: template
-    name: Zählerstand aktualisiert
+    name: "Watermeter Timestamp"
     id: watermeter_lastupdate
     icon: mdi:clock-start
     entity_category: "diagnostic"
 
   # device timestamp
-  # disabled for api (memory ??)
   - platform: template
-    name: Timestamp
     id: systime
     entity_category: "diagnostic"
-    internal: ${disabled_addOns}
+    internal: true
     lambda: char str[20];
-      time_t currTime = id(sntp_time).now().timestamp;
+      time_t currTime = id(time_sntp).now().timestamp;
       strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
       return (std::string) str;
 
   # simple rest get message for all watermeter data
-  # curl -i http://water-meter-izar.local/text_sensor/watermeterdata
   - platform: template
     id: watermeterdata
-    update_interval: ${update_interval}
     internal: true
+    disabled_by_default: true
     lambda: |-
-      char buf[512];
+      char buf[128];
       sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
              id(waterdisplay).state,
              id(current_value),
@@ -880,4 +781,4 @@ text_sensor:
       std::string s = buf;
       return s;
 
-# eof water-meter-izar.yaml
+

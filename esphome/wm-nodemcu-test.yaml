@@ -1,31 +1,41 @@
 ---
-## ---------------------------------------------------------------------------
-## WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
-## Hardware: ESP32 240MHz, 520KB RAM, 4MB Flash
+## ------------------------------------------------------------------
+## WMBUS NODEMCU V3 + CC1101 for Diehl IZAR RC 868 I R4 PL
+## HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
-## this version shows all watermeters. Use this for the first test
+## CC1101 TESTCASE FOR ALL WATERMETERS
 ##
-##  1. uses the latest wmbusmeter component from github
-##  2. Optional uses syslog component
+## usage:  1. Using Homassistant API (discovery + devices)
+##         2. Optional uses backup component
+##         3. Optinal usese syslog component
 ##
-##  SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
+## This version shows data from the all watermeters.
+## Use this for frist test to find your watermeterID.
 ##
-## ---------------------------------------------------------------------------
+## WEBUI:   http://water-meter.local
+## Backup:  http://water-meter.local/config.yaml
+##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
+##
+## ------------------------------------------------------------------
 substitutions:
-  ## device settings
-  device_name_short: "water-meter-esp"
-  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
+  device_name_short: "water-meter"
+  device_description: "Wasserzähler NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all Watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.6"
 
-  ## all watermeters   wmid: "0"
-  ## your watermeter: wmid: !secret watermeterId
-  wmid: "0"
-
+  # logger settings
   log_level: "DEBUG"
 
+# ----------------------------------------------------------------
+# HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
+# ----------------------------------------------------------------
+esp8266:
+  board: nodemcuv2
+  restore_from_flash: true
+
 ## ----------------------------------------------------------------
-## APPLICATION ESPHOME
+## ESPHOME APPLICATION
 ## ----------------------------------------------------------------
 esphome:
   name: ${device_name_short}
@@ -54,16 +64,7 @@ esphome:
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 ## ----------------------------------------------------------------
-## HARDWARE az-delivery-devkit-v4
-##          ESP32 240MHz, 520KB RAM, 4MB Flash
-## ----------------------------------------------------------------
-esp32:
-  board: az-delivery-devkit-v4
-  framework:
-    type: arduino
-
-## ----------------------------------------------------------------
-## EXTERNAL COMPONENTS
+## External components
 ## ----------------------------------------------------------------
 external_components:
 
@@ -118,15 +119,11 @@ globals:
     restore_value: yes
     initial_value: "0"
 
-  - id: last_value
-    type: float
-    restore_value: yes
-    initial_value: "0.00"
-
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
 ## ---------------------------------------------------
 wifi:
+  id: wifi_nodemcu
   networks:
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
@@ -146,9 +143,6 @@ wifi:
 ## ---------------------------------------------------
 captive_portal:
 
-## ---------------------------------------------------
-## LOGGER
-## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
@@ -162,27 +156,22 @@ ota:
   on_error:
     then:
       - logger.log:
-          level: INFO
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## LOCAL WEBSERVER - local settings - no internet
-## Include supporting javascript locally allowing
-## it to work without internet access.
-## local: true  ## without internet access.
-## local: false ## with internet access.
+## LOCAL WEBSERVER, local settings - no internet
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  local: false
 
 ## ---------------------------------------------------
-# Enable Home Assistant API
+## Enable Home Assistant API
 ## ---------------------------------------------------
 api:
-  id: espapi_wmbus_esp32
+  id: espapnuc
   port: 6053
   reboot_timeout: 0s
 
@@ -204,35 +193,35 @@ time:
 
 
 ## ---------------------------------------------------
-## WMBUS CC1101 --> ESP32
-## https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/img/Esp32_CC1101.png
+## WMBUS DEVICE NODEMCU V3 --> CC1101
 ## ---------------------------------------------------
 ##
-##                                        | 3.3V
-##    - - - - - - - - - - - - - - - - - - x
-##   |                                    |
-## - | 5v           ESP32                 | -- ANT
-##   |                                    |
-##    - - - - x - x x x x x x - - - - - x x
-##                | | | | |             | |
-##                | | | | |             | | GND
-##           GD00 | | | | |             |
-##               GD02                  M0SI
-##                   CSN
-##                      SCK
-##                        MISO
+##                                       | GND
+##                                       2
+##     - - - - - - - - - - - - - - - - - o -
+##   |                                       |
+## - | ANT        NODEMCU V3                 | -- USB
+##   |                                       |
+##     - o o - - - o o o o - - - - - - - - o
+##       7 6       4 5 3 8                 1    .... CC1101
+##       | |       | | | |                 |
+##       | |   SCK | | | | CSN             | 3.3V
+##        GD02     | | | |
+##      GDO0        MISO
+##                    MOSI
+##
+##
 ## -------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23    ## SI:   braun
-  miso_pin: GPIO19    ## SO:   grün
-  clk_pin: GPIO18     ## SCLK: violett
-  cs_pin: GPIO05      ## CSN:  orange
-  gdo0_pin: GPIO16    ## GD00: gelb (rx)
-  gdo2_pin: GPIO17    ## GD02: weiss (tx)
+  mosi_pin: GPIO13  #D7:3  MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12  #D6:5  MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14   #D5:4  SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15    #D8:8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05  #D1:7  Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2:6  FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: True
-
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -250,14 +239,13 @@ switch:
             level: INFO
             tag: "BOOT"
             format: "${device_name_short} reset boot counter o.k!"
-
-  - platform: safe_mode
-    name: "Restart (Safe Mode)"
-
   - platform: restart
     name: "Restart"
     id: restart_switch
-
+  # save device boot (develop only)
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+  # reset the device to factory reset (develop only)
   - platform: factory_reset
     name: Restart with Factory Default Settings
 
@@ -271,7 +259,8 @@ sensor:
     # only hex is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
-    meter_id: ${wmid}
+    # settings to add the watermeterid to the lqi, rssi and total_water_m3
+    meter_id: "0" # !secret watermeterId
     type: izar
     add_prefix: true
 
@@ -280,42 +269,51 @@ sensor:
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
       id: wmbus_cc1101_lqi
-      name: "Watermeter CC1101 LQI"
-      unit_of_measurement: "lqi"
+      name: "Wlan CC1101 LQI"
       entity_category: "diagnostic"
+      unit_of_measurement: "lqi"
 
     # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
     # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
     # RSSI stands for received signal strength (power) indication (in dBm).
-    # A higher value indicates higher power.
+    # A higher value indicates higher power. (internal only)
     rssi:
+      name: "Wlan CC1101 RSSI"
       id: wmbus_cc1101_rssi
-      name: "Watermeter CC1101 RSSI"
       unit_of_measurement: "%"
       entity_category: "diagnostic"
 
-    # reports the watermeter display value
+    # waterdisplay - get the total watermter m3 from the wmbus telegram
     total_water_m3:
-      id: "waterdisplay"
       name: "Wasseruhr Anzeige"
+      id: "waterdisplay"
       unit_of_measurement: "m³"
       state_class: total_increasing
       device_class: "water"
       accuracy_decimals: 3
-      # Send the value periodically with the specified time interval.
-      # If the sensor value changes during the interval the interval will not reset.
-      # The last value of the sensor will be sent. 60s means, that every minute the
-      # last state will be published.
-      filters:
-        - heartbeat: 60s
-      # update and calulatet all watermeter data values
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
-              id(last_value)=id(waterdisplay).state;
+              ESP_LOGI("SENSOR", "Water Display value: %f", id(waterdisplay).state);
 
-  # device boot counter
+  # Wifi quality RSSI used by wifi_signal_db
+  - platform: wifi_signal
+    id: wifi_signal_db
+    update_interval: 60s
+    internal: true
+    disabled_by_default: true
+
+  # Wifi quality RSSI in percentage
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  - platform: copy # Reports the WiFi signal strength in %
+    source_id: wifi_signal_db
+    name: "Watermeter WLAN RSSI"
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
+
+ # device boot counter
   - platform: template
     name: Boot counter
     id: bootcounter
@@ -324,19 +322,4 @@ sensor:
     entity_category: "diagnostic"
     lambda: return (id(boot_counter));
 
-  # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
-  - platform: wifi_signal
-    id: wifi_signal_db
-    update_interval: 60s
-    internal: true
-    disabled_by_default: true
 
-  # Wifi quality RSSI in percentage
-  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "Watermeter ESP32 WLAN Qualität"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"

@@ -39,15 +39,21 @@ ESPHome - ESP32 (v4) + CC1101 is the best solution for me because the resource r
 
 <br>
 
-## WEMOS D1MINI  vs ESP32 (v4)
-The version with WEMOS D1MINI was my first version, but it was not stable when integrated into Homeassistant. When i disable the `api`
-both D1MINI are working.  It looks like the 2nd D1MINI has a memory problem.
+## ESP8266 vs ESP32 (v4)
+The version with **WEMOS D1MINI (ESP8266)** was my first version. WEMOS D1MINI (ESP8266) has only limited RAM and can only be used to a limited extent. If there are too many sensors, a **JSON memory error occurs**, which causes the device to restart again and again.
 
-|  Device | Remarks   | State  | 
+The **ESP32** has more RAM memory and is therefore better suited for use.
+
+<br>
+
+|  Device | Remarks   | Hardware  | 
 |---------|-----------|--------|
-| **Wemos D1 Mini** ![d1Mini-wemos](./esphome/docs/d1Mini-wemos.png) |  CC1101, board: d1_mini   |  ✕ JSON Error, Software/System restart after 12h |
-| **Wemos D1 Mini Board** ![d1mini-esp8266MOD-12F](./esphome/docs/d1mini-esp8266MOD-12F.png) |  CC1101, board: esp12e (board: d1_mini )   |  ✕ JSON Error and keeps rebooting, can'nt use this !      |
-| **ESP32 Dev Kit C V4 NodeMCU** ![d1mini-esp8266MOD-12F](./esphome/docs/az-delivery-devkit-v4.png)   |  CC1101, board: az-delivery-devkit-v4  |  ✔︎ The ESP32 variant works w/o theese errors.      |
+| **Wemos D1 Mini** ![d1Mini-wemos](./esphome/docs/d1Mini-wemos.png) |  CC1101, board: d1_mini   |   ESP8266 80MHz, **80KB RAM**, 4MB Flash |
+| **Wemos D1 Mini Board** ![d1mini-esp8266MOD-12F](./esphome/docs/d1mini-esp8266MOD-12F.png) |  CC1101, board: esp12e (board: d1_mini )   |  ESP8266 80MHz, **80KB RAM** , 4MB Flash       |
+| **NodeMCU Lolin V3 Module** ![NodeMCU Lolin V3 Module](./esphome/docs/nodemcu_v3.png)   |  CC1101, board: NodeMCU Lua Lolin V3 Module ESP8266  | ESP8266 80MHz, **80KB RAM** , 4MB Flash      |
+| **ESP32 Dev Kit C V4 NodeMCU** ![d1mini-esp8266MOD-12F](./esphome/docs/az-delivery-devkit-v4.png)   |  CC1101, board: az-delivery-devkit-v4  |  ESP32 240MHz, **520KB RAM**, 4MB Flash     |
+
+<br>
 
 ### Memory Usage D1 Mini
 ![memory_usage](https://user-images.githubusercontent.com/30198737/235585457-895bb25f-47a6-4901-a403-96a115caac3d.png)
@@ -92,6 +98,7 @@ Currently supported meter types (wmbus version 2.0.5):
 - ultrimis
 - unismart
 - vario451
+- ... more will come :)
 
 see: <https://github.com/SzczepanLeon/esphome-components>
 
@@ -99,7 +106,7 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 [ESPHome - ESP32 (v4) + CC1101](./esphome/README.md)
 
 ### What I still miss
-Only the `total_m3` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
+For the IZAR Meter only the `total_m3`, `RSSI` and `LQI` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
 
 - Alarm (current_alarms, previous_alarms)
 - Water last month (last_month_total_m3)

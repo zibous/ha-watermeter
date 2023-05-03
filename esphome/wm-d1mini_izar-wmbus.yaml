@@ -1,5 +1,7 @@
 ## ######################################################
 ## DEVELOPER TEST VERSION component.maciekn
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
+##
 ## uses:
 ##   - lib maciekn
 ##   - lib backup
@@ -9,34 +11,33 @@ substitutions:
   # device settings
   device_name_short: "water-meter-izar"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL) Developer Version maciekn"
-
-  update_interval: 60s
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "1.1.7"
-  domain: !secret domain
 
   # my watermeter id (change this to your watermeter ID)
   myWaterMeterID: "43430778"
 
+  # my watermeter id (change this to see all watermeters)
+  # myWaterMeterID: "0"
+
   # log settings
   log_level: "DEBUG" # use VERBOSE mode to find the meterId 0x43430778
 
-  # syslog (change this to your syslog server)
-  syslogserver: 10.1.1.219
-  syslogport: "514"
+## ----------------------------------------------------------------
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
+## ----------------------------------------------------------------
+esp8266:
+  board: d1_mini
+  restore_from_flash: true
 
 ## ----------------------------------------------------------------
 ## ESP HOME Configuration
 ## ----------------------------------------------------------------
 esphome:
   name: ${device_name_short}
-  # HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
-  platform: ESP8266
-  board: d1_mini
-  esp8266_restore_from_flash: true
-  arduino_version: recommended
   comment: ${device_description}
   project:
-    name: "OE9psj.watermeter-izar"
+    name: ${projectname}
     version: ${appversion}
   includes:
     - custom_components/izar_meter.h
@@ -60,7 +61,6 @@ esphome:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
-
   on_shutdown:
     priority: 600
     then:
@@ -70,6 +70,7 @@ esphome:
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 external_components:
+
   # use local component from
   # https://github.com/TheStaticTurtle/esphome_syslog
   - source:
@@ -99,8 +100,8 @@ backup:
 ## syslog service
 ## ---------------------------------------------------
 syslog:
-  ip_address: ${syslogserver}
-  port: ${syslogport}
+  ip_address: !secret syslog_server
+  port: !secret syslog_port
   min_level: DEBUG
   enable_logger: true
 
@@ -112,16 +113,6 @@ globals:
     type: int
     restore_value: yes
     initial_value: "0"
-
-  - id: int_default
-    type: int
-    restore_value: no
-    initial_value: "0"
-
-  - id: float_default
-    type: float
-    restore_value: no
-    initial_value: "0.00"
 
   - id: mywatermeter_id
     type: std::string
@@ -185,7 +176,7 @@ globals:
 logger:
   id: appslogger
   level: ${log_level}
-  # baud_rate: 0  #disable logging via UART.
+  baud_rate: 0  #disable logging via UART.
 
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
@@ -361,7 +352,7 @@ web_server:
 ## ---------------------------------------------------
 time:
   - platform: sntp
-    id: sntp_time
+    id: time_sntp
     timezone: Europe/Berlin
     servers:
       - 0.at.pool.ntp.org
@@ -445,7 +436,7 @@ switch:
     turn_on_action:
       then:
         - lambda: |-
-            id(boot_counter) = id(int_default);
+            id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
 
         - logger.log:
@@ -459,35 +450,25 @@ switch:
     turn_on_action:
       then:
         - lambda: |-
-            id(last_value) = id(float_default);
-
-            id(boot_counter) = id(int_default);
+            id(last_value) = 0.00;
+            id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
-
-            id(current_value) = id(float_default);
+            id(current_value) = 0.00;
             id(watercurrent).publish_state(id(current_value));
-
-            id(hour_value) = id(float_default);
+            id(hour_value) = 0.00;
             id(waterhour).publish_state(id(hour_value));
-
-            id(daily_value) = id(float_default);
+            id(daily_value) = 0.00;
             id(waterday).publish_state(id(daily_value));
-
-            id(yesterday_value) = id(float_default);
+            id(yesterday_value) = 0.00;
             id(wateryesterday).publish_state(id(yesterday_value));
-
-            id(week_value) = id(float_default);
+            id(week_value) = 0.00;
             id(waterweek).publish_state(id(week_value));
-
-            id(month_value) = id(float_default);
+            id(month_value) = 0.00;
             id(watermonth).publish_state(id(month_value));
-
-            id(lastmonth_value) = id(float_default);
+            id(lastmonth_value) = 0.00;
             id(waterlastmonth).publish_state(id(lastmonth_value));
-
-            id(year_value) = id(float_default);
+            id(year_value) = 0.00;
             id(wateryear).publish_state(id(year_value));
-
         - logger.log: all values reset!
 
   - platform: restart
@@ -559,18 +540,17 @@ text_sensor:
     internal: true
     entity_category: "diagnostic"
     lambda: char str[20];
-      time_t currTime = id(sntp_time).now().timestamp;
+      time_t currTime = id(time_sntp).now().timestamp;
       strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
       return (std::string) str;
 
   # simple rest get message for all watermeter data
-  # curl -i http://water-meter-izar.local/text_sensor/watermeterdata
   - platform: template
     id: watermeterdata
     internal: true
-    update_interval: ${update_interval}
+    disabled_by_default: true
     lambda: |-
-      char buf[512];
+      char buf[128];
       sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
              id(waterdisplay).state,
              id(current_value),
@@ -585,6 +565,7 @@ text_sensor:
              );
       std::string s = buf;
       return s;
+
 
 ## ---------------------------------------------------
 ##  SENSOR
@@ -615,38 +596,21 @@ sensor:
                       format: "✔︎ My Watermeter ID: %s and has value %.1f Liter"
                       args: ["id(watermeter_id).state.c_str()", "x"]
                   - lambda: |-
-
-                      if(id(waterdisplay).state > id(float_default)){
+                      if(id(waterdisplay).state > 0.00){
                         id(watermeter_display_m3) = x * 0.001;
                         id(watermeterdisplay).publish_state(id(watermeter_display_m3));
                       }
-
-                      if ((id(last_value) > id(float_default)) and (id(waterdisplay).state)>(id(last_value)) ) {
-
+                      if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
                         id(current_value) = (id(waterdisplay).state-id(last_value));
-                        // id(watercurrent).publish_state(id(current_value));
-
                         id(hour_value)+=id(current_value);
-                        // id(waterhour).publish_state(id(hour_value));
-
                         id(daily_value)+=id(current_value);
-                        // id(waterday).publish_state(id(daily_value));
-
                         id(week_value)+=id(current_value);
-                        // id(waterweek).publish_state(id(week_value));
-
                         id(month_value)+=id(current_value);
-                        // id(watermonth).publish_state(id(month_value));
-
                         id(year_value)+=id(current_value);
-                        // id(wateryear).publish_state(id(year_value));
-
                         ESP_LOGD("DEBUG", "Set current value to %f litre and publish the data", id(watercurrent));
-
                         id(last_value)=id(waterdisplay).state;
-
                       }else{
-                        id(current_value) = id(float_default);
+                        id(current_value) = 0.00;
                         id(watercurrent).publish_state(id(current_value));
                         ESP_LOGI("SENSOR", "Reset current value to: %.1f", id(watercurrent));
                       };
@@ -655,7 +619,7 @@ sensor:
                       id: watermeter_lastupdate
                       state: !lambda |-
                         char str[20];
-                        time_t currTime = id(sntp_time).now().timestamp;
+                        time_t currTime = id(time_sntp).now().timestamp;
                         strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
                         return (std::string) str;
 
@@ -688,8 +652,7 @@ sensor:
     state_class: total_increasing
     device_class: "water"
     accuracy_decimals: 3
-    lambda: |-
-      return (id(watermeter_display_m3) );
+    lambda: return (id(watermeter_display_m3) );
 
   # water current
   - platform: template
@@ -699,8 +662,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: "measurement"
     device_class: "water"
-    lambda: |-
-      return (id(current_value));
+    lambda: return (id(current_value));
 
   # water current hour
   - platform: template
@@ -710,8 +672,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(hour_value));
+    lambda: return (id(hour_value));
 
   # water today
   - platform: template
@@ -721,8 +682,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(daily_value));
+    lambda: return (id(daily_value));
 
   # water yesterday
   - platform: template
@@ -732,8 +692,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(yesterday_value));
+    lambda: return (id(yesterday_value));
 
   # water current week
   - platform: template
@@ -743,8 +702,7 @@ sensor:
     unit_of_measurement: "L"
     device_class: "water"
     state_class: total_increasing
-    lambda: |-
-      return (id(week_value));
+    lambda: return (id(week_value));
 
   # water current month
   - platform: template
@@ -754,8 +712,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(month_value));
+    lambda: return (id(month_value));
 
   # water current year
   - platform: template
@@ -765,8 +722,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: total_increasing
     device_class: "water"
-    lambda: |-
-      return (id(year_value));
+    lambda: return (id(year_value));
 
   # water last month
   - platform: template
@@ -776,8 +732,7 @@ sensor:
     unit_of_measurement: "L"
     state_class: "measurement"
     device_class: "water"
-    lambda: |-
-      return (id(lastmonth_value));
+    lambda: return (id(lastmonth_value));
 
   # device boot counter
   - platform: template
@@ -785,8 +740,7 @@ sensor:
     id: bootcounter
     accuracy_decimals: 0
     entity_category: "diagnostic"
-    lambda: |-
-      return (id(boot_counter));
+    lambda: return (id(boot_counter));
 
   # device uptime human reading format
   # internal used only, not on api and web ui
@@ -794,7 +748,7 @@ sensor:
     name: Uptime
     id: uptime_sensor
     internal: true
-    update_interval: ${update_interval}
+    update_interval: 60s
     on_raw_value:
       then:
         - text_sensor.template.publish:

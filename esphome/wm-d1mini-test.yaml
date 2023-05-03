@@ -1,29 +1,38 @@
 ## ------------------------------------------------------------------
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
-## this version shows all watermeters. Use this for the first test
+## CC1101 TESTCASE FOR ALL WATERMETERS
 ##
-## Remark:
-##   Some Wemos D1 Mini has memory problems, for me one is working
-##   another one (same order) reboots with JSON Errors.
-##   ESP8266-12F Mini NodeMcu mit ESP8266-12F
+##   1. uses esphome-components latest version from github
+##   2. uses syslog component  (optional)
+##      tail -f /var/log/syslog | grep "water-meter"
+##
+## This version shows data from the all watermeters.
+## Use this for frist test to find your watermeterID.
+##
 ## ------------------------------------------------------------------
 substitutions:
   device_name_short: "water-meter-d1mini"
-  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
-  appversion: "2.0.5"
-  domain: !secret domain
-  update_interval: 60s
+  device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
+  projectname: "Diehl IZAR RC 868.Watermeter"
+  appversion: "2.0.6"
 
-  ## all watermeters watch logmessages to find the watermeterid in hex
-  wmid: "0"   # !secret watermeterId
+  ## all watermeters wmid: "0"
+  ## your watermeter: wmid: !secret watermeterId
+  wmid: "0"
 
-  # wmid: !secret watermeterId ## my watermeter
+  # logger settings
   log_level: "VERBOSE"
 
-# ----------------------------------------------------------------
-# HARDWARE: ESP8266 80MHz, 80KB RAM, 4MB Flash
-# ----------------------------------------------------------------
+## ----------------------------------------------------------------
+## HARDWARE: WEMOS D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
+## ----------------------------------------------------------------
+
+# wemmos D1 Mini  = d1_mini
+# D1 mit externer Antenne = d1_mini_pro
+# esp01 mit 1MB Speicher = esp01_1m
+
 esp8266:
   board: d1_mini
   restore_from_flash: true
@@ -32,7 +41,7 @@ esphome:
   name: ${device_name_short}
   comment: ${device_description}
   project:
-    name: "OE9psj.wmbus-minid1"
+    name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
@@ -58,12 +67,20 @@ esphome:
 ## External components
 ## ----------------------------------------------------------------
 external_components:
+
   # uses the latest version from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@main
     refresh: 0s
     components: [wmbus]
+
+  # use local component from
+  # https://github.com/zdzichu6969/esphome-components
+  - source:
+      type: local
+      path: custom_components
+    components: [backup]
 
   # use local component from
   # enable this if you have a syslog server
@@ -83,6 +100,15 @@ external_components:
 #   min_level: DEBUG
 #   enable_logger: true
 
+# ----------------------------------------------------------------
+# Save your ESPHome device configuration in firmware and and
+# recover it if you lost source files.
+# ----------------------------------------------------------------
+backup:
+  auth:
+    username: !secret web_username
+    password: !secret web_password
+  force_update: false
 
 ## ----------------------------------------------------------------
 ## Global variables
@@ -122,6 +148,9 @@ logger:
   level: ${log_level}
   baud_rate: 0 #disable logging over uart
 
+debug:
+  update_interval: 5s
+
 ## ---------------------------------------------------
 ## OTA Updates
 ## ---------------------------------------------------
@@ -154,7 +183,7 @@ api:
 ## ---------------------------------------------------
 time:
   - platform: sntp
-    id: sntp_time
+    id: time_sntp
     timezone: Europe/Berlin
     servers:
       - 0.at.pool.ntp.org
@@ -174,6 +203,9 @@ wmbus:
   cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
   gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
   gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+
+  # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
+  log_unknown: True
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -206,16 +238,17 @@ switch:
 ## SENSORS
 ## ---------------------------------------------------
 sensor:
-  # water display
+
   - platform: wmbus
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only hex is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
+    ## settings to add the watermeterid to the lqi, rssi and total_water_m3
     meter_id: ${wmid}
     type: izar
-    ## settings to add the watermeterid to the lqi, rssi and total_water_m3
     add_prefix: true
+
     # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
     # Note that a lower value indicates a better link.
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
@@ -223,12 +256,19 @@ sensor:
       id: wmbus_cc1101_lqi
       name: "Wlan CC1101 LQI"
       entity_category: "diagnostic"
+      unit_of_measurement: "lqi"
+
     # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
     # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
     # RSSI stands for received signal strength (power) indication (in dBm).
-    # A higher value indicates higher power.
+    # A higher value indicates higher power. (internal only)
     rssi:
+      name: "Wlan CC1101 RSSI"
       id: wmbus_cc1101_rssi
+      unit_of_measurement: "%"
+      entity_category: "diagnostic"
+
+    # waterdisplay - get the total watermter m3 from the wmbus telegram
     total_water_m3:
       name: "Wasseruhr Anzeige"
       id: "waterdisplay"
@@ -265,18 +305,48 @@ sensor:
   # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Wlan ESP32 Qualität"
+    name: "Wlan D1Mini Qualität"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
     entity_category: "diagnostic"
 
-  # CC1101 quality RSSI in percentage
-  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy
-    source_id: wmbus_cc1101_rssi
-    name: "Wlan CC1101 RSSI"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
+
+  # The debug component can be used to debug problems with ESPHome.
+  # At startup, it prints a bunch of useful information like reset reason,
+  # free heap size, ESPHome version and so on.
+  - platform: debug
+
+    #  Reports the free heap size in bytes.
+    free:
+      name: "Heap Free"
+      entity_category: "diagnostic"
+
+    # Reports the fragmentation metric of the heap (0% is clean, more than ~50% is not harmless).
+    fragmentation:
+      name: "Heap Fragmentation"
+      entity_category: "diagnostic"
+
+    # Reports the largest contiguous free RAM block on the heap in bytes.
+    block:
+      name: "Heap Max Block"
+      entity_category: "diagnostic"
+
+    # Reports the longest time between successive iterations of the main loop.
+    loop_time:
+      name: "Loop Time"
+      entity_category: "diagnostic"
+
+## ---------------------------------------------------
+## TEXT SENSORS
+## ---------------------------------------------------
+text_sensor:
+  - platform: debug
+    # Reports the device information:
+    device:
+      name: "Device Info"
+      entity_category: "diagnostic"
+    # Reports the last reboot reason in a human-readable form.
+    reset_reason:
+      name: "Reset Reason"
+      entity_category: "diagnostic"
