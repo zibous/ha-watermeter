@@ -43,8 +43,9 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: -100.0
+    # -100: At this priority, pretty much everything should already be initialized.
+    # 200.0: Network connections like MQTT/native API are set up at this priority.
+    priority: 200.0
     then:
       - globals.set:
           id: boot_counter
@@ -65,7 +66,6 @@ esphome:
 ## External components
 ## ----------------------------------------------------------------
 external_components:
-
   # uses the latest version from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
@@ -415,7 +415,6 @@ time:
           - lambda: id(wateryear).publish_state(id(year_value));
           - logger.log: Reset value yearly, starting new year
 
-
 ## ---------------------------------------------------
 ## WMBUS DEVICE NODEMCU V3 --> CC1101
 ## ---------------------------------------------------
@@ -437,12 +436,12 @@ time:
 ##
 ## -------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13  #D7:3  MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12  #D6:5  MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14   #D5:4  SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15    #D8:8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1:7  Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2:6  FIFO status signals. High Impedance !
+  mosi_pin: GPIO13 #D7:3  MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12 #D6:5  MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14 #D5:4  SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15 #D8:8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05 #D1:7  Clock output. High Impedance !
+  gdo2_pin: GPIO04 #D2:6  FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: False
@@ -568,6 +567,15 @@ sensor:
           - text_sensor.template.publish:
               id: watermeter_lastupdate
               state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S");
+
+    # get the last month total watermter m3 from the wmbus telegram
+    last_month_total_water_m3:
+      name: "Wasseruhr Anzeige letzter Monat"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
 
   # water current
   - platform: template
@@ -710,7 +718,6 @@ sensor:
                 (to_string(seconds) + "s")
               ).c_str();
 
-
 ## ---------------------------------------------------
 ## BINARY SENSOR
 ## ---------------------------------------------------
@@ -771,4 +778,3 @@ text_sensor:
              );
       std::string s = buf;
       return s;
-

@@ -3,9 +3,10 @@
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
-## usage:  1. Using Homassistant API (discovery + devices)
-##         2. Using Backup component
-##         3. Using Syslog component
+## usage:  1. Using wM-Bus v2.1.4
+##         2. Using Homassistant API (discovery + devices)
+##         3. Using Backup component
+##         4. Using Syslog component
 ##
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
@@ -577,6 +578,25 @@ sensor:
           - text_sensor.template.publish:
               id: watermeter_lastupdate
               state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S");
+
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus v2.1.4)
+    last_month_total_water_m3:
+      name: "Wasseruhr Anzeige letzter Monat"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Wasseruhr Batterie"
+      id: "watermeter_batterie"
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Wasseruhr Letzte Ablesung"
+      id: "watermeter_last_reading"
 
   # water current
   - platform: template

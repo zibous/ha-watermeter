@@ -146,7 +146,7 @@ captive_portal:
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: 0 #disable logging over uart
+  # baud_rate: 0 #disable logging over uart
 
 debug:
   update_interval: 5s
@@ -265,7 +265,7 @@ sensor:
     rssi:
       name: "Wlan CC1101 RSSI"
       id: wmbus_cc1101_rssi
-      unit_of_measurement: "%"
+      unit_of_measurement: "dBm"
       entity_category: "diagnostic"
 
     # waterdisplay - get the total watermter m3 from the wmbus telegram

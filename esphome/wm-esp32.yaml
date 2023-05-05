@@ -6,7 +6,8 @@
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
-## usage:  1. Using Homassistant API (discovery + devices)
+## usage:  1. Using the last wM-Bus component
+##         1. Using Homassistant API (discovery + devices)
 ##         2. Using HTTP Post to service server (optional)
 ##         3. Using wmbusmeters i a pipe (optional)
 ##         4. uses backup component (optinal)
@@ -44,8 +45,7 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: -100.0
+    priority: 200.0
     then:
       - globals.set:
           id: boot_counter
@@ -79,7 +79,7 @@ esp32:
 ## ----------------------------------------------------------------
 external_components:
 
-  # uses the latest version from SzczepanLeon
+  # uses the latest version from SzczepanLeon (wM-Bus 2.1.10)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@main
@@ -160,11 +160,6 @@ globals:
     restore_value: yes
     initial_value: "0.00"
 
-  - id: month_value
-    type: float
-    restore_value: yes
-    initial_value: "0.00"
-
   - id: lastmonth_value
     type: float
     restore_value: yes
@@ -179,6 +174,12 @@ globals:
     type: int
     restore_value: false
     initial_value: '0'
+
+  - id: alarm_error_text
+    type: std::vector<std::string>
+    restore_value: no
+    # initial_value: '{"no error", "general_alarm","leakage","meter_blocked","back_flow","underflow","overflow","submarine","sensor_fraud","mechanical_fraud"}'
+    initial_value: '{"Keiner", "Fehler","Zähler undicht","Zähler blockiert","Wasser Rückfluss","Wasser Unterlauf","Wasser Überlauf","Überschwemung","Sensor Fehler", "Mechanischer Fehler"}'
 
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
@@ -237,17 +238,16 @@ web_server:
 
 ## ---------------------------------------------------
 ## Enable Home Assistant API and
-## Homeassistant service call:
+## Homeassistant service call (all values in liter):
 ## ---------------------------------------------------
-#   service: esphome.set_watermeter_esp_data
-#   data:
-#     water_val_hour: 0.03
-#     water_val_day: 0.248
-#     water_val_yesterday: 0.178
-#     water_val_week: 0.248
-#     water_val_month: 1.94
-#     water_val_year: 14.256
-#     water_val_lastmonth: 9.59
+## service: esphome.water_meter_esp_set_watermeter_esp_data
+## data:
+##   water_val_hour: 0.00
+##   water_val_day: 167.00
+##   water_val_yesterday: 240.35
+##   water_val_week: 901.00
+##   water_val_year: 33143.00
+##   water_val_lastmonth: 7580.25
 ## ---------------------------------------------------
 api:
   id: espapi_wmbus_esp32
@@ -260,7 +260,6 @@ api:
         water_val_day: float
         water_val_yesterday: float
         water_val_week: float
-        water_val_month: float
         water_val_year: float
         water_val_lastmonth: float
       then:
@@ -313,18 +312,6 @@ api:
               id(waterweek).publish_state(id(week_value));
 
         - globals.set:
-            id: month_value
-            value: !lambda |-
-              if((water_val_month) and (water_val_month)>0.001){
-                ESP_LOGI("main", "Set last montj value to: %f", water_val_month);
-                return (water_val_month);
-              }else{
-                ESP_LOGI("main", "Skip setting monthly value");
-                return id(week_value);
-              };
-              id(watermonth).publish_state(id(month_value));
-
-        - globals.set:
             id: lastmonth_value
             value: !lambda |-
               if((water_val_lastmonth) and (water_val_lastmonth)>0.001){
@@ -344,33 +331,34 @@ api:
                 return (water_val_year);
               }else{
                 ESP_LOGI("main", "Skip setting last yearly value");
-                return id(week_value);
+                return id(year_value);
               };
               id(wateryear).publish_state(id(year_value));
 
         - logger.log:
-            format: "All new Values set: hour: %.3f, day: %.3f, week: %.3f, month: %.3f, lastmonth: %.3f, year: %.3f"
+            format: "All new Values set: hour: %.3f, day: %.3f, week: %.3f, last month: %.3f, year: %.3f"
             args:
               [
                 "id(hour_value)",
                 "id(daily_value)",
                 "id(week_value)",
-                "id(month_value)",
                 "id(lastmonth_value)",
                 "id(year_value)",
               ]
 
 ## ---------------------------------------------------
 ## SNTP Time server
+## Change this to your timezone and ntp server
 ## ---------------------------------------------------
 time:
   - platform: sntp
     id: time_sntp
     timezone: Europe/Berlin
     servers:
+      - fritz.box
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
-      - 1.pool.ntp.org
+     #  - 1.pool.ntp.org
 
     on_time_sync:
       then:
@@ -416,15 +404,11 @@ time:
         hours: 0
         days_of_month: 1
         then:
-          - globals.set:
-              id: month_value
-              value: "0.00"
-          - lambda: id(watermonth).publish_state(id(month_value));
           - lambda: |-
               if(id(waterdisplay).state){
                 id(lastmonth_value)=id(waterdisplay).state;
               }
-          - logger.log: Reset value monthly, starting new month
+          - logger.log: Set value last monthly value, starting new month
 
       # new year, reset yearly value
       - seconds: 0
@@ -577,8 +561,6 @@ switch:
             id(wateryesterday).publish_state(id(yesterday_value));
             id(week_value) = 0.00;
             id(waterweek).publish_state(id(week_value));
-            id(month_value) = 0.00;
-            id(watermonth).publish_state(id(month_value));
             id(lastmonth_value) = 0.00;
             id(waterlastmonth).publish_state(id(lastmonth_value));
             id(year_value) = 0.00;
@@ -596,7 +578,7 @@ sensor:
 
   - platform: wmbus
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
-    # only hex is working for my watermeter !
+    # only HEX is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
     # add_prefix: enable/disable add watermeterid to lqi, rssi, total_water_m3
@@ -628,20 +610,23 @@ sensor:
       state_class: total_increasing
       device_class: "water"
       accuracy_decimals: 3
+      icon: mdi:counter
 
       # Send the value periodically with the specified time interval.
       # If the sensor value changes during the interval the interval will not reset.
       # The last value of the sensor will be sent. 60s means, that every minute the
       # last state will be published.
-      filters:
-        - heartbeat: 60s
+      # The IZAR Watermeter will publish data all 8s (see transmit_period_s),
+      # but we need this only evers minute.
+      # filters:
+      #   - heartbeat: 60s
 
-      # update and calulatet all watermeter data values
+      # update and calulatet all watermeter sensor data values
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
               if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
+                ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
                 id(current_value) = float(id(waterdisplay).state-id(last_value)) * 1000.00;
                 id(watercurrent).publish_state(id(current_value));
                 id(hour_value)+=id(current_value);
@@ -650,20 +635,18 @@ sensor:
                 id(waterday).publish_state(id(daily_value));
                 id(week_value)+=id(current_value);
                 id(waterweek).publish_state(id(week_value));
-                id(month_value)+=id(current_value);
-                id(watermonth).publish_state(id(month_value));
                 id(year_value)+=id(current_value);
                 id(wateryear).publish_state(id(year_value));
-                ESP_LOGI("SENSOR", "Set current value to %.3f litre and publish the data", id(current_value));
+                ESP_LOGD("SENSOR", "Set current value to %.3f litre and publish the data", id(current_value));
                 if ( ${service_enabled} == true){
                   id(post_device_state).execute();
                 }else{
-                  ESP_LOGI("SENSOR", "Data Service to host disabled");
+                  ESP_LOGD("SENSOR", "Data Service to host disabled");
                 }
               }else{
                 id(current_value) = 0.00;
                 id(watercurrent).publish_state(id(current_value));
-                ESP_LOGI("SENSOR", "Reset current value to: %.3f", id(current_value));
+                ESP_LOGI("SENSOR", "Reset current value to: %.3f, Waterdisplay value: %.3f, last value: %.3f", id(current_value), id(waterdisplay).state, id(last_value));
               }
               id(last_value)=id(waterdisplay).state;
 
@@ -681,9 +664,67 @@ sensor:
               id: watermeter_read_timeout
               state: !lambda |-
                 int time_used = ( millis() - id(send_millisecond) );
-                ESP_LOGI("WATERDISPLAY", "Diff millisecond is: %d", time_used);
+                ESP_LOGD("WATERDISPLAY", "Diff millisecond is: %d", time_used);
                 id(send_millisecond) = millis();
                 return float(time_used)/1000;
+
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
+    last_month_total_water_m3:
+      name: "Wasseruhr Anzeige letzter Monat"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
+
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Wasser Monat
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water"
+
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Wasseruhr Batterielebensdauer"
+      id: "watermeter_batterie"
+      accuracy_decimals: 2
+      unit_of_measurement: "Jahre"
+      icon: mdi:battery
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Wasseruhr Update Intervall"
+      id: "watermeter_transmit_periode"
+      unit_of_measurement: "sec"
+      accuracy_decimals: 2
+      icon: mdi:timelapse
+
+    ## get the current watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    current_alarms:
+      id: "watermeter_current_alarms"
+      on_value:
+        then:
+          - lambda: |-
+              int error_code = int(x);
+              std::string message = id(alarm_error_text)[error_code];
+              ESP_LOGD("ALARMCODE", "watermeter_current_alarms: %s, error code: %d", message.c_str(), error_code);
+              id(watermeter_alarm_message).publish_state(message);
+
+    ## get the prevois watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    previous_alarms:
+      id: "watermeter_previous_alarms"
+      on_value:
+        then:
+          - lambda: |-
+              int error_code = int(x);
+              std::string message = id(alarm_error_text)[error_code];
+              ESP_LOGD("ALARMCODE", "watermeter_previous_alarms: %s, error code: %d", message.c_str(), error_code);
+              id(watermeter_alarm_perv_message).publish_state(message);
 
   # water current
   - platform: template
@@ -740,17 +781,6 @@ sensor:
     lambda: |-
       return (id(week_value));
 
-  # water current month
-  - platform: template
-    name: Wasser Monat
-    id: "watermonth"
-    accuracy_decimals: 2
-    unit_of_measurement: "L"
-    state_class: total_increasing
-    device_class: "water"
-    lambda: |-
-      return (id(month_value));
-
   # water current year
   - platform: template
     name: Wasser Jahr
@@ -787,6 +817,7 @@ sensor:
   - platform: template
     name: Boot counter
     id: bootcounter
+    icon: mdi:counter
     accuracy_decimals: 0
     state_class: "measurement"
     entity_category: "diagnostic"
@@ -800,7 +831,7 @@ sensor:
     disabled_by_default: true
 
   # Wifi quality RSSI in percentage
-  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
     name: "Watermeter ESP32 WLAN Qualität"
@@ -838,10 +869,12 @@ sensor:
 ## BINARY SENSOR
 ## ---------------------------------------------------
 binary_sensor:
+
   # simulate led state
   - platform: template
     name: "Watermeter Status Led"
     id: statusled
+    icon: mdi:led-outline
     entity_category: "diagnostic"
     lambda: "return id(current_value) > 0;"
 
@@ -850,13 +883,25 @@ binary_sensor:
 ## ---------------------------------------------------
 text_sensor:
 
+  # watermeter alarm message
+  - platform: template
+    name: "Wasseruhr Alarm"
+    id: watermeter_alarm_message
+    icon: mdi:alarm-light
+    entity_category: "diagnostic"
+
+  # watermeter previous alarm message
+  - platform: template
+    name: "Wasseruhr letzter Alarm"
+    id: watermeter_alarm_perv_message
+    icon: mdi:alarm-light
+    entity_category: "diagnostic"
+
   # optional device version
   - platform: version
     name: Version
     id: appver
     disabled_by_default: true
-    internal: true
-    entity_category: "diagnostic"
 
   # optional device online time
   - platform: template
@@ -877,6 +922,7 @@ text_sensor:
     id: systime
     entity_category: "diagnostic"
     internal: true
+    disabled_by_default: true
     lambda: char str[20];
       time_t currTime = id(time_sntp).now().timestamp;
       strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
@@ -896,11 +942,10 @@ text_sensor:
              id(daily_value),
              id(yesterday_value),
              id(week_value),
-             id(month_value),
+             id(watermonth).state,
              id(lastmonth_value),
              id(year_value),
              id(systime).state.c_str()
              );
       std::string s = buf;
       return s;
-

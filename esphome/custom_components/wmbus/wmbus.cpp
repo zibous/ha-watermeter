@@ -32,6 +32,7 @@ void WMBusComponent::setup() {
   this->add_driver(new FhkvdataIII());
   this->add_driver(new Hydrocalm3());
   this->add_driver(new Hydrus());
+  this->add_driver(new Iperl());
   this->add_driver(new Itron());
   this->add_driver(new Izar());
   this->add_driver(new Mkradio3());
@@ -116,13 +117,23 @@ void WMBusComponent::loop() {
         ESP_LOGE(TAG, "T : %s", not_ok_telegram.c_str());
       }
     }
-    else if (this->log_unknown_) {
-      ESP_LOGD(TAG, "Meter ID [0x%08X] RSSI: %d dBm LQI: %d Mode: %s not found in configuration T: %s",
-               meter_id,
-               mbus_data.rssi,
-               mbus_data.lqi,
-               mode_to_string(mbus_data.mode).c_str(),
-               telegram.c_str());
+    else {
+      if (this->wmbus_listeners_.count(0) > 0) {
+        if (this->wmbus_listeners_[0]->sensors_.count("lqi") > 0) {
+          this->wmbus_listeners_[0]->sensors_["lqi"]->publish_state(mbus_data.lqi);
+        }
+        if (this->wmbus_listeners_[0]->sensors_.count("rssi") > 0) {
+          this->wmbus_listeners_[0]->sensors_["rssi"]->publish_state(mbus_data.rssi);
+        }
+      }
+      if (this->log_unknown_) {
+        ESP_LOGD(TAG, "Meter ID [0x%08X] RSSI: %d dBm LQI: %d Mode: %s not found in configuration T: %s",
+                meter_id,
+                mbus_data.rssi,
+                mbus_data.lqi,
+                mode_to_string(mbus_data.mode).c_str(),
+                telegram.c_str());
+      }
     }
     if (!(this->clients_.empty())) {
       this->led_blink();

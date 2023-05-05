@@ -123,6 +123,11 @@ globals:
     restore_value: yes
     initial_value: "0.00"
 
+  - id: alarm_error_text
+    type: std::vector<std::string>
+    restore_value: no
+    initial_value: '{"no error", "general_alarm","leakage","meter_blocked","back_flow","underflow","overflow","submarine","sensor_fraud","mechanical_fraud"}'
+
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
 ## ---------------------------------------------------
@@ -197,7 +202,6 @@ time:
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
       - 1.pool.ntp.org
-
     on_time_sync:
       then:
         - logger.log: "Synchronized sntp clock"
@@ -230,7 +234,8 @@ wmbus:
   gdo0_pin: GPIO16    ## GD00: gelb (rx)
   gdo2_pin: GPIO17    ## GD02: weiss (tx)
 
-  # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
+  # log_unknown (Optional): Show telegrams from not configured meters in log.
+  # Defaults to False
   log_unknown: True
 
 
@@ -297,17 +302,12 @@ sensor:
     # reports the watermeter display value
     total_water_m3:
       id: "waterdisplay"
-      name: "Wasseruhr Anzeige"
+      name: "Watermeter Display"
       unit_of_measurement: "m³"
       state_class: total_increasing
       device_class: "water"
       accuracy_decimals: 3
-      # Send the value periodically with the specified time interval.
-      # If the sensor value changes during the interval the interval will not reset.
-      # The last value of the sensor will be sent. 60s means, that every minute the
-      # last state will be published.
-      filters:
-        - heartbeat: 60s
+      icon: mdi:counter
       # update and calulatet all watermeter data values
       on_value:
         then:
@@ -315,10 +315,60 @@ sensor:
               ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
               id(last_value)=id(waterdisplay).state;
 
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
+    last_month_total_water_m3:
+      name: "Watermeter Anzeige letzter Monat"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
+
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Water Monath
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water"
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Watermeter Battery Life"
+      id: "watermeter_batterie"
+      accuracy_decimals: 2
+      unit_of_measurement: "Years"
+      icon: mdi:battery
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Watermeter Update Intervall"
+      id: "watermeter_transmit_periode"
+      unit_of_measurement: "sec"
+      accuracy_decimals: 2
+      icon: mdi:timelapse
+
+    ## get the current watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    current_alarms:
+      id: "watermeter_current_alarms"
+      name: "Watermeter current alarm code"
+      icon: mdi:alarm-light
+      entity_category: "diagnostic"
+
+    ## get the prevois watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    previous_alarms:
+      id: "watermeter_previous_alarms"
+      name: "Watermeter pervious alarm code"
+      icon: mdi:alarm-light
+      entity_category: "diagnostic"
+
   # device boot counter
   - platform: template
     name: Boot counter
     id: bootcounter
+    icon: mdi:counter
     accuracy_decimals: 0
     state_class: "measurement"
     entity_category: "diagnostic"
@@ -332,10 +382,11 @@ sensor:
     disabled_by_default: true
 
   # Wifi quality RSSI in percentage
-  # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
+  # Received Signal Strength (RSSI) is a measure of incoherent
+  ## (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Watermeter ESP32 WLAN Qualität"
+    name: "Watermeter ESP32 WLAN Signal"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"

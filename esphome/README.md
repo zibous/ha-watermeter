@@ -95,8 +95,8 @@ ____
  
   <br>
 
-  > Be shure that you use the latest version for the build:
-  Use **`Clean build files`** before you install the selected esp-home device version.
+  > **IMPORTEND**: Be shure that you use the latest version for the build:
+  Use **`Clean build files`** before you install the selected esp-home device version. This ensures that the latest components are always used for the application.
 
 <br>
 

@@ -25,6 +25,8 @@ from esphome.const import (
     UNIT_VOLT,
     DEVICE_CLASS_VOLTAGE,
     ENTITY_CATEGORY_DIAGNOSTIC,
+    UNIT_SECOND,
+    DEVICE_CLASS_TIMESTAMP,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -34,6 +36,8 @@ AUTO_LOAD = ["wmbus"]
 CONF_METER_ID = "meter_id"
 CONF_LISTENER_ID = "listener_id"
 CONF_ADD_PREFIX = "add_prefix"
+
+UNIT_LITER = "l"
 
 from .. import (
     WMBusComponent,
@@ -65,7 +69,7 @@ CONFIG_SCHEMA = cv.Schema(
     {
         cv.GenerateID(CONF_LISTENER_ID): cv.declare_id(WMBusListener),
         cv.GenerateID(CONF_WMBUS_ID): cv.use_id(WMBusComponent),
-        cv.Required(CONF_METER_ID): cv.hex_int,
+        cv.Optional(CONF_METER_ID, default=0): cv.hex_int,
         cv.Optional(CONF_TYPE, default="unknown"): cv.string_strict,
         cv.Optional(CONF_KEY, default=""): my_key,
         cv.Optional(CONF_ADD_PREFIX, default=True): cv.boolean,
@@ -86,6 +90,20 @@ CONFIG_SCHEMA = cv.Schema(
         cv.Optional("total_water_m3"): sensor.sensor_schema(
             accuracy_decimals=3,
             unit_of_measurement=UNIT_CUBIC_METER,
+            device_class=DEVICE_CLASS_WATER,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            icon="mdi:water",
+        ),
+        cv.Optional("last_month_total_water_m3"): sensor.sensor_schema(
+            accuracy_decimals=3,
+            unit_of_measurement=UNIT_CUBIC_METER,
+            device_class=DEVICE_CLASS_WATER,
+            state_class=STATE_CLASS_TOTAL_INCREASING,
+            icon="mdi:water",
+        ),
+        cv.Optional("current_month_total_water_l"): sensor.sensor_schema(
+            accuracy_decimals=3,
+            unit_of_measurement=UNIT_LITER,
             device_class=DEVICE_CLASS_WATER,
             state_class=STATE_CLASS_TOTAL_INCREASING,
             icon="mdi:water",
@@ -201,6 +219,23 @@ CONFIG_SCHEMA = cv.Schema(
             device_class=DEVICE_CLASS_VOLTAGE,
             state_class=STATE_CLASS_MEASUREMENT,
             icon="mdi:sine-wave",
+        ),
+        cv.Optional("transmit_period_s"): sensor.sensor_schema(
+            accuracy_decimals=0,
+            unit_of_measurement=UNIT_SECOND,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("remaining_battery_life_y"): sensor.sensor_schema(
+            accuracy_decimals=0,
+            state_class=STATE_CLASS_MEASUREMENT,
+        ),
+        cv.Optional("current_alarms"): sensor.sensor_schema(
+            accuracy_decimals=0,
+            icon="mdi:alarm-light-outline",
+        ),
+        cv.Optional("previous_alarms"): sensor.sensor_schema(
+            accuracy_decimals=0,
+            icon="mdi:alarm-light-outline",
         ),
     }
 ).extend(cv.COMPONENT_SCHEMA)
