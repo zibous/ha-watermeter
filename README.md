@@ -76,19 +76,22 @@ The **ESP32** has more RAM memory and is therefore better suited for use.
 
 ### Meter types:
 
-Currently supported meter types (wmbus version 2.0.5):
+Currently supported meter types (wmbus 2.1.10):
 
 - amiplus
-- apator08
+- apator08 
 - apator162
 - apatoreitn
 - bmeters
+- compact5
 - elf
 - evo868
 - fhkvdataiii
 - hydrocalm3
+- hydrus
+- iperl
 - itron
-- izar
+- **izar**
 - mkradio3
 - mkradio4
 - qheat
@@ -104,18 +107,6 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 
 ## Installation / Details
 [ESPHome - ESP32 (v4) + CC1101](./esphome/README.md)
-
-### What I still miss
-For the IZAR Meter only the `total_m3`, `RSSI` and `LQI` are currently decoded from the telegram. I am still looking for support on how to determine the further information from the telegram:
-
-- Alarm (current_alarms, previous_alarms)
-- Water last month (last_month_total_m3)
-- Last Month date (last_month_measure_date)
-- Battery (remaining_battery_life_y)
-- Periode (transmit_period_s)
-
-> see: <https://github.com/weetmuts/wmbusmeters/discussions/835>
-
 
 ## Result
 
