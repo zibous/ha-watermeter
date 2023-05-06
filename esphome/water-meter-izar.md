@@ -54,6 +54,37 @@ CC1101 --> NODEMCI
 see: https://github.com/maciekn/izar-wmbus-esp#cc1101-868mhz-pinout
 
 
+```
+## ---------------------------------------------------
+##        WMBUS DEVICE D1MINI WEMOS --> CC1101
+## ---------------------------------------------------
+##
+##               GDO0
+##                 o
+##                 7
+##                 | GD02         ╭-------o 2 (GND)
+##                 |  6
+##                 |  o           |
+##                 |  |           |
+##        ╭――x――x――o――o――x――x――x――o――╮
+##        │       D1  D2          -  │
+##        │                          │
+##        │       D1MINI WEMOS       │
+##   ANT  │                          │ USB
+##        │                          │
+##        │           D5 D6 D7 D8 +  │
+##        ╰――x――x――x――o――o――o――o――o――╯
+##                    |  |  |  |  |
+##                    |  |  |  |  ╰-----o  1 (+3.3V)
+##                    |  o  |  o
+##                    |  5  |  8
+##                    | MISO| CSN
+##                    o     o
+##                    4     3
+##                   CLK   MOSI
+##
+```
+
 ## Used Libraries:
 
     - SPI

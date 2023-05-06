@@ -22,8 +22,8 @@
 substitutions:
   device_name_short: "water-meter-d1mini"
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.6"
+  projectname: "Watermeter.Diehl IZAR RC 868"
+  appversion: "2.0.7"
 
   # logger settings
   log_level: "INFO"

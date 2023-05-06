@@ -6,12 +6,12 @@
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
-## usage:  2. Using the last wM-Bus component
-##         3. Using Homassistant API (discovery + devices)
-##         4. Using HTTP Post to service server (optional)
-##         5. Using wmbusmeters i a pipe (optional)
-##         6. uses backup component (optinal)
-##         7. uses syslog component (optinal)
+## usage:  1. Using the last wM-Bus component
+##         2. Using Homassistant API (discovery + devices)
+##         3. Using HTTP Post to service server (optional)
+##         4. Using wmbusmeters i a pipe (optional)
+##         5. uses backup component (optinal)
+##         6. uses syslog component (optinal)
 ##
 ## Backup:  http://water-meter-esp.local/config.yaml
 ##          curl -v 'http://water-meter-esp/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
@@ -23,8 +23,8 @@ substitutions:
   ## device settings
   device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.6"
+  projectname: "Watermeter.Diehl IZAR RC 868"
+  appversion: "2.0.7"
 
   # logger settings
   log_level: "INFO"
@@ -692,7 +692,6 @@ sensor:
       unit_of_measurement: "L"
       state_class: total_increasing
       device_class: "water"
-
 
     # get the battery life time (wM-Bus v2.1.4)
     remaining_battery_life_y:

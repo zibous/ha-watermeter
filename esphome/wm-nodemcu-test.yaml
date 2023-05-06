@@ -21,8 +21,8 @@
 substitutions:
   device_name_short: "water-meter"
   device_description: "Wasserzähler NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all Watermeters"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.6"
+  projectname: "Watermeter.Diehl IZAR RC 868"
+  appversion: "2.0.7"
 
   # logger settings
   log_level: "DEBUG"
@@ -298,6 +298,50 @@ sensor:
           - lambda: |-
               ESP_LOGI("SENSOR", "Water Display value: %f", id(waterdisplay).state);
 
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Wasseruhr Monat
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water" 
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Wasseruhr Batterielebensdauer"
+      id: "watermeter_batterie"
+      entity_category: "diagnostic"
+      icon: mdi:battery
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Wasseruhr Interval"
+      id: "watermeter_last_reading"
+      entity_category: "diagnostic"
+      icon: mdi:timelapse
+
+    current_alarms:
+      id: "watermeter_current_alarms"
+      name: "Wasseruhr Alarm"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
+
+    previous_alarms:
+      id: "watermeter_prev_alarms"
+      name: "Wasseruhr voriger alarm"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
+
+ # device boot counter
+  - platform: template
+    name: Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));
+
   # Wifi quality RSSI used by wifi_signal_db
   - platform: wifi_signal
     id: wifi_signal_db
@@ -314,14 +358,4 @@ sensor:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
     entity_category: "diagnostic"
-
- # device boot counter
-  - platform: template
-    name: Boot counter
-    id: bootcounter
-    accuracy_decimals: 0
-    state_class: "measurement"
-    entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
-
 

@@ -32,15 +32,41 @@ After Wemos D1 Mini + CC1101 has been wired, the application can be flashed with
 
 ```yaml
 ## ---------------------------------------------------
-## WMBUS DEVICE D1MINI WEMOS --> CC1101
+##        WMBUS DEVICE D1MINI WEMOS --> CC1101
 ## ---------------------------------------------------
+##
+##               GDO0
+##                 o
+##                 7
+##                 | GD02         ╭-------o 2 (GND)
+##                 |  6           |
+##                 |  o           |
+##                 |  |           |
+##        ╭――x――x――o――o――x――x――x――o――╮
+##        │       D1  D2          -  │
+##        │                          │
+##        │       D1MINI WEMOS       │
+##   ANT  │                          │ USB
+##        │                          │
+##        │           D5 D6 D7 D8 +  │
+##        ╰――x――x――x――o――o――o――o――o――╯
+##                    |  |  |  |  |
+##                    |  |  |  |  ╰-----o  1 (+3.3V)
+##                    |  o  |  o
+##                    |  5  |  8
+##                    | MISO| CSN
+##                    o     o
+##                    4     3
+##                   CLK   MOSI
+##
+## --------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13  #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+  mosi_pin: GPIO13  #D7  3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12  #D6  5: MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14   #D5  4: SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15    #D8  8: CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05  #D1  7: Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2  6: FIFO status signals. High Impedance !
 ```
 
 ___

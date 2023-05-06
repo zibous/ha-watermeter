@@ -32,31 +32,35 @@ ____
 After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ```yaml
-## ---------------------------------------------------
-## WMBUS CC1101 --> ESP32
-## ---------------------------------------------------
+## ------------------------------------------------------------------
+##           WMBUS CC1101 --> ESP32 az-delivery-devkit-v4
+## ------------------------------------------------------------------
 ##
-##                                        | 3.3V
-##    - - - - - - - - - - - - - - - - - - x
-##   |                                    |
-## - | 5v           ESP32                 | -- ANT
-##   |                                    |
-##    - - - - x - x x x x x x - - - - - x x
-##                | | | | |             | |
-##                | | | | |             | | GND
-##           GD00 | | | | |             |
-##               GD02                  M0SI
-##                   CSN
-##                      SCK
-##                        MISO
-## -------------------------------------------------
+##
+##                                                               o 1 (3.3V)
+##                                                               |
+##   ╭――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――o―╮
+##   |                                                             |
+## - | 5v               az-delivery-devkit-v4                      | -- ANT
+##   |                                                             |
+##   |                          16 17 5  18 19               23    |
+##   ╰――x――x――x――x――x――x――x――x――o――x――o――o――o――o――o――o――o――o――o――o―╯
+##                              |  |  |  |  |                 |   |
+##                              o  |  |  o  |                 |   ╰-o - 2 (GND)
+##                              7  o  |  4  o                 o
+##                            GDO0 6  | CLK 5                 3
+##                               GD02 o    MISO              M0SI
+##                                    8
+##                                   CSN
+##
+## ------------------------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23    ## SI:   braun
-  miso_pin: GPIO19    ## SO:   grün
-  clk_pin: GPIO18     ## SCLK: violett
-  cs_pin: GPIO05      ## CSN:  orange
-  gdo0_pin: GPIO16    ## GD00: gelb (rx)
-  gdo2_pin: GPIO17    ## GD02: weiss (tx)
+  mosi_pin: GPIO23  ## SI:   braun   3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO19  ## SO:   grün    5: MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO18   ## SCLK: violett 4: SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO05    ## CSN:  orange  8: CSN  Attached to Hardware SPI controller
+  gdo0_pin: GPIO16  ## GD00: gelb    7: RX Clock output. High Impedance !
+  gdo2_pin: GPIO17  ## GD02: weiss   6: TX FIFO status signals. High Impedance !
   
 # https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/img/Esp32_CC1101.png
 ```

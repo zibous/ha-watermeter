@@ -15,8 +15,8 @@
 substitutions:
   device_name_short: "water-meter-d1mini"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.6"
+  projectname: "Watermeter.Diehl IZAR RC 868"
+  appversion: "2.0.7"
 
   ## all watermeters wmid: "0"
   ## your watermeter: wmid: !secret watermeterId
@@ -279,8 +279,8 @@ sensor:
     # Note that a lower value indicates a better link.
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
-      id: wmbus_cc1101_lqi
       name: "Wlan CC1101 LQI"
+      id: wmbus_cc1101_lqi      
       entity_category: "diagnostic"
       unit_of_measurement: "lqi"
 
@@ -307,6 +307,41 @@ sensor:
           - lambda: |-
               ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
               id(last_value)=id(waterdisplay).state;
+    
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Wasseruhr Monat
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water" 
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Wasseruhr Batterielebensdauer"
+      id: "watermeter_batterie"
+      entity_category: "diagnostic"
+      icon: mdi:battery
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Wasseruhr Interval"
+      id: "watermeter_last_reading"
+      entity_category: "diagnostic"
+      icon: mdi:timelapse
+
+    current_alarms:
+      id: "watermeter_current_alarms"
+      name: "Wasseruhr Alarm"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
+
+    previous_alarms:
+      id: "watermeter_prev_alarms"
+      name: "Wasseruhr voriger alarm"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
 
   # device boot counter
   - platform: template

@@ -19,8 +19,8 @@
 substitutions:
   device_name_short: "water-meter-d1mini"
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.6"
+  projectname: "Watermeter.Diehl IZAR RC 868"
+  appversion: "2.0.7"
 
   # logger settings
   log_level: "INFO"
@@ -282,6 +282,15 @@ sensor:
       accuracy_decimals: 3
       icon: mdi:counter
 
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Water Month
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water"
+
     # get the last month total watermter m3 from the wmbus telegram  (wM-Bus v2.1.4)
     last_month_total_water_m3:
       name: "Watermeter last mont"
@@ -300,20 +309,20 @@ sensor:
 
     # get the last transmit periode (wM-Bus v2.1.4)
     transmit_period_s:
-      name: "Watermeter Interval"
+      name: "Watermeter Periode"
       id: "watermeter_last_reading"
       entity_category: "diagnostic"
       icon: mdi:timelapse
 
     current_alarms:
-      id: "watermeter_current_alarms"
       name: "Watermeter current alarm"
+      id: "watermeter_current_alarms"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
-    previous_alarms:
-      id: "watermeter_prev_alarms"
+    previous_alarms:      
       name: "Watermeter previous alarm"
+      id: "watermeter_prev_alarms"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 

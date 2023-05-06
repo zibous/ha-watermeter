@@ -111,7 +111,32 @@ The **ESP32** has more RAM memory and is therefore better suited for use.
 ### Memory Usage D1 Mini
 ![memory_usage](https://user-images.githubusercontent.com/30198737/235585457-895bb25f-47a6-4901-a403-96a115caac3d.png)
 
+<br>
 
+## ESPHome Device configurations
+
+
+- **Testcase - and simple version**
+	`Total Water m³ (Watermeter Display)`, `LQI`, `RSSI`, `Total m³`, `Last Month total m³`, `Current Month total liter`, `Remaining Battery Lifetime`, `Last Transmit periode`, `Current Alarm Code`, `Previous Alarm Code`, `Boot Counter`, `WIFI Signal`, `Application Version`.
+- **Full version**
+	`Total Water m³ (Watermeter Display)`, `LQI`, `RSSI`, `Total m³`, `Last Month total m³`, `Water usage current`, `Water usage hour`, `Water usage today`, `Water usage yesterday`, `Water usage week`, `Water usage month`, `Water usage previous month`, `Water usage current year `, `Remaining Battery Lifetime`, `Last Transmit periode`, `Alarm Text`, `Previous Alarm Text`, `Boot Counter`, `WIFI Signal`, `Reset values`, `Restart`, `Set History value with Homeassistant service`, `Application Version`, `Online Time`, `Watermeter LED`, `Watermeter Timestamp`, `Watermeter Update intervall`.	
+
+<br>	
+	
+|  Version         | Remarks   | Configuration  | 
+|------------------|-----------|----------------|
+| ESP32 Test  |Frist run to find watermeters. Messages see Logwindow or syslog messages |[wm-esp32-test.yaml](esphome/wm-esp32-test.yaml)  |
+| ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.         |[wm-esp32-simple.yaml](esphome/wm-esp32-simple.yaml)  |
+| ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-esp32.yaml](esphome/wm-esp32.yaml)  |  
+| D1MINI IZAR WMBUS|Testcase for IZAR WMBUS METER          |[wm-d1mini_izar-wmbus.yaml](esphome/wm-d1mini_izar-wmbus.yaml)|
+| D1MINI Test|Frist run to find watermeters. Messages see Logwindow or syslog messages         |[wm-d1mini-test.yaml](esphome/wm-d1mini-test.yaml)|
+| D1MINI Simple |Simple Sensor outputs, no calculations. Low memory consumption.          |[wm-d1mini-simple.yaml](esphome/wm-d1mini-simple.yaml)|
+| D1MINI |Sensors and calulated values, Statitics. Alarmcode text message          |[wm-d1mini.yaml](esphome/wm-d1mini.yaml)|  
+| NodeMCU Test |Frist run to find watermeters. Low memory consumption. Messages see Logwindow or syslog messages          |[wm-nodemcu-test.yaml](esphome/wm-nodemcu-test.yaml) |
+| NodeMCU  |Full version - Sensors and calulated values, Statitics. Alarmcode text message|[wm-nodemcu.yaml](esphome/wm-nodemcu.yaml) |  
+  
+<br>  
+  
 <hr>
 
 ## Other solutions (alternatively)

@@ -11,7 +11,7 @@ substitutions:
   # device settings
   device_name_short: "water-meter-izar"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL) Developer Version maciekn"
-  projectname: "Diehl IZAR RC 868.Watermeter"
+  projectname: "Watermeter.Diehl IZAR RC 868"
   appversion: "1.1.7"
 
   # my watermeter id (change this to your watermeter ID)
