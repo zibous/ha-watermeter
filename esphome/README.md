@@ -26,7 +26,7 @@ ____
 ### Requirements
 - ESPHOME Docker v2023.5.0-dev
 - ESP32 240MHz, 520KB RAM, 4MB Flash (ESP32 AZ-DELIVERY-DEVKIT-V4)
-- CC1101
+- CC1101 + (optional CC1101 Adapter Platine)
 
 
 After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
@@ -374,11 +374,11 @@ The flashing process is done using the esptool library by espressif.
 
 ### WMBUSMETERS custom components
 - [Szczepan's esphome custom components](https://github.com/SzczepanLeon/esphome-components)
+- [izar-wmbus-esp (maciekn)](https://github.com/maciekn/izar-wmbus-esp)
+- [ESPhome-IZAR-meter-reader (MariuszWoszczynski)](https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader)
 
 ### Informations
 
-- <https://github.com/maciekn/izar-wmbus-esp>
+- SmartRC-CC1101-Driver-Lib: <https://github.com/LSatan/SmartRC-CC1101-Driver-Lib>
 
-- <https://github.com/MariuszWoszczynski/ESPhome-IZAR-meter-reader>
-
-- <https://github.com/LSatan/SmartRC-CC1101-Driver-Lib>
+- CC1101 Adapter Platine: <https://oshpark.com/shared_projects/dVZXCMXP>
