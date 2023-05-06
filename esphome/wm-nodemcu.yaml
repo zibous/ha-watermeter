@@ -45,7 +45,7 @@ esphome:
   on_boot:
     # -100: At this priority, pretty much everything should already be initialized.
     # 200.0: Network connections like MQTT/native API are set up at this priority.
-    priority: 200.0
+    priority: 200
     then:
       - globals.set:
           id: boot_counter
@@ -415,33 +415,35 @@ time:
           - lambda: id(wateryear).publish_state(id(year_value));
           - logger.log: Reset value yearly, starting new year
 
-## ---------------------------------------------------
-## WMBUS DEVICE NODEMCU V3 --> CC1101
-## ---------------------------------------------------
-##
-##                                       | GND
-##                                       2
-##     - - - - - - - - - - - - - - - - - o -
-##   |                                       |
-## - | ANT        NODEMCU V3                 | -- USB
-##   |                                       |
-##     - o o - - - o o o o - - - - - - - - o
-##       7 6       4 5 3 8                 1    .... CC1101
-##       | |       | | | |                 |
-##       | |   SCK | | | | CSN             | 3.3V
-##        GD02     | | | |
-##      GDO0        MISO
-##                    MOSI
+## ------------------------------------------------------------------
+##           WMBUS CC1101 --> NODEMCU V3
+## ------------------------------------------------------------------
 ##
 ##
-## -------------------------------------------------
+##       GDO0                 MOSI
+##         7              MISO  3
+##         o GD02       CLK  5  o  CSN
+##         |  6           4  o  |  8           ╭-------o 2 (GND)
+##         |  o           o  |  |  o           |  ╭----o 1 (3.3V)
+##         |  |           |  |  |  |           |  |
+##   ╭――x――o――o――x――x――x――o――o――o――o――x――x――x――o――o―╮
+##   |     D1 D2          D5 D6 D7 D8               |
+##   |                                              |
+## - | ANT              NODEMCU V3                  | -- USB
+##   |                                              |
+##   |                                              |
+##   ╰――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x―╯
+##
+##
+##
+## ------------------------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13 #D7:3  MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12 #D6:5  MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14 #D5:4  SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15 #D8:8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05 #D1:7  Clock output. High Impedance !
-  gdo2_pin: GPIO04 #D2:6  FIFO status signals. High Impedance !
+  mosi_pin: GPIO13  #D7  3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12  #D6  5: MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14   #D5  4: SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15    #D8  8: CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05  #D1  7: Clock output. High Impedance !
+  gdo2_pin: GPIO04  #D2  6: FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: False

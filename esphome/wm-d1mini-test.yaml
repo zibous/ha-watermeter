@@ -46,7 +46,7 @@ esphome:
   build_path: ./build/${device_name_short}
   on_boot:
     # At this priority, pretty much everything should already be initialized.
-    priority: -100.0
+    priority: 200
     then:
       - globals.set:
           id: boot_counter
@@ -194,8 +194,34 @@ time:
         - logger.log: "Synchronized sntp clock"
 
 ## ---------------------------------------------------
-## WMBUS DEVICE D1MINI WEMOS --> CC1101
+##        WMBUS DEVICE D1MINI WEMOS --> CC1101
 ## ---------------------------------------------------
+##
+##               GDO0
+##                 o
+##                 7
+##                 | GD02         ╭-------o 2 (GND)
+##                 |  6
+##                 |  o           |
+##                 |  |           |
+##        ╭――x――x――o――o――x――x――x――o――╮
+##        │       D1  D2          -  │
+##        │                          │
+##        │       D1MINI WEMOS       │
+##   ANT  │                          │ USB
+##        │                          │
+##        │           D5 D6 D7 D8 +  │
+##        ╰――x――x――x――o――o――o――o――o――╯
+##                    |  |  |  |  |
+##                    |  |  |  |  ╰-----o  1 (+3.3V)
+##                    |  o  |  o
+##                    |  5  |  8
+##                    | MISO| CSN
+##                    o     o
+##                    4     3
+##                   CLK   MOSI
+##
+## --------------------------------------------------
 wmbus:
   mosi_pin: GPIO13  #D7  MOSI Attached to Hardware SPI controller MOSI SPI Interface
   miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
