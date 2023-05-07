@@ -1,0 +1,10 @@
+https://amzn.eu/d/bA0fmJE
+https://www.cdebyte.com/products/E07-900MM10S/2#Pin
+
+Ebyte E07-900MM10S Wireless Transmitter Module 10dBm Cheap Rf Module CC1101 1.5km 855-925MHz rf module
+E07-900MM10S uses Texas Instruments (TI) CC1101 chip as the core self-developed SMD wireless module. 
+The working frequency range is 855-925 MHz, and it uses an industrial-grade high-precision 26MHz crystal 
+oscillator. This series of modules is mainly aimed at smart home, industry, scientific research and 
+medical and short-distance wireless communication equipment. Extensive hardware support for 
+packet processing, data buffering, burst transfers, received signal strength indication (RSSI), 
+clear channel assessment (CCA), link quality indication, and wake-on-wireless (WOR) is available. 
