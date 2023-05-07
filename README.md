@@ -18,7 +18,7 @@
 [donate-me-shield]: https://img.shields.io/static/v1?label=+&color=orange&message=Buy+me+a+coffee
 [donate-me]: https://www.buymeacoff.ee/zibous
 
-![](https://img.shields.io/badge/ESP8266_vs_ESP32_(v4)-orange?style=for-the-badge)
+[![](https://img.shields.io/badge/ESPHOME_ESP32_(v4)+CC1101-orange?style=for-the-badge)](https://github.com/zibous/ha-watermeter/blob/master/esphome/wm-esp32.yaml)
 
 <br>
 
