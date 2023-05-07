@@ -20,7 +20,8 @@
 [donate-me]: https://www.buymeacoff.ee/zibous
 
 ![Wemos D1 Mini + CC1101](docs/esp32_cc1101.png)
-![](https://img.shields.io/badge/ESPHOME_ESP32_(v4)+CC1101-orange?style=for-the-badge)
+
+[![](https://img.shields.io/badge/ESPHOME_ESP32_(v4)+CC1101-orange?style=for-the-badge)](https://github.com/zibous/ha-watermeter/blob/master/esphome/wm-esp32.yaml)
 
 
 
