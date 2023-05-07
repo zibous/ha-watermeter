@@ -1,0 +1,231 @@
+---
+## ------------------------------------------------------------------
+## TESTCASE FOR WMBUS METER + CC1101 for WATERMETES
+##
+## This version has no sensors and shows only
+## the logs for checking wM-Bus and CC1101.
+##
+## ------------------------------------------------------------------
+substitutions:
+  # device and application settings
+  device_name_short: "water-meter-test"
+  device_description: "Watermeter CC1101 wmbus Test"
+  projectname: "Watermeter.CC1101 wmbus Test"
+  appversion: "2.0.7"
+
+  # logger settings
+  log_level: "VERBOSE"
+  log_bautrate: "0"
+
+  # Device configuration (select your device)
+ 
+  ## ---------------------------------------------------
+  ##
+  ##               GDO0
+  ##                 o
+  ##                 7
+  ##                 | GD02         ╭-------o 2 (GND)
+  ##                 |  6
+  ##                 |  o           |
+  ##                 |  |           |
+  ##        ╭――x――x――o――o――x――x――x――o――╮
+  ##        │       D1  D2          -  │
+  ##        │                          │
+  ##        │       D1MINI WEMOS       │
+  ##   ANT  │                          │ USB
+  ##        │                          │
+  ##        │           D5 D6 D7 D8 +  │
+  ##        ╰――x――x――x――o――o――o――o――o――╯
+  ##                    |  |  |  |  |
+  ##                    |  |  |  |  ╰-----o  1 (+3.3V)
+  ##                    |  o  |  o
+  ##                    |  5  |  8
+  ##                    | MISO| CSN
+  ##                    o     o
+  ##                    4     3
+  ##                   CLK   MOSI
+  ##
+  ## --------------------------------------------------  
+  BOARD: d1_mini
+  CC1101_3: D7 # MOSI 
+  CC1101_4: D5 # CLK
+  CC1101_5: D6 # MISO
+  CC1101_6: D2 # GD02
+  CC1101_7: D1 # GDO0
+  CC1101_8: D8 # CSN
+
+## ----------------------------------------------------------------
+## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
+## ----------------------------------------------------------------
+esp8266:
+  board: ${BOARD}
+  restore_from_flash: true
+  
+  ## ------------------------------------------------------------------
+  ##
+  ##                                                               o 1 (3.3V)
+  ##                                                               |
+  ##   ╭――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――o―╮
+  ##   |                                                             |
+  ## - | 5v               az-delivery-devkit-v4                      | -- ANT
+  ##   |                                                             |
+  ##   |                          16 17 5  18 19               23    |
+  ##   ╰――x――x――x――x――x――x――x――x――o――x――o――o――o――o――o――o――o――o――o――o―╯
+  ##                              |  |  |  |  |                 |   |
+  ##                              o  |  |  o  |                 |   ╰-o - 2 (GND)
+  ##                              7  o  |  4  o                 o
+  ##                            GDO0 6  | CLK 5                 3
+  ##                               GD02 o    MISO              M0SI
+  ##                                    8
+  ##                                   CSN
+  ##
+  ## ------------------------------------------------------------------
+  # BOARD: az-delivery-devkit-v4
+  # CC1101_3: GPIO23  # M0SI
+  # CC1101_4: GPIO18  # CLK
+  # CC1101_5: GPIO19  # MISO
+  # CC1101_6: GPIO17  # GD02
+  # CC1101_7: GPIO16  # GDO0
+  # CC1101_8: GPIO05  # CSN
+
+## ----------------------------------------------------------------
+## HARDWARE az-delivery-devkit-v4
+##          ESP32 240MHz, 520KB RAM, 4MB Flash
+## ----------------------------------------------------------------
+# esp32:
+#   board: ${BOARD}
+#   framework:
+#     type: arduino
+
+
+  ## ------------------------------------------------------------------
+  ##
+  ##
+  ##       GDO0                 MOSI
+  ##         7              MISO  3
+  ##         o GD02       CLK  5  o  CSN
+  ##         |  6           4  o  |  8           ╭-------o 2 (GND)
+  ##         |  o           o  |  |  o           |  ╭----o 1 (3.3V)
+  ##         |  |           |  |  |  |           |  |
+  ##   ╭――x――o――o――x――x――x――o――o――o――o――x――x――x――o――o―╮
+  ##   |     D1 D2          D5 D6 D7 D8               |
+  ##   |                                              |
+  ## - | ANT              NODEMCU V3                  | -- USB
+  ##   |                                              |
+  ##   |                                              |
+  ##   ╰――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x―╯
+  ##
+  ##
+  ##
+  ## ------------------------------------------------------------------
+  # BOARD: nodemcuv2
+  # CC1101_3: D7  # MOSI
+  # CC1101_4: D5  # CLK
+  # CC1101_5: D6  # MISO
+  # CC1101_6: D2  # GD02
+  # CC1101_7: D1  # GDO0
+  # CC1101_8: D8  # CSN
+
+# ----------------------------------------------------------------
+# HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
+# ----------------------------------------------------------------
+# esp8266:
+#   board: ${BOARD}
+#   restore_from_flash: true
+
+## ----------------------------------------------------------------
+## ESPHOME APPLICATION
+## ----------------------------------------------------------------
+esphome:
+  name: ${device_name_short}
+  comment: ${device_description}
+  project:
+    name: ${projectname}
+    version: ${appversion}
+  build_path: ./build/${device_name_short}
+ 
+## ----------------------------------------------------------------
+## External components
+## ----------------------------------------------------------------
+external_components:
+  # uses the latest version from SzczepanLeon
+  - source: github://SzczepanLeon/esphome-components@main
+    refresh: 0s
+    components: [wmbus]
+
+## ---------------------------------------------------
+## WIFI Settings 3 wifis
+## ---------------------------------------------------
+wifi:
+  id: wifi_d1mini
+  networks:
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 0
+    - ssid: !secret ssid1_name
+      password: !secret ssid1_pswd
+      priority: 1
+    - ssid: !secret ssid2_name
+      password: !secret ssid2_pswd
+      priority: 2
+  domain: !secret domain
+
+## ---------------------------------------------------
+## Captive portal component 
+## ---------------------------------------------------
+captive_portal:
+
+## ---------------------------------------------------
+## LOGGER component 
+## ---------------------------------------------------
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: ${log_bautrate}
+
+## ---------------------------------------------------
+## OTA Updates
+## ---------------------------------------------------
+ota:
+  password: !secret ota_pswd
+  on_error:
+    then:
+      - logger.log:
+          format: "OTA update error %d"
+          args: ["x"]
+
+## ---------------------------------------------------
+## LOCAL WEBSERVER, local settings - no internet
+## ---------------------------------------------------
+web_server:
+  port: 80
+  version: 2
+  local: true
+
+## ---------------------------------------------------
+## SNTP Time server
+## ---------------------------------------------------
+time:
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Berlin
+    servers:
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+
+## ---------------------------------------------------
+## CC11001 WMBUS TO DEVICE (selected board)
+## ---------------------------------------------------
+wmbus:
+  mosi_pin: ${CC1101_3}  # MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: ${CC1101_5}  # MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: ${CC1101_4}   # SCK  Attached to Hardware SPI controller CLK
+  cs_pin: ${CC1101_8}    # CSN  Attached to Hardware SPI controller
+  gdo0_pin: ${CC1101_7}  # GDO0 Clock output. High Impedance !
+  gdo2_pin: ${CC1101_6}  # GDO2 status signals. High Impedance !
+
+  # Shows telegrams from all watermeters in log.
+  log_unknown: True
+
+## Nothing follow here, output only on log console

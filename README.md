@@ -6,7 +6,6 @@
 [![Open in Visual Studio Code][open-in-vscode-shield]][open-in-vscode]
 [![Support author][donate-me-shield]][donate-me]
 
-
 [license-shield]: https://img.shields.io/static/v1?label=License&message=MIT&color=orange&logo=license
 [license]: https://opensource.org/licenses/MIT
 
@@ -19,6 +18,7 @@
 [donate-me-shield]: https://img.shields.io/static/v1?label=+&color=orange&message=Buy+me+a+coffee
 [donate-me]: https://www.buymeacoff.ee/zibous
 
+![](https://img.shields.io/badge/ESP8266_vs_ESP32_(v4)-orange?style=for-the-badge)
 
 <br>
 
@@ -95,7 +95,7 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 ## ESP8266 vs ESP32 (v4)
 The version with **WEMOS D1MINI (ESP8266)** was my first version. WEMOS D1MINI (ESP8266) has only limited RAM and can only be used to a limited extent. If there are too many sensors, a **JSON memory error occurs**, which causes the device to restart again and again.
 
-The **ESP32** has more RAM memory and is therefore better suited for use.
+__Note__: The **ESP32** has more RAM memory and is therefore better suited for use.
 
 <br>
 
@@ -125,15 +125,16 @@ The **ESP32** has more RAM memory and is therefore better suited for use.
 	
 |  Version         | Remarks   | Configuration  | 
 |------------------|-----------|----------------|
-| ESP32 Test  |Frist run to find watermeters. Messages see Logwindow or syslog messages |[wm-esp32-test.yaml](esphome/wm-esp32-test.yaml)  |
-| ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.         |[wm-esp32-simple.yaml](esphome/wm-esp32-simple.yaml)  |
-| ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-esp32.yaml](esphome/wm-esp32.yaml)  |  
+| 🛠 WMBUSCHECK  |Test configuration and wmbus. NO SENSORS only messages: Details see Log window  |[wm-check-wmbus.yaml](esphome/wm-check-wmbus.yaml)  |
+| 🛠 ESP32 Test  |Frist run to find watermeters. Messages see Log window or syslog messages |[wm-esp32-test.yaml](esphome/wm-esp32-test.yaml)  |
+| 💻 ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.         |[wm-esp32-simple.yaml](esphome/wm-esp32-simple.yaml)  |
+|✔️ ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-esp32.yaml](esphome/wm-esp32.yaml)  |  
 | D1MINI IZAR WMBUS|Testcase for IZAR WMBUS METER          |[wm-d1mini_izar-wmbus.yaml](esphome/wm-d1mini_izar-wmbus.yaml)|
-| D1MINI Test|Frist run to find watermeters. Messages see Logwindow or syslog messages         |[wm-d1mini-test.yaml](esphome/wm-d1mini-test.yaml)|
-| D1MINI Simple |Simple Sensor outputs, no calculations. Low memory consumption.          |[wm-d1mini-simple.yaml](esphome/wm-d1mini-simple.yaml)|
-| D1MINI |Sensors and calulated values, Statitics. Alarmcode text message          |[wm-d1mini.yaml](esphome/wm-d1mini.yaml)|  
-| NodeMCU Test |Frist run to find watermeters. Low memory consumption. Messages see Logwindow or syslog messages          |[wm-nodemcu-test.yaml](esphome/wm-nodemcu-test.yaml) |
-| NodeMCU  |Full version - Sensors and calulated values, Statitics. Alarmcode text message|[wm-nodemcu.yaml](esphome/wm-nodemcu.yaml) |  
+| 🛠 D1MINI Test|Frist run to find watermeters. Messages see Log window or syslog messages         |[wm-d1mini-test.yaml](esphome/wm-d1mini-test.yaml)|
+| 💻 D1MINI Simple |Simple Sensor outputs, no calculations. Low memory consumption.          |[wm-d1mini-simple.yaml](esphome/wm-d1mini-simple.yaml)|
+|✔️ D1MINI |Sensors and calulated values, Statitics. Alarmcode text message          |[wm-d1mini.yaml](esphome/wm-d1mini.yaml)|  
+| 🛠 NodeMCU Test |Frist run to find watermeters. Low memory consumption. Messages see Log window or syslog messages          |[wm-nodemcu-test.yaml](esphome/wm-nodemcu-test.yaml) |
+|✔️ NodeMCU  |Full version - Sensors and calulated values, Statitics. Alarmcode text message|[wm-nodemcu.yaml](esphome/wm-nodemcu.yaml) |  
   
 <br>  
   
