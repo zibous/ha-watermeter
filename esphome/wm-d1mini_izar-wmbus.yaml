@@ -53,9 +53,6 @@ esphome:
         - globals.set:
             id: boot_counter
             value: !lambda "return id(boot_counter)+=1;"
-        - globals.set:
-            id: send_millisecond
-            value: !lambda "return millis();"
         - logger.log:
             level: WARN
             tag: "system"
@@ -66,10 +63,7 @@ esphome:
         - logger.log:
             level: WARN
             tag: "system"
-            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
-        - text_sensor.template.publish:
-              id: device_lastBoot_time
-              state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "        
   on_shutdown:
     priority: 700
     then:
