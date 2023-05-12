@@ -89,14 +89,18 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 
 ## Result
 
-![ESPHOME-WATERMETER](./esphome/docs/eshome_webui.png)
+### ESPHOME Webserver
+![ESPHOME-WATERMETER](./esphome/docs/water-meter-esp.png)
+
+### Homeassistant Device
+![ESPHOME-WATERMETER](./esphome/docs/ha_water-meter-esp.png)
 
 <br>
 
 ## ESP8266 vs ESP32 (v4)
-The version with **WEMOS D1MINI (ESP8266)** was my first version. WEMOS D1MINI (ESP8266) has only limited RAM and can only be used to a limited extent. If there are too many sensors, a **JSON memory error occurs**, which causes the device to restart again and again.
+The version with **WEMOS D1MINI (ESP8266)** was my first version. WEMOS D1MINI (ESP8266) has only limited RAM and can only be used to a limited extent. If there are too many sensors and the logger level is to high, a **JSON memory error occurs**, which causes the device to restart again and again.
 
-__Note__: The **ESP32** has more RAM memory and is therefore better suited for use.
+__Note__: The **ESP32** has more RAM memory and is therefore better suited for use. To prevent this, it is absolutely necessary to set the log level to `warn`. Otherwise, at a higher log level, JSON errors will occur in productive operation.
 
 <br>
 

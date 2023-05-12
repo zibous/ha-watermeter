@@ -12,6 +12,8 @@
 ## This version shows data from the all watermeters.
 ## Use this for frist test to find your watermeterID.
 ##
+## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
+##
 ## WEBUI:   http://water-meter.local
 ## Backup:  http://water-meter.local/config.yaml
 ##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
@@ -19,13 +21,17 @@
 ##
 ## ------------------------------------------------------------------
 substitutions:
+
+   ## device settings
   device_name_short: "water-meter"
   device_description: "Wasserzähler NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all Watermeters"
-  projectname: "Watermeter.Diehl IZAR RC 868"
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
 
-  # logger settings
-  log_level: "DEBUG"
+  ## logger settings
+  log_level: "DEBUG"  # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "DEBUG" # Loglevel for wmbus meters component
+  log_baudrate: "0" # 0 disable uart logger messages
 
 # ----------------------------------------------------------------
 # HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -45,22 +51,22 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: 200
+    priority: -100.00
     then:
       - globals.set:
           id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
+          value: !lambda "return id(boot_counter)+=1;"      
       - logger.log:
           level: INFO
-          tag: "BOOT"
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+      - component.update: bootcounter
   on_shutdown:
     priority: 700
     then:
       - logger.log:
-          level: INFO
-          tag: "BOOT"
+          level: ERROR
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 ## ----------------------------------------------------------------
@@ -143,24 +149,32 @@ wifi:
 ## ---------------------------------------------------
 captive_portal:
 
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: 0 #disable logging over uart
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
-## OTA Updates
+## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
   on_error:
     then:
       - logger.log:
+          level: INFO
+          tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## LOCAL WEBSERVER, local settings - no internet
+## WEBSERVER COMPONENT
 ## ---------------------------------------------------
 web_server:
   port: 80
@@ -168,7 +182,7 @@ web_server:
   local: false
 
 ## ---------------------------------------------------
-## Enable Home Assistant API
+## Home Assistant API COMPONENT
 ## ---------------------------------------------------
 api:
   id: espapnuc
@@ -176,7 +190,7 @@ api:
   reboot_timeout: 0s
 
 ## ---------------------------------------------------
-## SNTP Time server
+## SNTP COMPONENT
 ## ---------------------------------------------------
 time:
   - platform: sntp
@@ -189,7 +203,10 @@ time:
 
     on_time_sync:
       then:
-        - logger.log: "Synchronized sntp clock"
+        - logger.log:
+            tag: "system"
+            level: INFO
+            format: "Synchronized sntp clock"
 
 
 ## ------------------------------------------------------------------
@@ -231,7 +248,7 @@ wmbus:
 switch:
   # reset boot counter value
   - platform: template
-    name: Reset Boot Counter
+    name: "Device Reset Boot Counter"
     turn_on_action:
       then:
         - lambda: |-
@@ -239,17 +256,21 @@ switch:
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
             level: INFO
-            tag: "BOOT"
+            tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
+
   - platform: restart
-    name: "Restart"
+    name: "Device Restart"
     id: restart_switch
+
   # save device boot (develop only)
   - platform: safe_mode
-    name: "Restart (Safe Mode)"
+    name: "Device Restart (Safe Mode)"
+
   # reset the device to factory reset (develop only)
   - platform: factory_reset
-    name: Restart with Factory Default Settings
+    name: "Device Restart Factory"
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -271,7 +292,7 @@ sensor:
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
       id: wmbus_cc1101_lqi
-      name: "Wlan CC1101 LQI"
+      name: "WLAN CC1101 LQI"
       entity_category: "diagnostic"
       unit_of_measurement: "lqi"
 
@@ -280,14 +301,14 @@ sensor:
     # RSSI stands for received signal strength (power) indication (in dBm).
     # A higher value indicates higher power. (internal only)
     rssi:
-      name: "Wlan CC1101 RSSI"
+      name: "WLAN CC1101 RSSI"
       id: wmbus_cc1101_rssi
       unit_of_measurement: "%"
       entity_category: "diagnostic"
 
     # waterdisplay - get the total watermter m3 from the wmbus telegram
     total_water_m3:
-      name: "Wasseruhr Anzeige"
+      name: "Watermeter Display"
       id: "waterdisplay"
       unit_of_measurement: "m³"
       state_class: total_increasing
@@ -296,46 +317,56 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("SENSOR", "Water Display value: %f", id(waterdisplay).state);
+              ESP_LOGI("wmbus", "Water Display value: %f", id(waterdisplay).state);
 
     # water current month (wM-Bus v2.1.4)
     current_month_total_water_l:
-      name: Wasseruhr Monat
+      name: "Watermeter current month"
       id: "watermonth"
       accuracy_decimals: 2
       unit_of_measurement: "L"
       state_class: total_increasing
-      device_class: "water" 
+      device_class: "water"
+
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
+    last_month_total_water_m3:
+      name: "Water last month"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
 
     # get the battery life time (wM-Bus v2.1.4)
     remaining_battery_life_y:
-      name: "Wasseruhr Batterielebensdauer"
+      name: "Watermeter battery life"
       id: "watermeter_batterie"
       entity_category: "diagnostic"
       icon: mdi:battery
 
     # get the last transmit periode (wM-Bus v2.1.4)
     transmit_period_s:
-      name: "Wasseruhr Interval"
+      name: "Watermeter transmit periode"
       id: "watermeter_last_reading"
       entity_category: "diagnostic"
       icon: mdi:timelapse
 
     current_alarms:
       id: "watermeter_current_alarms"
-      name: "Wasseruhr Alarm"
+      name: "Watermeter current alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
     previous_alarms:
       id: "watermeter_prev_alarms"
-      name: "Wasseruhr voriger alarm"
+      name: "Watermeter previous alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
  # device boot counter
   - platform: template
-    name: Boot counter
+    name: Device Boot counter
     id: bootcounter
     accuracy_decimals: 0
     state_class: "measurement"
@@ -353,7 +384,7 @@ sensor:
   # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Watermeter WLAN RSSI"
+    name: "Device WLAN RSSI"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"

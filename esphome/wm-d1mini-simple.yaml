@@ -17,13 +17,17 @@
 ##
 ## ------------------------------------------------------------------
 substitutions:
+
+  ## device settings
   device_name_short: "water-meter-d1mini"
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
-  projectname: "Watermeter.Diehl IZAR RC 868"
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
 
-  # logger settings
-  log_level: "INFO"
+  ## logger settings
+  log_level: "WARN"  # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "ERROR" # Loglevel for wmbus meters component
+  log_baudrate: "0" # 0 disable uart logger messages
 
 ## ----------------------------------------------------------------
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -43,22 +47,28 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: 200
-    then:
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
-      - logger.log:
-          level: INFO
-          tag: "BOOT"
-          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+    - priority: -100.00
+      then:
+        - globals.set:
+            id: boot_counter
+            value: !lambda "return id(boot_counter)+=1;"        
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+        - component.update: bootcounter
+    - priority: 800
+      then:
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "        
   on_shutdown:
     priority: 700
     then:
       - logger.log:
-          level: INFO
-          tag: "BOOT"
+          level: ERROR
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 ## ----------------------------------------------------------------
@@ -125,13 +135,18 @@ wifi:
 ## ---------------------------------------------------
 captive_portal:
 
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: 0 #disable logging over uart
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
 
 ## ---------------------------------------------------
-## OTA Updates
+## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
@@ -142,7 +157,7 @@ ota:
           args: ["x"]
 
 ## ---------------------------------------------------
-## LOCAL WEBSERVER, local settings - no internet
+## WEBSERVER COMPONENT
 ## ---------------------------------------------------
 web_server:
   port: 80
@@ -150,7 +165,7 @@ web_server:
   local: true
 
 ## ---------------------------------------------------
-## Enable Home Assistant API
+## Home Assistant API COMPONENT
 ## ---------------------------------------------------
 api:
   id: espapiwm2_d1
@@ -171,7 +186,10 @@ time:
 
     on_time_sync:
       then:
-        - logger.log: "Synchronized sntp clock"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "Synchronized sntp clock"
 
 ## ---------------------------------------------------
 ##        WMBUS DEVICE D1MINI WEMOS --> CC1101
@@ -220,7 +238,7 @@ wmbus:
 switch:
   # reset boot counter value
   - platform: template
-    name: "Boot Counter reset"
+    name: Device Boot Counter Reset
     turn_on_action:
       then:
         - lambda: |-
@@ -228,12 +246,13 @@ switch:
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
             level: INFO
-            tag: "BOOT"
+            tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
 
   # restarts the device
   - platform: restart
-    name: "Restart"
+    name: "Device Restart"
     id: restart_switch
 
 ## ---------------------------------------------------
@@ -320,7 +339,7 @@ sensor:
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
-    previous_alarms:      
+    previous_alarms:
       name: "Watermeter previous alarm"
       id: "watermeter_prev_alarms"
       entity_category: "diagnostic"
@@ -328,7 +347,7 @@ sensor:
 
   # device boot counter
   - platform: template
-    name: Boot counter
+    name: Device Boot counter
     id: bootcounter
     accuracy_decimals: 0
     state_class: "measurement"
@@ -346,7 +365,7 @@ sensor:
   # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Watermeter WLAN RSSI"
+    name: "Device WLAN RSSI"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"

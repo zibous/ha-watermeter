@@ -5,20 +5,25 @@
 ## This version has no sensors and shows only
 ## the logs for checking wM-Bus and CC1101.
 ##
+## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
+##
 ## ------------------------------------------------------------------
 substitutions:
+
   # device and application settings
   device_name_short: "water-meter-test"
   device_description: "Watermeter CC1101 wmbus Test"
-  projectname: "Watermeter.CC1101 wmbus Test"
+  projectname: "CC1101 wmbus Test.Watermeter"
   appversion: "2.0.7"
 
-  # logger settings
-  log_level: "VERBOSE"
-  log_bautrate: "0"
+# logger settings
+  log_level: "VERBOSE"  # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "VERBOSE" # Loglevel for wmbus meters component
+  log_baudrate: "0" # 0 disable uart logger messages
+
 
   # Device configuration (select your device)
- 
+
   ## ---------------------------------------------------
   ##
   ##               GDO0
@@ -45,9 +50,9 @@ substitutions:
   ##                    4     3
   ##                   CLK   MOSI
   ##
-  ## --------------------------------------------------  
+  ## --------------------------------------------------
   BOARD: d1_mini
-  CC1101_3: D7 # MOSI 
+  CC1101_3: D7 # MOSI
   CC1101_4: D5 # CLK
   CC1101_5: D6 # MISO
   CC1101_6: D2 # GD02
@@ -60,7 +65,7 @@ substitutions:
 esp8266:
   board: ${BOARD}
   restore_from_flash: true
-  
+
   ## ------------------------------------------------------------------
   ##
   ##                                                               o 1 (3.3V)
@@ -143,7 +148,21 @@ esphome:
     name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
- 
+  on_boot:
+    priority: -100.00
+    then:
+      - logger.log:
+          level: INFO
+          tag: "system"
+          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+  on_shutdown:
+    priority: 700
+    then:
+      - logger.log:
+          level: ERROR
+          tag: "system"
+          format: "BOOTMESSAGE:${device_name_short} is down!"
+
 ## ----------------------------------------------------------------
 ## External components
 ## ----------------------------------------------------------------
@@ -171,17 +190,20 @@ wifi:
   domain: !secret domain
 
 ## ---------------------------------------------------
-## Captive portal component 
+## Captive portal component
 ## ---------------------------------------------------
 captive_portal:
 
 ## ---------------------------------------------------
-## LOGGER component 
+## LOGGER COMPONENT
 ## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: ${log_bautrate}
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
 ## OTA Updates
@@ -191,6 +213,8 @@ ota:
   on_error:
     then:
       - logger.log:
+          level: INFO
+          tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 

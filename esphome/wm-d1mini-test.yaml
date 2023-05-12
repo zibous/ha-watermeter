@@ -3,6 +3,7 @@
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
 ## CC1101 TESTCASE FOR ALL WATERMETERS
+## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
 ##
 ##   1. uses esphome-components latest version from github
 ##   2. uses syslog component  (optional)
@@ -13,17 +14,21 @@
 ##
 ## ------------------------------------------------------------------
 substitutions:
+
+  ## device settings
   device_name_short: "water-meter-d1mini"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
-  projectname: "Watermeter.Diehl IZAR RC 868"
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
 
   ## all watermeters wmid: "0"
   ## your watermeter: wmid: !secret watermeterId
   wmid: "0"
 
-  # logger settings
-  log_level: "VERBOSE"
+  ## logger settings
+  log_level: "DEBUG"  # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "DEBUG" # Loglevel for wmbus meters component
+  log_baudrate: "0" # 0 disable uart logger messages
 
 ## ----------------------------------------------------------------
 ## HARDWARE: WEMOS D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -45,22 +50,31 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: 200
-    then:
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
-      - logger.log:
-          level: INFO
-          tag: "BOOT"
-          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+    - priority: -100.00
+      then:
+        - globals.set:
+            id: boot_counter
+            value: !lambda "return id(boot_counter)+=1;"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+        - component.update: bootcounter
+    - priority: 800
+      then:
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
+        - text_sensor.template.publish:
+              id: device_lastBoot_time
+              state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
   on_shutdown:
     priority: 700
     then:
       - logger.log:
-          level: INFO
-          tag: "BOOT"
+          level: ERROR
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 ## ----------------------------------------------------------------
@@ -143,27 +157,38 @@ wifi:
 # when connecting to the configured WiFi fails.
 captive_portal:
 
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
-  # baud_rate: 0 #disable logging over uart
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
 
+## ---------------------------------------------------
+## DEBUG COMPONENT
+## ---------------------------------------------------
 debug:
   update_interval: 5s
 
 ## ---------------------------------------------------
-## OTA Updates
+## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
   on_error:
     then:
       - logger.log:
+          level: INFO
+          tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## LOCAL WEBSERVER Settings
+## WEBSERVER COMPONENT
 ## ---------------------------------------------------
 web_server:
   port: 80
@@ -171,7 +196,7 @@ web_server:
   local: true
 
 ## ---------------------------------------------------
-# Enable Home Assistant API
+## Home Assistant API COMPONENT
 ## ---------------------------------------------------
 api:
   id: espapiwm2_d1
@@ -189,9 +214,13 @@ time:
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
       - 1.pool.ntp.org
+
     on_time_sync:
       then:
-        - logger.log: "Synchronized sntp clock"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "Synchronized sntp clock"
 
 ## ---------------------------------------------------
 ##        WMBUS DEVICE D1MINI WEMOS --> CC1101
@@ -239,7 +268,7 @@ wmbus:
 switch:
   # reset boot counter value
   - platform: template
-    name: Reset Boot Counter
+    name: Device Boot Counter reset
     turn_on_action:
       then:
         - lambda: |-
@@ -247,18 +276,22 @@ switch:
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
             level: INFO
-            tag: "BOOT"
+            tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
+
   # restart device
   - platform: restart
-    name: "Restart"
+    name: "Device Restart"
     id: restart_switch
+
   # save device boot (develop only)
   - platform: safe_mode
-    name: "Restart (Safe Mode)"
+    name: "Device Restart (Safe Mode)"
+
   # reset the device to factory reset (develop only)
   - platform: factory_reset
-    name: Restart with Factory Default Settings
+    name: Device Factory Restart
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -279,8 +312,8 @@ sensor:
     # Note that a lower value indicates a better link.
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
-      name: "Wlan CC1101 LQI"
-      id: wmbus_cc1101_lqi      
+      name: "WLAN CC1101 LQI"
+      id: wmbus_cc1101_lqi
       entity_category: "diagnostic"
       unit_of_measurement: "lqi"
 
@@ -289,14 +322,14 @@ sensor:
     # RSSI stands for received signal strength (power) indication (in dBm).
     # A higher value indicates higher power. (internal only)
     rssi:
-      name: "Wlan CC1101 RSSI"
+      name: "WLAN CC1101 RSSI"
       id: wmbus_cc1101_rssi
       unit_of_measurement: "dBm"
       entity_category: "diagnostic"
 
     # waterdisplay - get the total watermter m3 from the wmbus telegram
     total_water_m3:
-      name: "Wasseruhr Anzeige"
+      name: "Watermeter Display"
       id: "waterdisplay"
       unit_of_measurement: "m³"
       state_class: total_increasing
@@ -305,47 +338,57 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("SENSOR", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
+              ESP_LOGD("system", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
               id(last_value)=id(waterdisplay).state;
-    
+
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
+    last_month_total_water_m3:
+      name: "Water last month"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
+
     # water current month (wM-Bus v2.1.4)
     current_month_total_water_l:
-      name: Wasseruhr Monat
+      name: "Water current month"
       id: "watermonth"
       accuracy_decimals: 2
       unit_of_measurement: "L"
       state_class: total_increasing
-      device_class: "water" 
+      device_class: "water"
 
     # get the battery life time (wM-Bus v2.1.4)
     remaining_battery_life_y:
-      name: "Wasseruhr Batterielebensdauer"
+      name: "Watermeter battery life"
       id: "watermeter_batterie"
       entity_category: "diagnostic"
       icon: mdi:battery
 
     # get the last transmit periode (wM-Bus v2.1.4)
     transmit_period_s:
-      name: "Wasseruhr Interval"
+      name: "Watermeter transmit periode"
       id: "watermeter_last_reading"
       entity_category: "diagnostic"
       icon: mdi:timelapse
 
     current_alarms:
       id: "watermeter_current_alarms"
-      name: "Wasseruhr Alarm"
+      name: "Watermeter current alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
     previous_alarms:
       id: "watermeter_prev_alarms"
-      name: "Wasseruhr voriger alarm"
+      name: "Watermeter previous alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
   # device boot counter
   - platform: template
-    name: Boot counter
+    name: Device Boot counter
     id: bootcounter
     accuracy_decimals: 0
     state_class: "measurement"
@@ -366,7 +409,7 @@ sensor:
   # # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Wlan D1Mini Qualität"
+    name: "Device WLAN Qualtiy"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
@@ -380,22 +423,22 @@ sensor:
 
     #  Reports the free heap size in bytes.
     free:
-      name: "Heap Free"
+      name: "Device Heap Free"
       entity_category: "diagnostic"
 
     # Reports the fragmentation metric of the heap (0% is clean, more than ~50% is not harmless).
     fragmentation:
-      name: "Heap Fragmentation"
+      name: "Device Heap Fragmentation"
       entity_category: "diagnostic"
 
     # Reports the largest contiguous free RAM block on the heap in bytes.
     block:
-      name: "Heap Max Block"
+      name: "Device Heap Max Block"
       entity_category: "diagnostic"
 
     # Reports the longest time between successive iterations of the main loop.
     loop_time:
-      name: "Loop Time"
+      name: "Application Loop Time"
       entity_category: "diagnostic"
 
 ## ---------------------------------------------------
@@ -409,5 +452,12 @@ text_sensor:
       entity_category: "diagnostic"
     # Reports the last reboot reason in a human-readable form.
     reset_reason:
-      name: "Reset Reason"
+      name: "Device Reset Reason"
       entity_category: "diagnostic"
+
+  # Last boot timestamp
+  - platform: template
+    name: "Device Last Boot timestamp"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start

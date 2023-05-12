@@ -74,7 +74,7 @@ After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 
 ## ESPHOME Dashboard
 
-![ESPHOME water-meter-esp](docs/eshome_webui.png)
+![ESPHOME water-meter-esp](docs/water-meter-esp.png)
 
 ____
 
@@ -102,8 +102,11 @@ ____
 -  **2nd Step**: Edit the `secrets.yaml` and change the `watermeterID`
    - Install [wm-esp32.yaml](wm-esp32.yaml)
    - Check log messages 
-      ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
- 
+     
+- **3rd Step**: Memory
+   - Logging need's memory. Set loglevel to `warn` for production mode !
+   - Use ESP32 because this device has 520KB RAM.
+    
   <br>
 
   > **IMPORTEND**: Be shure that you use the latest version for the build:
@@ -333,7 +336,7 @@ Using: wmbusmeters: 1.12.0-28-g5e548ce
 
 ## Homeassitant Device
 
-<img src="docs/homeassistat-water-meter-izar.png" width="90%"></img>
+<img src="docs/ha_water-meter-esp.png" width="90%"></img>
 <img src="docs/ha_waterdisplay.png" width="45%"> </img> <img src="docs/ha_water.png" width="45%"></img> <img src="docs/ha_water_day.png" width="45%"></img> <img src="docs/ha_water_year.png" width="45%"> <img src="docs/ha_rssi.png" width="45%"></img>  </img><img src="docs/ha_wlan.png" width="45%"></img>
 
 

@@ -8,10 +8,11 @@
 ##   - lib syslog
 ## ######################################################
 substitutions:
+
   # device settings
   device_name_short: "water-meter-izar"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL) Developer Version maciekn"
-  projectname: "Watermeter.Diehl IZAR RC 868"
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "1.1.7"
 
   # my watermeter id (change this to your watermeter ID)
@@ -46,27 +47,35 @@ esphome:
     - "https://github.com/maciekn/izar-wmbus-esp.git"
     - "https://github.com/bblanchon/ArduinoJson.git"
   build_path: ./build/${device_name_short}
-
-  ## ----------------------------------------------------------------
-  ## External components for wmbusmeter
-  ## ----------------------------------------------------------------
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
-    priority: 200
-    then:
-      - logger.log:
-          level: INFO
-          tag: "BOOT"
-          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
+    - priority: 200
+      then:
+        - globals.set:
+            id: boot_counter
+            value: !lambda "return id(boot_counter)+=1;"
+        - globals.set:
+            id: send_millisecond
+            value: !lambda "return millis();"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+        - component.update: bootcounter
+    - priority: 800
+      then:
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
+        - text_sensor.template.publish:
+              id: device_lastBoot_time
+              state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
   on_shutdown:
-    priority: 600
+    priority: 700
     then:
       - logger.log:
-          level: INFO
-          tag: "BOOT"
+          level: ERROR
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 external_components:
@@ -194,8 +203,9 @@ wifi:
       priority: 2
   domain: !secret domain
 
-## ---------------------------------------------------
-## Enable Home Assistant API
+# ---------------------------------------------------
+## Home Assistant API COMPONENT
+## Homeassistant service call (all values in liter):
 ## ---------------------------------------------------
 # Homeassistant service call:
 # service: esphome.water_meter_set_water_val
@@ -227,10 +237,10 @@ api:
             id: hour_value
             value: !lambda |-
               if((water_val_hour) and (water_val_hour)>0.001){
-                ESP_LOGI("main", "Set hourly value to: %f", water_val_hour);
+                ESP_LOGI("system", "Set hourly value to: %f", water_val_hour);
                 return (water_val_hour);
               }else{
-                ESP_LOGI("main", "Skip setting hourly value");
+                ESP_LOGI("system", "Skip setting hourly value");
                 return id(hour_value);
               };
               id(waterhour).publish_state(id(hour_value));
@@ -239,10 +249,10 @@ api:
             id: daily_value
             value: !lambda |-
               if((water_val_day) and (water_val_day)>0.001){
-                ESP_LOGI("main", "Set daily value to: %f", water_val_day);
+                ESP_LOGI("system", "Set daily value to: %f", water_val_day);
                 return (water_val_day);
               }else{
-                ESP_LOGI("main", "Skip setting hourly value");
+                ESP_LOGI("system", "Skip setting hourly value");
                 return id(hour_value);
               };
               id(waterday).publish_state(id(daily_value));
@@ -251,10 +261,10 @@ api:
             id: yesterday_value
             value: !lambda |-
               if((water_val_yesterday) and (water_val_yesterday)>0.001){
-                ESP_LOGI("main", "Set yesterday value to: %f", water_val_yesterday);
+                ESP_LOGI("system", "Set yesterday value to: %f", water_val_yesterday);
                 return (water_val_yesterday);
               }else{
-                ESP_LOGI("main", "Skip setting yesterday value");
+                ESP_LOGI("system", "Skip setting yesterday value");
                 return id(yesterday_value);
               };
               id(wateryesterday).publish_state(id(hour_value));
@@ -263,10 +273,10 @@ api:
             id: week_value
             value: !lambda |-
               if((water_val_week) and (water_val_week)>0.001){
-                ESP_LOGI("main", "Set weekly value to: %f", water_val_week);
+                ESP_LOGI("system", "Set weekly value to: %f", water_val_week);
                 return (water_val_week);
               }else{
-                ESP_LOGI("main", "Skip setting weekly value");
+                ESP_LOGI("system", "Skip setting weekly value");
                 return id(week_value);
               };
               id(waterweek).publish_state(id(week_value));
@@ -275,10 +285,10 @@ api:
             id: month_value
             value: !lambda |-
               if((water_val_month) and (water_val_month)>0.001){
-                ESP_LOGI("main", "Set last montj value to: %f", water_val_month);
+                ESP_LOGI("system", "Set last montj value to: %f", water_val_month);
                 return (water_val_month);
               }else{
-                ESP_LOGI("main", "Skip setting monthly value");
+                ESP_LOGI("system", "Skip setting monthly value");
                 return id(week_value);
               };
               id(watermonth).publish_state(id(month_value));
@@ -287,10 +297,10 @@ api:
             id: lastmonth_value
             value: !lambda |-
               if((water_val_lastmonth) and (water_val_lastmonth)>0.001){
-                ESP_LOGI("main", "Set last month value to: %f", water_val_lastmonth);
+                ESP_LOGI("system", "Set last month value to: %f", water_val_lastmonth);
                 return (water_val_lastmonth);
               }else{
-                ESP_LOGI("main", "Skip setting last month value");
+                ESP_LOGI("system", "Skip setting last month value");
                 return id(lastmonth_value);
               };
               id(waterlastmonth).publish_state(id(lastmonth_value));
@@ -299,16 +309,18 @@ api:
             id: year_value
             value: !lambda |-
               if((water_val_year) and (water_val_year)>0.001){
-                ESP_LOGI("main", "Set last yearly value to: %f", water_val_year);
+                ESP_LOGI("system", "Set last yearly value to: %f", water_val_year);
                 return (water_val_year);
               }else{
-                ESP_LOGI("main", "Skip setting last yearly value");
+                ESP_LOGI("system", "Skip setting last yearly value");
                 return id(week_value);
               };
               id(wateryear).publish_state(id(year_value));
 
         - logger.log:
+            tag: "system"
             format: "All new Values set: hour: %.1f, day: %.1f, week: %.1f, month: %.1f, lastmonth: %.1f, year: %.1f"
+            level: INFO
             args:
               [
                 "id(hour_value)",
@@ -327,6 +339,8 @@ ota:
   on_error:
     then:
       - logger.log:
+          tag: "system"
+          level: INFO
           format: "OTA update error %d"
           args: ["x"]
 
@@ -361,7 +375,10 @@ time:
 
     on_time_sync:
       then:
-        - logger.log: "Synchronized sntp clock"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "Synchronized sntp clock"
 
     # reset hourly value
     on_time:
@@ -372,7 +389,10 @@ time:
               id: hour_value
               value: "0.00"
           - lambda: id(waterhour).publish_state(id(hour_value));
-          - logger.log: Reset value hour, starting next hour
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value hour, starting next hour"
 
       # reset daily value and set yesterday value
       - seconds: 0
@@ -383,7 +403,10 @@ time:
           - lambda: id(wateryesterday).publish_state(id(yesterday_value));
           - lambda: id(daily_value)=0.00;
           - lambda: id(waterday).publish_state(id(daily_value));
-          - logger.log: Set yesterday value and reset value daily, starting new day
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Set yesterday value and reset value daily, starting new day"
 
       # reset weekly value, start new week
       - seconds: 0
@@ -395,7 +418,10 @@ time:
               id: week_value
               value: "0.00"
           - lambda: id(waterweek).publish_state(id(week_value));
-          - logger.log: Reset value weekly, starting new week
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value weekly, starting new week"
 
       # reset monthly value and set last month value
       - seconds: 0
@@ -411,7 +437,10 @@ time:
               if(id(waterdisplay).state){
                 id(lastmonth_value)=id(waterdisplay).state;
               }
-          - logger.log: Reset value monthly, starting new month
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Set value last monthly value, starting new month"
 
       # new year, reset yearly value
       - seconds: 0
@@ -424,7 +453,10 @@ time:
               id: year_value
               value: "0.00"
           - lambda: id(wateryear).publish_state(id(year_value));
-          - logger.log: Reset value yearly, starting new year
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value yearly, starting new year"
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -432,21 +464,21 @@ time:
 switch:
   # reset boot counter value
   - platform: template
-    name: Reset Boot Counter
+    name: Device Boot Counter Reset
     turn_on_action:
       then:
         - lambda: |-
             id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
-
         - logger.log:
             level: INFO
-            tag: "BOOT"
+            tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
 
   # reset all global vars
   - platform: template
-    name: Reset values
+    name: Watermeter Reset values
     turn_on_action:
       then:
         - lambda: |-
@@ -469,10 +501,13 @@ switch:
             id(waterlastmonth).publish_state(id(lastmonth_value));
             id(year_value) = 0.00;
             id(wateryear).publish_state(id(year_value));
-        - logger.log: all values reset!
+        - logger.log:
+            level: INFO
+            tag: "system"
+            format: "all values reset!"
 
   - platform: restart
-    name: "Restart"
+    name: "Device Restart"
     id: restart_switch
 
 ## ---------------------------------------------------
@@ -528,27 +563,27 @@ text_sensor:
                 then:
                   - logger.log:
                       level: INFO
-                      tag: "TEXT_SENSOR"
+                      tag: "wmbus"
                       format: "✔︎ My Watermeter ID is: %s"
                       args: ["x.c_str()"]
                 else:
                   - logger.log:
                       level: INFO
-                      tag: "TEXT_SENSOR"
+                      tag: "wmbus"
                       format: "✘ Other Watermeter ID is: %s"
                       args: ["x.c_str()"]
 
   # device version
   # disabled for api (memory ??)
   - platform: version
-    name: Version
+    name: Application Version
     internal: true
     id: appver
     entity_category: "diagnostic"
 
   # device online time
   - platform: template
-    name: Online seit
+    name: Device Online seit
     id: uptime_human
     icon: mdi:clock-start
     entity_category: "diagnostic"
@@ -563,14 +598,11 @@ text_sensor:
   # device timestamp
   # disabled for api (memory ??)
   - platform: template
-    name: Timestamp
+    name: Device Timestamp
     id: systime
     internal: true
     entity_category: "diagnostic"
-    lambda: char str[20];
-      time_t currTime = id(time_sntp).now().timestamp;
-      strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
-      return (std::string) str;
+    lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
 
   # simple rest get message for all watermeter data
   - platform: template
@@ -620,7 +652,7 @@ sensor:
                 then:
                   - logger.log:
                       level: INFO
-                      tag: "SENSOR"
+                      tag: "wmbus"
                       format: "✔︎ My Watermeter ID: %s and has value %.1f Liter"
                       args: ["id(watermeter_id).state.c_str()", "x"]
                   - lambda: |-
@@ -635,25 +667,22 @@ sensor:
                         id(week_value)+=id(current_value);
                         id(month_value)+=id(current_value);
                         id(year_value)+=id(current_value);
-                        ESP_LOGD("DEBUG", "Set current value to %f litre and publish the data", id(watercurrent));
+                        ESP_LOGD("wmbus", "Set current value to %f litre and publish the data", id(watercurrent));
                         id(last_value)=id(waterdisplay).state;
                       }else{
                         id(current_value) = 0.00;
                         id(watercurrent).publish_state(id(current_value));
-                        ESP_LOGI("SENSOR", "Reset current value to: %.1f", id(watercurrent));
+                        ESP_LOGI("wmbus", "Reset current value to: %.1f", id(watercurrent));
                       };
 
+                  # update the timestamp for the last waterdisplay state
                   - text_sensor.template.publish:
                       id: watermeter_lastupdate
-                      state: !lambda |-
-                        char str[20];
-                        time_t currTime = id(time_sntp).now().timestamp;
-                        strftime(str, sizeof(str), "%Y-%m-%dT%H:%M:%S", localtime(&currTime));
-                        return (std::string) str;
+                      state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
 
                   - logger.log:
                       level: INFO
-                      tag: "SENSOR"
+                      tag: "wmbus"
                       format: "New Values: current:%.1f, hour: %.1f, day: %.1f, week: %.1f, month: %.1f, lastmonth: %.1f, year: %.1f"
                       args:
                         [
@@ -669,7 +698,7 @@ sensor:
                 else:
                   - logger.log:
                       level: INFO
-                      tag: "SENSOR"
+                      tag: "wmbus"
                       format: "✘ Other Watermeter ID: %s and has value %.1f Liter"
                       args: ["id(watermeter_id).state.c_str()", "x"]
 
@@ -764,7 +793,7 @@ sensor:
 
   # device boot counter
   - platform: template
-    name: Boot counter
+    name: Device Boot counter
     id: bootcounter
     accuracy_decimals: 0
     entity_category: "diagnostic"
@@ -773,7 +802,7 @@ sensor:
   # device uptime human reading format
   # internal used only, not on api and web ui
   - platform: uptime
-    name: Uptime
+    name: Device Uptime
     id: uptime_sensor
     internal: true
     update_interval: 60s
@@ -796,10 +825,17 @@ sensor:
                 (String(seconds) + "s")
               ).c_str();
 
+  # Last boot timestamp
+  - platform: template
+    name: "Device Last Boot"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start
+
   # Wifi quality RSSI
   # internal used only, not on api and web ui
   - platform: wifi_signal
-    name: Wlan Signal
+    name: Device Wlan Signal
     id: wifi_signal_db
     update_interval: 60s
     internal: true
@@ -809,7 +845,7 @@ sensor:
   # Reports the WiFi signal strength in %
   - platform: copy
     source_id: wifi_signal_db
-    name: "Wlan Qualität"
+    name: "Device Wlan Qualität"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "Signal %"

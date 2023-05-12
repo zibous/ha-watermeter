@@ -12,17 +12,21 @@
 ##
 ## ---------------------------------------------------------------------------
 substitutions:
+
   ## device settings
   device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
-  projectname: "Watermeter.Diehl IZAR RC 868"
+  projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
 
   ## all watermeters   wmid: "0"
   ## your watermeter: wmid: !secret watermeterId
   wmid: "0"
 
-  log_level: "DEBUG"
+  ## logger settings
+  log_level: "DEBUG"  # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "DEBUG" # Loglevel for wmbus meters component
+  log_baudrate: "0" # 0 disable uart logger messages
 
 ## ----------------------------------------------------------------
 ## APPLICATION ESPHOME
@@ -35,22 +39,25 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    # At this priority, pretty much everything should already be initialized.
     priority: 200
     then:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
+      - globals.set:
+          id: send_millisecond
+          value: !lambda "return millis();"
       - logger.log:
           level: INFO
-          tag: "BOOT"
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+      - component.update: bootcounter
   on_shutdown:
     priority: 700
     then:
       - logger.log:
-          level: INFO
-          tag: "BOOT"
+          level: ERROR
+          tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
 ## ----------------------------------------------------------------
@@ -152,15 +159,18 @@ wifi:
 captive_portal:
 
 ## ---------------------------------------------------
-## LOGGER
+## LOGGER COMPONENT
 ## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: 0 #disable logging over uart
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
-## OTA Updates
+## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
@@ -168,11 +178,12 @@ ota:
     then:
       - logger.log:
           level: INFO
+          tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## LOCAL WEBSERVER - local settings - no internet
+## WEBSERVER COMPONENT
 ## Include supporting javascript locally allowing
 ## it to work without internet access.
 ## local: true  ## without internet access.
@@ -184,7 +195,7 @@ web_server:
   local: true
 
 ## ---------------------------------------------------
-# Enable Home Assistant API
+## Home Assistant API COMPONENT
 ## ---------------------------------------------------
 api:
   id: espapi_wmbus_esp32
@@ -192,7 +203,7 @@ api:
   reboot_timeout: 0s
 
 ## ---------------------------------------------------
-## SNTP Time server
+## SNTP COMPONENT
 ## ---------------------------------------------------
 time:
   - platform: sntp
@@ -204,7 +215,10 @@ time:
       - 1.pool.ntp.org
     on_time_sync:
       then:
-        - logger.log: "Synchronized sntp clock"
+        - logger.log:
+            tag: "system"
+            level: INFO
+            format: "Synchronized sntp clock"
 
 
 ## ------------------------------------------------------------------
@@ -215,6 +229,7 @@ time:
 ##                                                               o 1 (3.3V)
 ##                                                               |
 ##   ╭――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――o―╮
+##   |                                                             |
 ##   |                                                             |
 ## - | 5v               az-delivery-devkit-v4                      | -- ANT
 ##   |                                                             |
@@ -248,7 +263,7 @@ wmbus:
 switch:
   # reset boot counter value
   - platform: template
-    name: Reset Boot Counter
+    name: Device Boot Counter reset
     turn_on_action:
       then:
         - lambda: |-
@@ -256,18 +271,19 @@ switch:
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
             level: INFO
-            tag: "BOOT"
+            tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
 
   - platform: safe_mode
-    name: "Restart (Safe Mode)"
+    name: "Device Restart (Safe Mode)"
 
   - platform: restart
     name: "Restart"
     id: restart_switch
 
   - platform: factory_reset
-    name: Restart with Factory Default Settings
+    name: Device Restart Factory
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -315,12 +331,12 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("SENSOR", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
+              ESP_LOGI("wmbus", "Water Display value: %.3f, last value: %.3f", id(waterdisplay).state, id(last_value));
               id(last_value)=id(waterdisplay).state;
 
     # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
     last_month_total_water_m3:
-      name: "Watermeter Anzeige letzter Monat"
+      name: "Water last month"
       id: "waterdisplay_lastmonth"
       unit_of_measurement: "m³"
       state_class: total_increasing
@@ -330,7 +346,7 @@ sensor:
 
     # water current month (wM-Bus v2.1.4)
     current_month_total_water_l:
-      name: Water Monath
+      name: "Water current month"
       id: "watermonth"
       accuracy_decimals: 2
       unit_of_measurement: "L"
@@ -347,7 +363,7 @@ sensor:
 
     # get the last transmit periode (wM-Bus v2.1.4)
     transmit_period_s:
-      name: "Watermeter Update Intervall"
+      name: "Watermeter transmit periode"
       id: "watermeter_transmit_periode"
       unit_of_measurement: "sec"
       accuracy_decimals: 2
@@ -369,7 +385,7 @@ sensor:
 
   # device boot counter
   - platform: template
-    name: Boot counter
+    name: Device Boot counter
     id: bootcounter
     icon: mdi:counter
     accuracy_decimals: 0
@@ -389,7 +405,7 @@ sensor:
   ## (raw) RF power in a channel.
   - platform: copy # Reports the WiFi signal strength in %
     source_id: wifi_signal_db
-    name: "Watermeter ESP32 WLAN Signal"
+    name: "Device WLAN Signal"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
