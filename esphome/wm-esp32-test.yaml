@@ -44,9 +44,6 @@ esphome:
       - globals.set:
           id: boot_counter
           value: !lambda "return id(boot_counter)+=1;"
-      - globals.set:
-          id: send_millisecond
-          value: !lambda "return millis();"
       - logger.log:
           level: INFO
           tag: "system"
