@@ -72,10 +72,12 @@ After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 
 <br>
 
-## ESPHOME Dashboard
+## ESPHOME Dashboard V3
 
+![ESPHOME water-meter-esp](docs/watermeter-webserver3.png)
+
+## ESPHOME Dashboard V2
 ![ESPHOME water-meter-esp](docs/water-meter-esp.png)
-
 ____
 
 ### Used components
