@@ -1,11 +1,12 @@
 # ESPHOME Webserver
 
+![ESPHOME-WEBSERVER3](../docs/watermeter-webserver3.png)
+
 The web_server component creates a simple web server on the node that can be accessed through any browser and a simple REST API. Please note that enabling this component will take up a lot of memory and can lead to problems, especially on the ESP8266.
 
 see: <https://esphome.io/components/web_server.html?highlight=webserver>
 
 In order to save memory, I don't use the ESP WEBserver, but my own version that I have installed on my server.
-
 
 ## Configuration variables:
 
