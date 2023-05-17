@@ -89,8 +89,11 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 
 ## Result
 
-### ESPHOME Webserver
+### ESPHOME Webserver V2
 ![ESPHOME-WATERMETER](./esphome/docs/water-meter-esp.png)
+
+### ESPHOME Webserver V3
+![ESPHOME-WEBSERVER3](./esphome/docs/watermeter-webserver3.png)
 
 ### Homeassistant Device
 ![ESPHOME-WATERMETER](./esphome/docs/ha_water-meter-esp.png)
