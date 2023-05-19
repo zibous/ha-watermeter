@@ -50,7 +50,9 @@ ESPHome - ESP32 (v4) + CC1101 is the best solution for me because the resource r
   IZAR Radio Compact Hall is designed for mobile reading and fixed network remote reading of Diehl Metering meters.
   <br>
 - [ ESP32 Dev Kit C V4 NodeMCU](https://amzn.eu/d/eUNLyYc)
-- [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR)
+- [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR) <br>
+Alternative: [ EBYTE TI CC1101 Wireless 868Mhz 915Mhz RF Modul](https://amzn.eu/d/7GPqsng) with external antenna.
+
 
 
 ### Meter types:
@@ -175,4 +177,6 @@ __Note__: The **ESP32** has more RAM memory and is therefore better suited for u
 - nano-cul: <https://www.smart-home-komponente.de/nano-cul/nano-cul-868-extra/>
 
 - diehl watermeter: <https://www.diehl.com/metering/en/portfolio/software-system-components/software-system-components-products/software-system-components-product/izar-radio-compact-hall/74843/>
+
+
 
