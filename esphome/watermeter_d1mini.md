@@ -111,7 +111,7 @@ see: <https://github.com/SzczepanLeon/esphome-components>
 -  **2nd Step**: Edit secrets.yaml and edit the `watermeterID`
   - Install [wm-d1mini.yaml](wm-d1mini.yaml)
   - Check log messages 
-     ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-esp.png)
+     ![ESPHOME Wemos D1 Mini + CC1101](docs/water-meter-d1mini.png)
  
 <br>
 
