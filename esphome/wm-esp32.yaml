@@ -26,7 +26,7 @@ substitutions:
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.0.7"
+  appversion: "2.0.8"
 
   ## logger settings
   log_level: "WARN"   # not that logging need memory, so in production mode use "WARN"
@@ -70,12 +70,9 @@ esphome:
           level: WARN
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+      # update the device boot counter sensor
       - component.update: bootcounter
-      - text_sensor.template.publish:
-          id: device_lastBoot_time
-          state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
   on_shutdown:
-    priority: 700
     then:
       - logger.log:
           level: ERROR
@@ -87,7 +84,7 @@ esphome:
 ## ----------------------------------------------------------------
 external_components:
 
-  # uses the latest version from SzczepanLeon (wM-Bus 2.1.10)
+  # uses the latest version from SzczepanLeon (github)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@main
@@ -109,7 +106,7 @@ external_components:
     components: [syslog]
 
 ## ----------------------------------------------------------------
-## BACKUP SERVICE ENABLED
+## COMPONENT BACKUP SERVICE ENABLED
 ## Save your ESPHome device configuration in firmware and and
 ## recover it if you lost source files.
 ## ----------------------------------------------------------------
@@ -120,7 +117,7 @@ backup:
   force_update: false
 
 ## ---------------------------------------------------
-## SYSLOG SERVICE ENABLED
+## COMPONENT SYSLOG SERVICE ENABLED
 ## ---------------------------------------------------
 syslog:
   ip_address: !secret syslog_server
@@ -200,7 +197,7 @@ globals:
     initial_value: '{"Init", "Warte auf Daten", "Daten empfangem", "Ready", "Error"}'
 
 ## ---------------------------------------------------
-## WIFI Settings 3 wifis
+## COMPONENT WIFI
 ## ---------------------------------------------------
 wifi:
   id: wifi_esp32
@@ -217,14 +214,12 @@ wifi:
   domain: !secret domain
 
 ## ---------------------------------------------------
-## The captive portal component in ESPHome is a
-## fallback mechanism for when connecting to the
-## configured WiFi fails.
+## COMPONENT CAPTIVE PORTAL
 ## ---------------------------------------------------
 captive_portal:
 
 ## ---------------------------------------------------
-## LOGGER COMPONENT
+## COMPONENT LOGGER
 ## ---------------------------------------------------
 logger:
   id: appslogger
@@ -235,28 +230,28 @@ logger:
     wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
-## OTA COMPONENT
+## COMPONENT OTA
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
   on_error:
     then:
       - logger.log:
-          level: INFO
+          level: WARN
           tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
+## COMPONENT WEBSERVER (local hosted)
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
-## Home Assistant API COMPONENT
+## COMPONENT Home Assistant API
 ## Homeassistant service call (all values in liter):
 ## ---------------------------------------------------
 ## service: esphome.water_meter_esp_set_watermeter_esp_data
@@ -368,7 +363,7 @@ api:
               ]
 
 ## ---------------------------------------------------
-## SNTP COMPONENT
+## COMPONENT Timeserver SNTP
 ## Change this to your timezone and ntp server
 ## ---------------------------------------------------
 time:
@@ -383,6 +378,13 @@ time:
     on_time_sync:
       # Components should trigger on_time_sync when they update the system clock.
       then:
+        - if:
+            condition:
+              lambda: 'return id(device_lastBoot_time).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_lastBoot_time
+                  state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
         - logger.log:
             level: WARN
             tag: "system"
@@ -456,7 +458,7 @@ time:
               format: "Reset value yearly, starting new year"
 
 ## ---------------------------------------------------
-## HTTP COMPONENT (optional)
+## COMPONENT HTTP (optional)
 ## Prepare for sending HTTP requests
 ## ---------------------------------------------------
 http_request:
@@ -465,7 +467,7 @@ http_request:
   timeout: 10s
 
 ## ---------------------------------------------------
-## SCRIPTS COMPONENT
+## COMPONENT SCRIPTS
 ## ---------------------------------------------------
 script:
 
@@ -475,7 +477,7 @@ script:
         - lambda: |-
             int msgcode = int(id(cc1101_state));
             std::string message = id(cc1101_state_message)[msgcode];
-            ESP_LOGD("wmbus", "watermeter_current_alarms: %s, error code: %d", message.c_str(), msgcode);
+            ESP_LOGD("wmbus", "watermeter state message: %s, error code: %d", message.c_str(), msgcode);
             id(watermeter_status_message).publish_state(message);
 
   # id(post_device_state).execute();
@@ -580,55 +582,17 @@ wmbus:
   # led_blink_time: "100ms"
 
 ## ---------------------------------------------------
-## SWITCHES
+## BINARY SENSOR
 ## ---------------------------------------------------
-switch:
-  # reset boot counter value
-  - platform: template
-    name: "${friendly_name} Boot Counter Reset"
-    turn_on_action:
-      then:
-        - lambda: |-
-            id(boot_counter) = 0;
-            id(bootcounter).publish_state(id(boot_counter));
-        - logger.log:
-            level: INFO
-            tag: "system"
-            format: "${device_name_short} reset boot counter o.k!"
-        - component.update: bootcounter
+binary_sensor:
 
-  # reset all global vars
+  # simulate led state (updated by id: "waterdisplay")
   - platform: template
-    name: "Wasseruhr Reset values"
-    turn_on_action:
-      then:
-        - lambda: |-
-            id(last_value) = 0.00;
-            id(boot_counter) = 0;
-            id(bootcounter).publish_state(id(boot_counter));
-            id(current_value) = 0.00;
-            id(watercurrent).publish_state(id(current_value));
-            id(hour_value) = 0.00;
-            id(waterhour).publish_state(id(hour_value));
-            id(daily_value) = 0.00;
-            id(waterday).publish_state(id(daily_value));
-            id(yesterday_value) = 0.00;
-            id(wateryesterday).publish_state(id(yesterday_value));
-            id(week_value) = 0.00;
-            id(waterweek).publish_state(id(week_value));
-            id(lastmonth_value) = 0.00;
-            id(waterlastmonth).publish_state(id(lastmonth_value));
-            id(year_value) = 0.00;
-            id(wateryear).publish_state(id(year_value));
-        - logger.log:
-            level: INFO
-            tag: "system"
-            format: "all values reset!"
-
-  # restarts the device
-  - platform: restart
-    name: "${friendly_name} Restart"
-    id: restart_switch
+    name: "Wasseruhr Status Led"
+    id: statusled
+    icon: mdi:led-outline
+    entity_category: "diagnostic"
+    lambda: "return id(current_value) > 0;"
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -659,9 +623,15 @@ sensor:
     # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
     # range from -138 dBm to -10.5 dBm when the CC1101 is operating around 868 MHz.
     # RSSI stands for received signal strength (power) indication (in dBm).
-    # A higher value indicates higher power. (internal only)
+    # A higher value indicates higher power. (internal only) see id: cc1101_rssi
     rssi:
       id: wmbus_cc1101_rssi
+      name: "${friendly_name} CC1101 RSSI"
+      filters:
+        - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+      unit_of_measurement: "%"
+      entity_category: "diagnostic"
+      state_class: "measurement"
 
     # get the total watermter m3 from the wmbus telegram, log the timestamp
     # for the last reading  and calculates the statitics value
@@ -716,12 +686,12 @@ sensor:
               }
               id(last_value)=id(waterdisplay).state;
 
-          # update the timestamp for the last waterdisplay state
+          # update the watermeter_lastupdate timestamp for the last waterdisplay state
           - text_sensor.template.publish:
               id: watermeter_lastupdate
               state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
 
-          # update the reading timeout for the watermeter display
+          # update watermeter_read_timeout the reading timeout for the watermeter display
           - sensor.template.publish:
               id: watermeter_read_timeout
               state: !lambda |-
@@ -733,7 +703,7 @@ sensor:
           # update the watermeter status
           - script.execute: set_status_message
 
-          # update the status led
+          # update the status led (statusled)
           - binary_sensor.template.publish:
               id: statusled
               state: !lambda "return id(current_value) > 0;"
@@ -776,6 +746,7 @@ sensor:
       icon: mdi:timelapse
 
     ## get the current watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    ## see: id: watermeter_alarm_message
     current_alarms:
       id: "watermeter_current_alarms"
       name: "Wasseruhr Alarm Code"
@@ -794,6 +765,7 @@ sensor:
               }
 
     ## get the prevois watermeter alarms and publish the text message (wM-Bus 2.1.10)
+    ## see: id: watermeter_alarm_perv_message
     previous_alarms:
       id: "watermeter_previous_alarms"
       name: "Wasseruhr Alarm Code voriger"
@@ -813,7 +785,7 @@ sensor:
                 id(watermeter_alarm_timestamp).publish_state("--");
               }
 
-  # water current
+  # water current (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Aktuell
     id: "watercurrent"
@@ -823,7 +795,7 @@ sensor:
     device_class: "water"
     lambda: return (id(current_value));
 
-  # water current hour
+  # water current hour (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Stunde
     id: "waterhour"
@@ -833,7 +805,7 @@ sensor:
     device_class: "water"
     lambda: return (id(hour_value));
 
-  # water today
+  # water today (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Tag
     id: "waterday"
@@ -843,7 +815,7 @@ sensor:
     state_class: total_increasing
     lambda: return (id(daily_value));
 
-  # water yesterday
+  # water yesterday (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Gestern
     id: "wateryesterday"
@@ -853,7 +825,7 @@ sensor:
     state_class: total_increasing
     lambda: return (id(yesterday_value));
 
-  # water current week
+  # water current week (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Woche
     id: "waterweek"
@@ -863,7 +835,7 @@ sensor:
     state_class: total_increasing
     lambda: return (id(week_value));
 
-  # water current year
+  # water current year (updated by id: "waterdisplay")
   - platform: template
     name: Wasser Jahr
     id: "wateryear"
@@ -873,17 +845,17 @@ sensor:
     device_class: "water"
     lambda: return (id(year_value));
 
-  # water last month
+  # water last month (updated by id: "waterdisplay")
   - platform: template
     name: Wasser letzer Monat
     id: "waterlastmonth"
     accuracy_decimals: 2
     unit_of_measurement: "L"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     lambda: return (id(lastmonth_value));
 
-  # service call delay
+  # service call delay (updated by id: "waterdisplay")
   - platform: template
     name: Wasseruhr Daten Intervall
     id: watermeter_read_timeout
@@ -893,7 +865,37 @@ sensor:
     state_class: "measurement"
     entity_category: "diagnostic"
 
-  # device boot counter
+  # Wifi quality RSSI (%)
+  - platform: wifi_signal
+    name: "${friendly_name} WLAN Signal"
+    id: wifi_signal_db
+    update_interval: 60s
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    entity_category: "diagnostic"
+    unit_of_measurement: "%"
+
+  # Uptime device in hours
+  - platform: uptime
+    name: "${friendly_name} Online seit"
+    id: uptime_human
+    icon: mdi:clock-start
+    filters:
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    accuracy_decimals: 2
+
+  # device internal temperature
+  - platform: internal_temperature
+    name: Device Internal Temperature
+    id: device_internal_temperature
+    update_interval: 60s
+    entity_category: "diagnostic"
+    disabled_by_default: true
+
+  # device boot counter by device boot
   - platform: template
     name: "${friendly_name} Boot counter"
     id: bootcounter
@@ -903,137 +905,126 @@ sensor:
     entity_category: "diagnostic"
     lambda: return (id(boot_counter));
 
-  # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
-  - platform: wifi_signal
-    id: wifi_signal_db
-    update_interval: 60s
-    internal: true
-    disabled_by_default: true
-
-  # Reports the Device WiFi signal strength in %
-  - platform: copy
-    source_id: wifi_signal_db
-    name: "${friendly_name} WLAN Qualität"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
-
-  # Reports the CC1101 WiFi signal strength in %
-  - platform: copy
-    source_id: wmbus_cc1101_rssi
-    name: "${friendly_name} CC1101 WLAN Qualität"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
-
-  # update the uptime_human with the uptime
-  - platform: uptime
-    id: uptime_sensor
-    update_interval: 60s
-    internal: True
-    disabled_by_default: true
-    on_raw_value:
-      then:
-        - text_sensor.template.publish:
-            id: uptime_human
-            state: !lambda |-
-              int seconds = round(id(uptime_sensor).raw_state);
-              int days = seconds / (24 * 3600);
-              seconds = seconds % (24 * 3600);
-              int hours = seconds / 3600;
-              seconds = seconds % 3600;
-              int minutes = seconds /  60;
-              seconds = seconds % 60;
-              return (
-                (days ? to_string(days) + "d " : "") +
-                (hours ? to_string(hours) + "h " : "") +
-                (minutes ? to_string(minutes) + "m " : "") +
-                (to_string(seconds) + "s")
-              ).c_str();
-
 ## ---------------------------------------------------
-## BINARY SENSOR
+## SWITCHES
 ## ---------------------------------------------------
-binary_sensor:
-
-  # simulate led state
+switch:
+  # reset boot counter value
   - platform: template
-    name: "Wasseruhr Status Led"
-    id: statusled
-    icon: mdi:led-outline
-    entity_category: "diagnostic"
-    lambda: "return id(current_value) > 0;"
+    name: "${friendly_name} Boot Counter Reset"
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: INFO
+            tag: "system"
+            format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
+
+  # reset all global vars
+  - platform: template
+    name: "Wasseruhr Reset values"
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(last_value) = 0.00;
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+            id(current_value) = 0.00;
+            id(watercurrent).publish_state(id(current_value));
+            id(hour_value) = 0.00;
+            id(waterhour).publish_state(id(hour_value));
+            id(daily_value) = 0.00;
+            id(waterday).publish_state(id(daily_value));
+            id(yesterday_value) = 0.00;
+            id(wateryesterday).publish_state(id(yesterday_value));
+            id(week_value) = 0.00;
+            id(waterweek).publish_state(id(week_value));
+            id(lastmonth_value) = 0.00;
+            id(waterlastmonth).publish_state(id(lastmonth_value));
+            id(year_value) = 0.00;
+            id(wateryear).publish_state(id(year_value));
+        - logger.log:
+            level: INFO
+            tag: "system"
+            format: "all values reset!"
+
+  # restarts the device
+  - platform: restart
+    name: "${friendly_name} Restart"
+    id: restart_switch
+
 
 ## ---------------------------------------------------
 ## TEXT SENSOR
 ## ---------------------------------------------------
 text_sensor:
 
+  # watermeter status message (updated by script: set_status_message)
   - platform: template
     name: "Wasseruhr Status Info"
     id: watermeter_status_message
     icon: mdi:bell
     entity_category: "diagnostic"
 
-  # watermeter alarm message
+  # watermeter alarm message (updated by id: current_alarms)
   - platform: template
     name: "Wasseruhr Alarm"
     id: watermeter_alarm_message
     icon: mdi:alarm-light
     entity_category: "diagnostic"
 
-  # watermeter previous alarm message
+  # watermeter previous alarm message (updated by id: current_prev_alarms)
   - platform: template
     name: "Wasseruhr Alarm voriger"
     id: watermeter_alarm_perv_message
     icon: mdi:alarm-light
     entity_category: "diagnostic"
 
-  # watermeter alarm timestamp
+  # watermeter alarm timestamp (updated by id: current_alarms)
   - platform: template
     name: "Wasseruhr Alarm Zeit"
     id: watermeter_alarm_timestamp
     icon: mdi:alarm-light
     entity_category: "diagnostic"
 
-  # optional device version
+  # optional device version (only for webserver)
   - platform: version
-    name: "${friendly_name} Version"
+    name: "${friendly_name} ESPHome Version"
     id: appver
     disabled_by_default: true
 
-  # optional device online time
+  # Last boot timestamp (updated by device boot)
   - platform: template
-    name: "${friendly_name} Online seit"
-    disabled_by_default: true
-    id: uptime_human
-    icon: mdi:clock-start
-
-  # Last boot timestamp
-  - platform: template
-    name: "${friendly_name} Last Boot"
+    name: "Device Last Boot"
     disabled_by_default: true
     id: device_lastBoot_time
     icon: mdi:clock-start
 
-  # waterdisplay timestamp last update
+  # waterdisplay timestamp last update (updated by id: "waterdisplay")
   - platform: template
     name: "${friendly_name} Timestamp"
     id: watermeter_lastupdate
     icon: mdi:clock-start
     entity_category: "diagnostic"
 
-  # optional device timestamp
+  # optional device timestamp (only for webserver)
   - platform: template
     id: systime
-    entity_category: "diagnostic"
-    internal: true
     disabled_by_default: true
     lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
 
+  # connected to ssid (only for webserver)
+  - platform: wifi_info
+    ssid:
+      name: ${friendly_name} WLAN SSID
+      id: wlan_ssid
+      disabled_by_default: true
+
   # simple rest get message for all watermeter data
+  # (disable this if you do not need rest service)
   - platform: template
     id: watermeterdata
     internal: true

@@ -55,7 +55,7 @@ esphome:
             level: WARN
             tag: "system"
             format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
-        
+
   on_shutdown:
     priority: 700
     then:
@@ -155,22 +155,18 @@ ota:
   on_error:
     then:
       - logger.log:
-          level: INFO
+          level: WARN
           tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
-## Include supporting javascript locally allowing
-## it to work without internet access.
-## local: true  ## without internet access.
-## local: false ## with internet access.
+## COMPONENT WEBSERVER
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -344,22 +340,6 @@ sensor:
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
-  # device boot counter
-  - platform: template
-    name: Device Boot counter
-    id: bootcounter
-    accuracy_decimals: 0
-    state_class: "measurement"
-    entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
-
-  # Last boot timestamp
-  - platform: template
-    name: "Device Last Boot"
-    disabled_by_default: true
-    id: device_lastBoot_time
-    icon: mdi:clock-start
-
   # Wifi quality RSSI used by wifi_signal_db
   - platform: wifi_signal
     id: wifi_signal_db
@@ -376,3 +356,19 @@ sensor:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "%"
     entity_category: "diagnostic"
+
+  # device boot counter
+  - platform: template
+    name: Device Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));
+
+  # Last boot timestamp
+  - platform: template
+    name: "Device Last Boot"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start

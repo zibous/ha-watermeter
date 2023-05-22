@@ -12,7 +12,6 @@
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
 ## WEBUI:   http://water-meter-d1mini.local
-## REST:    curl -i http://water-meter-d1mini.local/text_sensor/watermeterdata
 ## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
 ## Backup:  http://water-meter.local/config.yaml
 ##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
@@ -26,7 +25,7 @@ substitutions:
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.0.7"
+  appversion: "2.0.8"
 
   ## logger settings
   log_level: "WARN"  # not that logging need memory, so in production mode use "WARN"
@@ -64,9 +63,6 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
       - component.update: bootcounter
-      - text_sensor.template.publish:
-          id: device_lastBoot_time
-          state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
   on_shutdown:
     priority: 700
     then:
@@ -234,18 +230,18 @@ ota:
   on_error:
     then:
       - logger.log:
-          level: INFO
+          level: WARN
           tag: "system"
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
+## COMPONENT WEBSERVER
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -370,10 +366,16 @@ time:
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
       - 1.pool.ntp.org
-
     on_time_sync:
       # Components should trigger on_time_sync when they update the system clock.
       then:
+        - if:
+            condition:
+              lambda: 'return id(device_lastBoot_time).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_lastBoot_time
+                  state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
         - logger.log:
             level: WARN
             tag: "system"
@@ -457,7 +459,7 @@ script:
         - lambda: |-
             int msgcode = int(id(cc1101_state));
             std::string message = id(cc1101_state_message)[msgcode];
-            ESP_LOGD("wmbus", "watermeter_current_alarms: %s, error code: %d", message.c_str(), msgcode);
+            ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
             id(watermeter_status_message).publish_state(message);
 
 ## ---------------------------------------------------
@@ -820,7 +822,7 @@ sensor:
     id: "waterlastmonth"
     accuracy_decimals: 2
     unit_of_measurement: "L"
-    state_class: "measurement"
+    state_class: total_increasing
     device_class: "water"
     lambda: return (id(lastmonth_value));
 
@@ -834,15 +836,6 @@ sensor:
     state_class: "measurement"
     entity_category: "diagnostic"
 
-  # device boot counter
-  - platform: template
-    name: "${friendly_name} Boot counter"
-    id: bootcounter
-    icon: mdi:counter
-    accuracy_decimals: 0
-    state_class: "measurement"
-    entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
 
   # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
   - platform: wifi_signal
@@ -869,30 +862,27 @@ sensor:
     unit_of_measurement: "%"
     entity_category: "diagnostic"
 
-  # update the uptime_human with the uptime
+  # Uptime device in hours
   - platform: uptime
-    id: uptime_sensor
-    update_interval: 60s
-    internal: True
-    disabled_by_default: true
-    on_raw_value:
-      then:
-        - text_sensor.template.publish:
-            id: uptime_human
-            state: !lambda |-
-              int seconds = round(id(uptime_sensor).raw_state);
-              int days = seconds / (24 * 3600);
-              seconds = seconds % (24 * 3600);
-              int hours = seconds / 3600;
-              seconds = seconds % 3600;
-              int minutes = seconds /  60;
-              seconds = seconds % 60;
-              return (
-                (days ? to_string(days) + "d " : "") +
-                (hours ? to_string(hours) + "h " : "") +
-                (minutes ? to_string(minutes) + "m " : "") +
-                (to_string(seconds) + "s")
-              ).c_str();
+    name: "${friendly_name} Online seit"
+    id: uptime_human
+    icon: mdi:clock-start
+    filters:
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    accuracy_decimals: 2
+
+  # device boot counter
+  - platform: template
+    name: "${friendly_name} Boot counter"
+    id: bootcounter
+    icon: mdi:counter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));
 
 ## ---------------------------------------------------
 ## BINARY SENSOR
@@ -939,20 +929,13 @@ text_sensor:
     icon: mdi:alarm-light
     entity_category: "diagnostic"
 
-  # optional device version
+  # optional device version (only on webserver)
   - platform: version
     name: "${friendly_name} Version"
     id: appver
     disabled_by_default: true
 
-  # optional device online time
-  - platform: template
-    name: "${friendly_name} Online seit"
-    disabled_by_default: true
-    id: uptime_human
-    icon: mdi:clock-start
-
-  # Last boot timestamp
+  # Last boot timestamp (only on webserver)
   - platform: template
     name: "${friendly_name} Last Boot"
     disabled_by_default: true
@@ -965,33 +948,3 @@ text_sensor:
     id: watermeter_lastupdate
     icon: mdi:clock-start
     entity_category: "diagnostic"
-
-  # optional device timestamp
-  - platform: template
-    id: systime
-    entity_category: "diagnostic"
-    internal: true
-    disabled_by_default: true
-    lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
-
-  # simple rest get message for all watermeter data
-  - platform: template
-    id: watermeterdata
-    internal: true
-    disabled_by_default: true
-    lambda: |-
-      char buf[128];
-      sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
-             id(waterdisplay).state,
-             id(current_value),
-             id(hour_value),
-             id(daily_value),
-             id(yesterday_value),
-             id(week_value),
-             id(watermonth).state,
-             id(lastmonth_value),
-             id(year_value),
-             id(systime).state.c_str()
-             );
-      std::string s = buf;
-      return s;

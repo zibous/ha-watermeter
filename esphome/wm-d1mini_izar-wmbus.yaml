@@ -63,7 +63,7 @@ esphome:
         - logger.log:
             level: WARN
             tag: "system"
-            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "        
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
   on_shutdown:
     priority: 700
     then:
@@ -345,15 +345,13 @@ ota:
 ## ---------------------------------------------------
 captive_portal:
 
-## ----------------------------------------------------------------------
-## LOCAL WEBSERVER Settings, local settings - no internet
-## Include supporting javascript locally allowing it to work
-## without internet access.
-## ----------------------------------------------------------------------
+## ---------------------------------------------------
+## COMPONENT WEBSERVER
+## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## SNTP Time server
@@ -785,13 +783,6 @@ sensor:
     device_class: "water"
     lambda: return (id(lastmonth_value));
 
-  # device boot counter
-  - platform: template
-    name: Device Boot counter
-    id: bootcounter
-    accuracy_decimals: 0
-    entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
 
   # device uptime human reading format
   # internal used only, not on api and web ui
@@ -819,13 +810,6 @@ sensor:
                 (String(seconds) + "s")
               ).c_str();
 
-  # Last boot timestamp
-  - platform: template
-    name: "Device Last Boot"
-    disabled_by_default: true
-    id: device_lastBoot_time
-    icon: mdi:clock-start
-
   # Wifi quality RSSI
   # internal used only, not on api and web ui
   - platform: wifi_signal
@@ -844,3 +828,18 @@ sensor:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
     unit_of_measurement: "Signal %"
     entity_category: "diagnostic"
+
+  # Last boot timestamp
+  - platform: template
+    name: "Device Last Boot"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start
+
+  # device boot counter
+  - platform: template
+    name: Device Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));

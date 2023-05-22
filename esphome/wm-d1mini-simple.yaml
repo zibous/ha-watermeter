@@ -1,4 +1,3 @@
----
 ## ------------------------------------------------------------------
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -14,6 +13,9 @@
 ## Backup:  http://water-meter.local/config.yaml
 ##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
+## 0x43410778
+## 0x43430778 **
+## 0x43890785
 ##
 ## ------------------------------------------------------------------
 substitutions:
@@ -22,7 +24,7 @@ substitutions:
   device_name_short: "water-meter-d1mini"
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.7"
+  appversion: "2.0.8"
 
   ## logger settings
   log_level: "WARN"  # not that logging need memory, so in production mode use "WARN"
@@ -51,7 +53,7 @@ esphome:
       then:
         - globals.set:
             id: boot_counter
-            value: !lambda "return id(boot_counter)+=1;"        
+            value: !lambda "return id(boot_counter)+=1;"
         - logger.log:
             level: WARN
             tag: "system"
@@ -62,7 +64,7 @@ esphome:
         - logger.log:
             level: WARN
             tag: "system"
-            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "        
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
   on_shutdown:
     priority: 700
     then:
@@ -153,16 +155,17 @@ ota:
   on_error:
     then:
       - logger.log:
+          level: WARN
           format: "OTA update error %d"
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
+## COMPONENT WEBSERVER
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -173,19 +176,26 @@ api:
   reboot_timeout: 0s
 
 ## ---------------------------------------------------
+## DEBUG COMPONENT
+## ---------------------------------------------------
+debug:
+  update_interval: 5s  
+
+## ---------------------------------------------------
 ## SNTP Time server
 ## ---------------------------------------------------
 time:
-  - platform: sntp
-    id: time_sntp
-    timezone: Europe/Berlin
-    servers:
-      - 0.at.pool.ntp.org
-      - 0.pool.ntp.org
-      - 1.pool.ntp.org
-
+  - platform: homeassistant
+    id: time_sntp    
     on_time_sync:
       then:
+        - if:
+            condition:
+              lambda: 'return id(last_restart_time).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: last_restart_time
+                  state: !lambda 'return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");'
         - logger.log:
             level: WARN
             tag: "system"
@@ -231,6 +241,16 @@ wmbus:
   # log_unknown (Optional): Show telegrams from not configured meters in log.
   log_unknown: False
 
+  ## ---------------------------------------------------
+  ## Using wmbusmeters i a pipe
+  ## enable this if you have wmbusmeters installed
+  ## ---------------------------------------------------
+  ## clients:
+  ##  - name: "wmbusmeters"
+  ##    ip_address: !secret wmbusmeter_host
+  ##    port: 7227
+  ##    format: rtlwMBus
+  ##    transport: UDP
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -245,7 +265,7 @@ switch:
             id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
-            level: INFO
+            level: WARN
             tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
         - component.update: bootcounter
@@ -261,8 +281,35 @@ switch:
 sensor:
 
   - platform: wmbus
+    # watermeter 1: nearly to mine
+    meter_id: 0x43410778
+    type: izar
+    add_prefix: True
+    # get the total watermter m3 from the wmbus telegram
+    total_water_m3:
+      name: "Watermeter"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
 
-    # Meter ID (usually from sticker). Can be specified as decimal or hex.
+  - platform: wmbus
+    # watermeter 3: nearly to mine
+    meter_id: 0x43890785
+    type: izar
+    add_prefix: True
+    # get the total watermter m3 from the wmbus telegram
+    total_water_m3:
+      name: "Watermeter"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
+
+  - platform: wmbus
+    # My Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only hex is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
@@ -270,6 +317,65 @@ sensor:
     meter_id: !secret watermeterId
     type: izar
     add_prefix: false
+
+    # get the total watermter m3 from the wmbus telegram
+    total_water_m3:
+      name: "Watermeter display"
+      id: "waterdisplay"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+      icon: mdi:counter
+
+    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus v2.1.4)
+    last_month_total_water_m3:
+      name: "Watermeter Display last month"
+      id: "waterdisplay_lastmonth"
+      unit_of_measurement: "m³"
+      state_class: total_increasing
+      device_class: "water"
+      accuracy_decimals: 3
+    
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Water current Month
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      state_class: total_increasing
+      device_class: "water"
+
+    # get the battery life time (wM-Bus v2.1.4)
+    remaining_battery_life_y:
+      name: "Watermeter Battery Life"
+      id: "watermeter_batterie"
+      entity_category: "diagnostic"
+      unit_of_measurement: "Years"
+      accuracy_decimals: 2
+      icon: mdi:battery
+
+    # get the last transmit periode (wM-Bus v2.1.4)
+    transmit_period_s:
+      name: "Watermeter Periode"
+      id: "watermeter_last_reading"
+      entity_category: "diagnostic"
+      accuracy_decimals: 2
+      icon: mdi:timelapse
+
+    # current alarm code
+    current_alarms:
+      name: "Watermeter current alarm"
+      id: "watermeter_current_alarms"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
+
+    # previous alarm code
+    previous_alarms:
+      name: "Watermeter previous alarm"
+      id: "watermeter_prev_alarms"
+      entity_category: "diagnostic"
+      icon: mdi:alarm-light
 
     # The LQI value reported by the CC1101 is a 7 bit unsigned number with a range from 0 to 127.
     # Note that a lower value indicates a better link.
@@ -288,62 +394,64 @@ sensor:
     rssi:
       id: wmbus_cc1101_rssi
       name: "Watermeter CC1101 RSSI"
-      unit_of_measurement: "dbm"
+      filters:
+        - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+      unit_of_measurement: "%"
       entity_category: "diagnostic"
 
-    # get the total watermter m3 from the wmbus telegram
-    total_water_m3:
-      name: "Watermeter display"
-      id: "waterdisplay"
-      unit_of_measurement: "m³"
-      state_class: total_increasing
-      device_class: "water"
-      accuracy_decimals: 3
-      icon: mdi:counter
 
-    # water current month (wM-Bus v2.1.4)
-    current_month_total_water_l:
-      name: Water Month
-      id: "watermonth"
-      accuracy_decimals: 2
-      unit_of_measurement: "L"
-      state_class: total_increasing
-      device_class: "water"
+  # Wifi quality RSSI used by wifi_signal_db
+  - platform: wifi_signal
+    name: "Device WLAN RSSI Quality"
+    id: wifi_signal_db
+    update_interval: 60s
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    unit_of_measurement: "%"
+    entity_category: "diagnostic"
 
-    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus v2.1.4)
-    last_month_total_water_m3:
-      name: "Watermeter last mont"
-      id: "waterdisplay_lastmonth"
-      unit_of_measurement: "m³"
-      state_class: total_increasing
-      device_class: "water"
-      accuracy_decimals: 3
+  # device uptime in hours  
+  - platform: uptime
+    name: "Device Uptime"
+    filters:
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    icon: mdi:clock-start
 
-    # get the battery life time (wM-Bus v2.1.4)
-    remaining_battery_life_y:
-      name: "Watermeter Battery Life"
-      id: "watermeter_batterie"
+  # The debug component can be used to debug problems with ESPHome.
+  # At startup, it prints a bunch of useful information like reset reason,
+  # free heap size, ESPHome version and so on.
+  - platform: debug
+    #  Reports the free heap size in bytes.
+    free:
+      name: "Device Heap Free"
+      id: heapfreekb
+      filters:
+        - lambda: return x * 0.0009765625;
+      unit_of_measurement: "KB"
       entity_category: "diagnostic"
-      icon: mdi:battery
-
-    # get the last transmit periode (wM-Bus v2.1.4)
-    transmit_period_s:
-      name: "Watermeter Periode"
-      id: "watermeter_last_reading"
+      state_class: "measurement"  
+      
+    # Reports the fragmentation metric of the heap (0% is clean, more than ~50% is not harmless).
+    fragmentation:
+      name: "Device Heap Fragmentation"
+      id: curfragm      
+      unit_of_measurement: "%"
       entity_category: "diagnostic"
-      icon: mdi:timelapse
+      state_class: "measurement"  
 
-    current_alarms:
-      name: "Watermeter current alarm"
-      id: "watermeter_current_alarms"
+    # Reports the largest contiguous free RAM block on the heap in bytes.
+    block:
+      name: "Device Heap Max Block"      
+      id: heepmaxblockkb
+      filters:
+        - lambda: return x * 0.0009765625;
+      unit_of_measurement: "KB"
       entity_category: "diagnostic"
-      icon: mdi:alarm-light
-
-    previous_alarms:
-      name: "Watermeter previous alarm"
-      id: "watermeter_prev_alarms"
-      entity_category: "diagnostic"
-      icon: mdi:alarm-light
+      state_class: "measurement"    
 
   # device boot counter
   - platform: template
@@ -353,20 +461,11 @@ sensor:
     state_class: "measurement"
     entity_category: "diagnostic"
     lambda: return (id(boot_counter));
-
-  # Wifi quality RSSI used by wifi_signal_db
-  - platform: wifi_signal
-    id: wifi_signal_db
-    update_interval: 60s
-    internal: true
-    disabled_by_default: true
-
-  # Wifi quality RSSI in percentage
-  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "Device WLAN RSSI"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
+    
+text_sensor:
+  # last boot timestamp
+  - platform: template
+    name: "Device Last Restart Time"
+    id: last_restart_time
+    icon: mdi:clock
+    entity_category: diagnostic

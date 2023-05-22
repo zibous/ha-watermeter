@@ -55,7 +55,7 @@ esphome:
     then:
       - globals.set:
           id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"      
+          value: !lambda "return id(boot_counter)+=1;"
       - logger.log:
           level: INFO
           tag: "system"
@@ -174,12 +174,12 @@ ota:
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
+## COMPONENT WEBSERVER
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: false
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -364,15 +364,6 @@ sensor:
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
- # device boot counter
-  - platform: template
-    name: Device Boot counter
-    id: bootcounter
-    accuracy_decimals: 0
-    state_class: "measurement"
-    entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
-
   # Wifi quality RSSI used by wifi_signal_db
   - platform: wifi_signal
     id: wifi_signal_db
@@ -390,3 +381,11 @@ sensor:
     unit_of_measurement: "%"
     entity_category: "diagnostic"
 
+ # device boot counter
+  - platform: template
+    name: Device Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));

@@ -188,12 +188,12 @@ ota:
           args: ["x"]
 
 ## ---------------------------------------------------
-## WEBSERVER COMPONENT
+## COMPONENT WEBSERVER
 ## ---------------------------------------------------
 web_server:
   port: 80
   version: 2
-  local: true
+  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -386,16 +386,6 @@ sensor:
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
-  # device boot counter
-  - platform: template
-    name: Device Boot counter
-    id: bootcounter
-    accuracy_decimals: 0
-    state_class: "measurement"
-    entity_category: "diagnostic"
-    lambda: |-
-      return (id(boot_counter));
-
   # Wifi quality RSSI
   # only internal used (memory bug D1MINI ??)
   - platform: wifi_signal
@@ -440,6 +430,17 @@ sensor:
     loop_time:
       name: "Application Loop Time"
       entity_category: "diagnostic"
+
+  # device boot counter
+  - platform: template
+    name: Device Boot counter
+    id: bootcounter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: |-
+      return (id(boot_counter));
+
 
 ## ---------------------------------------------------
 ## TEXT SENSORS
