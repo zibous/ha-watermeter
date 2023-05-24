@@ -27,4 +27,11 @@ body {
   max-height: 100%;
   background-color: #4b6cb7;
   font-family: 'Roboto', sans-serif;
+  font-size: 18px;
+}
+
+@media (max-width: 920px) {
+  body {
+    font-size: 15px;
+  }
 }
