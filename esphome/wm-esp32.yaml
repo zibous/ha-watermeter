@@ -632,6 +632,7 @@ sensor:
       unit_of_measurement: "%"
       entity_category: "diagnostic"
       state_class: "measurement"
+      icon: mdi:rss
 
     # get the total watermter m3 from the wmbus telegram, log the timestamp
     # for the last reading  and calculates the statitics value
@@ -708,6 +709,16 @@ sensor:
               id: statusled
               state: !lambda "return id(current_value) > 0;"
 
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Wasser Monat
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      icon: mdi:water-outline
+      state_class: total_increasing
+      device_class: "water"
+
     # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
     last_month_total_water_m3:
       name: "Wasseruhr Anzeige letzter Monat"
@@ -718,21 +729,13 @@ sensor:
       accuracy_decimals: 3
       icon: mdi:counter
 
-    # water current month (wM-Bus v2.1.4)
-    current_month_total_water_l:
-      name: Wasser Monat
-      id: "watermonth"
-      accuracy_decimals: 2
-      unit_of_measurement: "L"
-      state_class: total_increasing
-      device_class: "water"
-
     # get the battery life time (wM-Bus v2.1.4)
     remaining_battery_life_y:
       name: "Wasseruhr Batterielebensdauer"
       id: "watermeter_batterie"
       accuracy_decimals: 2
       unit_of_measurement: "Jahre"
+      state_class: "measurement"
       entity_category: "diagnostic"
       icon: mdi:battery
 
@@ -741,6 +744,7 @@ sensor:
       name: "Wasseruhr Update Intervall"
       id: "watermeter_transmit_periode"
       unit_of_measurement: "sec"
+      state_class: "measurement"
       accuracy_decimals: 2
       entity_category: "diagnostic"
       icon: mdi:timelapse
@@ -751,6 +755,7 @@ sensor:
       id: "watermeter_current_alarms"
       name: "Wasseruhr Alarm Code"
       entity_category: "diagnostic"
+      icon: mdi:message-alert-outline
       on_value:
         then:
           - lambda: |-
@@ -769,6 +774,7 @@ sensor:
     previous_alarms:
       id: "watermeter_previous_alarms"
       name: "Wasseruhr Alarm Code voriger"
+      icon: mdi:message-alert
       entity_category: "diagnostic"
       on_value:
         then:
@@ -791,6 +797,7 @@ sensor:
     id: "watercurrent"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well
     state_class: "measurement"
     device_class: "water"
     lambda: return (id(current_value));
@@ -801,6 +808,7 @@ sensor:
     id: "waterhour"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     state_class: total_increasing
     device_class: "water"
     lambda: return (id(hour_value));
@@ -811,6 +819,7 @@ sensor:
     id: "waterday"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(daily_value));
@@ -821,6 +830,7 @@ sensor:
     id: "wateryesterday"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(yesterday_value));
@@ -831,19 +841,10 @@ sensor:
     id: "waterweek"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(week_value));
-
-  # water current year (updated by id: "waterdisplay")
-  - platform: template
-    name: Wasser Jahr
-    id: "wateryear"
-    accuracy_decimals: 2
-    unit_of_measurement: "L"
-    state_class: total_increasing
-    device_class: "water"
-    lambda: return (id(year_value));
 
   # water last month (updated by id: "waterdisplay")
   - platform: template
@@ -854,6 +855,16 @@ sensor:
     state_class: total_increasing
     device_class: "water"
     lambda: return (id(lastmonth_value));
+
+  # water current year (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Jahr
+    id: "wateryear"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(year_value));
 
   # service call delay (updated by id: "waterdisplay")
   - platform: template
@@ -887,10 +898,12 @@ sensor:
     state_class: "measurement"
     accuracy_decimals: 2
 
-  # device internal temperature
+  # device internal temperature (only webview)
   - platform: internal_temperature
     name: Device Internal Temperature
     id: device_internal_temperature
+    icon: mdi:thermometer-lines
+    state_class: "measurement"
     update_interval: 60s
     entity_category: "diagnostic"
     disabled_by_default: true
@@ -918,7 +931,7 @@ switch:
             id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
-            level: INFO
+            level: WARN
             tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
         - component.update: bootcounter
@@ -926,6 +939,7 @@ switch:
   # reset all global vars
   - platform: template
     name: "Wasseruhr Reset values"
+    icon: mdi:lock-reset
     turn_on_action:
       then:
         - lambda: |-
@@ -955,6 +969,7 @@ switch:
   - platform: restart
     name: "${friendly_name} Restart"
     id: restart_switch
+    icon: mdi:restart
 
 
 ## ---------------------------------------------------
@@ -993,6 +1008,7 @@ text_sensor:
   # optional device version (only for webserver)
   - platform: version
     name: "${friendly_name} ESPHome Version"
+    icon: mdi:application-cog-outline
     id: appver
     disabled_by_default: true
 
@@ -1014,6 +1030,7 @@ text_sensor:
   - platform: template
     id: systime
     disabled_by_default: true
+    icon: mdi:clock-start
     lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
 
   # connected to ssid (only for webserver)
@@ -1022,6 +1039,7 @@ text_sensor:
       name: ${friendly_name} WLAN SSID
       id: wlan_ssid
       disabled_by_default: true
+      icon: mdi:wifi-settings
 
   # simple rest get message for all watermeter data
   # (disable this if you do not need rest service)

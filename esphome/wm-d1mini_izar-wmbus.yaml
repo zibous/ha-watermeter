@@ -48,7 +48,7 @@ esphome:
     - "https://github.com/bblanchon/ArduinoJson.git"
   build_path: ./build/${device_name_short}
   on_boot:
-    - priority: 200
+    - priority: -100.00
       then:
         - globals.set:
             id: boot_counter
@@ -58,7 +58,7 @@ esphome:
             tag: "system"
             format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
         - component.update: bootcounter
-    - priority: 800
+    - priority: 700
       then:
         - logger.log:
             level: WARN
@@ -334,7 +334,7 @@ ota:
     then:
       - logger.log:
           tag: "system"
-          level: INFO
+          level: WARN
           format: "OTA update error %d"
           args: ["x"]
 

@@ -185,8 +185,14 @@ debug:
 ## SNTP Time server
 ## ---------------------------------------------------
 time:
-  - platform: homeassistant
-    id: time_sntp    
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Berlin
+    servers:
+      - fritz.box
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      # - 1.pool.ntp.org 
     on_time_sync:
       then:
         - if:
@@ -339,7 +345,7 @@ sensor:
     
     # water current month (wM-Bus v2.1.4)
     current_month_total_water_l:
-      name: Water current Month
+      name: Water current month
       id: "watermonth"
       accuracy_decimals: 2
       unit_of_measurement: "L"
@@ -398,7 +404,6 @@ sensor:
         - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
       unit_of_measurement: "%"
       entity_category: "diagnostic"
-
 
   # Wifi quality RSSI used by wifi_signal_db
   - platform: wifi_signal
