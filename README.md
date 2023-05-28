@@ -53,6 +53,10 @@ ESPHome - ESP32 (v4) + CC1101 is the best solution for me because the resource r
 - [Fayme CC1101 868MHZ Funk ÜBertragung Antennen Transceiver Modul, Grün](https://amzn.eu/d/i5YwBkR) <br>
 Alternative: [ EBYTE TI CC1101 Wireless 868Mhz 915Mhz RF Modul](https://amzn.eu/d/7GPqsng) with external antenna.
 
+<br>
+
+## Wiring CC1101 module to boards
+![CC1101 module to boards](./esphome/docs/cc1101_board_pins.png)
 
 
 ### Meter types:

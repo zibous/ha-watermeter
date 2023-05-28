@@ -60,7 +60,7 @@ esphome:
           level: WARN
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-      - component.update: bootcounter      
+      - component.update: bootcounter
   on_shutdown:
     priority: 700
     then:
@@ -381,7 +381,7 @@ time:
         - logger.log:
             level: WARN
             tag: "system"
-            format: "Synchronized sntp clock"           
+            format: "Synchronized sntp clock"
         - script.execute: set_status_message
 
     on_time:
@@ -510,7 +510,7 @@ switch:
             id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
-            level: INFO
+            level: WARN
             tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
         - component.update: bootcounter
@@ -836,7 +836,7 @@ sensor:
   - platform: uptime
     name: "${friendly_name} Online seit"
     id: uptime_human
-    icon: mdi:clock-start    
+    icon: mdi:clock-start
     filters:
       - lambda: return x / 3600;
     unit_of_measurement: "h"

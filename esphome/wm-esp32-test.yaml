@@ -263,7 +263,7 @@ switch:
             id(boot_counter) = 0;
             id(bootcounter).publish_state(id(boot_counter));
         - logger.log:
-            level: INFO
+            level: WARN
             tag: "system"
             format: "${device_name_short} reset boot counter o.k!"
         - component.update: bootcounter

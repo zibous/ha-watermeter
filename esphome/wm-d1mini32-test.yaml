@@ -1,48 +1,52 @@
----
 ## ------------------------------------------------------------------
-## WMBUS NODEMCU V3 + CC1101 for Diehl IZAR RC 868 I R4 PL
-## HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
+## WMBUS METER D1 MINI 32 + CC1101 for Diehl IZAR RC 868 I R4 PL
+## HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
 ##
 ## CC1101 TESTCASE FOR ALL WATERMETERS
+## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
 ##
-## usage:  1. Using Homassistant API (discovery + devices)
-##         2. Optional uses backup component
-##         3. Optinal usese syslog component
+##   1. uses esphome-components latest version from github
+##   2. uses syslog component  (optional)
+##      tail -f /var/log/syslog | grep "water-meter"
 ##
 ## This version shows data from the all watermeters.
 ## Use this for frist test to find your watermeterID.
 ##
-## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
-##
-## WEBUI:   http://water-meter.local
-## Backup:  http://water-meter.local/config.yaml
-##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
-## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
-##
 ## ------------------------------------------------------------------
 substitutions:
 
-   ## device settings
-  device_name_short: "water-meter"
-  device_description: "Wasserzähler NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all Watermeters"
-  projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.7"
+  ## device settings
+  device_name_short: "water-meter-d1mini32"
+  device_description: "TEST: Wasserzähler Wemos D1 Mini 32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
+  projectname: "Diehl IZAR RC 868.Watermeter-Test"
+  appversion: "2.0.8"
 
-  ## logger settings
-  log_level: "DEBUG"  # not that logging need memory, so in production mode use "WARN"
-  log_wmbus: "DEBUG" # Loglevel for wmbus meters component
-  log_baudrate: "0" # 0 disable uart logger messages
+  ## all watermeters wmid: "0", your watermeter: wmid: !secret watermeterId
+  ## wmid: "0"
+  wmid: "0x43430778"
 
-# ----------------------------------------------------------------
-# HARDWARE:  NODEMCU V3 ESP8266 80MHz, 80KB RAM, 4MB Flash
-# ----------------------------------------------------------------
-esp8266:
-  board: nodemcuv2
-  restore_from_flash: true
+  ## logger settings, use DEBUG or VERBOSE to see the telegram data
+  log_level: "DEBUG"    # In production mode use "WARN"
+  log_wmbus: "DEBUG"    # Loglevel for wmbus meters component
+  log_baudrate: "0"     # Disable uart logger messages log baudrate=0
 
 ## ----------------------------------------------------------------
-## ESPHOME APPLICATION
+## HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
 ## ----------------------------------------------------------------
+esp32:
+  board: wemos_d1_mini32
+
+preferences:
+  flash_write_interval: 1min
+
+# The mdns component makes the node announce itself on the local
+# network using the multicast DNS (mDNS) protocol.
+# mdns:
+#   disabled: false
+
+## ---------------------------------------------------
+## ESPHOME Configuration
+## ---------------------------------------------------
 esphome:
   name: ${device_name_short}
   comment: ${device_description}
@@ -51,16 +55,23 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    priority: -100.00
-    then:
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
-      - logger.log:
-          level: INFO
-          tag: "system"
-          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-      - component.update: bootcounter
+    - priority: -100.00
+      then:
+        - globals.set:
+            id: boot_counter
+            value: !lambda "return id(boot_counter)+=1;"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+        - component.update: bootcounter
+    - priority: 800
+      then:
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
+
   on_shutdown:
     priority: 700
     then:
@@ -69,9 +80,9 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 ## External components
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 external_components:
 
   # uses the latest version from SzczepanLeon
@@ -81,6 +92,12 @@ external_components:
     refresh: 0s
     components: [wmbus]
 
+  # uses the latest local version from SzczepanLeon
+  # - source:
+  #    type: local
+  #    path: custom_components
+  #  components: [wmbus]
+
   # use local component from
   # https://github.com/zdzichu6969/esphome-components
   - source:
@@ -89,15 +106,16 @@ external_components:
     components: [backup]
 
   # use local component from
+  # enable this if you have a syslog server
   # https://github.com/TheStaticTurtle/esphome_syslog
   # - source:
   #     type: local
   #     path: custom_components
   #   components: [syslog]
 
+
 ## ---------------------------------------------------
 ## syslog service
-## tail -f /var/log/syslog | grep "water-meter"
 ## ---------------------------------------------------
 # syslog:
 #   ip_address: !secret syslog_server
@@ -115,21 +133,23 @@ backup:
     password: !secret web_password
   force_update: false
 
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 ## Global variables
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 globals:
-
   - id: boot_counter
     type: int
     restore_value: yes
     initial_value: "0"
+  - id: last_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
 
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
 ## ---------------------------------------------------
 wifi:
-  id: wifi_nodemcu
   networks:
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
@@ -142,11 +162,8 @@ wifi:
       priority: 2
   domain: !secret domain
 
-## ---------------------------------------------------
-## The captive portal component in ESPHome is a
-## fallback mechanism for when connecting to the
-## configured WiFi fails.
-## ---------------------------------------------------
+# The captive portal component in ESPHome is a fallback mechanism for
+# when connecting to the configured WiFi fails.
 captive_portal:
 
 ## ---------------------------------------------------
@@ -161,6 +178,12 @@ logger:
     wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
+## DEBUG COMPONENT
+## ---------------------------------------------------
+debug:
+  update_interval: 5s
+
+## ---------------------------------------------------
 ## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
@@ -168,7 +191,7 @@ ota:
   on_error:
     then:
       - logger.log:
-          level: INFO
+          level: WARN
           tag: "system"
           format: "OTA update error %d"
           args: ["x"]
@@ -185,12 +208,12 @@ web_server:
 ## Home Assistant API COMPONENT
 ## ---------------------------------------------------
 api:
-  id: espapnuc
+  id: espapiwm2_d1
   port: 6053
   reboot_timeout: 0s
 
 ## ---------------------------------------------------
-## SNTP COMPONENT
+## SNTP Time server
 ## ---------------------------------------------------
 time:
   - platform: sntp
@@ -200,77 +223,35 @@ time:
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
       - 1.pool.ntp.org
-
     on_time_sync:
+      # Components should trigger on_time_sync when they update the system clock.
       then:
+        - if:
+            condition:
+              lambda: 'return id(device_lastBoot_time).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_lastBoot_time
+                  state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
         - logger.log:
+            level: WARN
             tag: "system"
-            level: INFO
             format: "Synchronized sntp clock"
 
-
-## ------------------------------------------------------------------
-##           WMBUS CC1101 --> NODEMCU V3
-## ------------------------------------------------------------------
-##
-##
-##       GDO0                 MOSI
-##         7              MISO  3
-##         o GD02       CLK  5  o  CSN
-##         |  6           4  o  |  8           ╭-------o 2 (GND)
-##         |  o           o  |  |  o           |  ╭----o 1 (3.3V)
-##         |  |           |  |  |  |           |  |
-##   ╭――x――o――o――x――x――x――o――o――o――o――x――x――x――o――o―╮
-##   |     D1 D2          D5 D6 D7 D8               |
-##   |                                              |
-## - | ANT              NODEMCU V3                  | -- USB
-##   |                                              |
-##   |                                              |
-##   ╰――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x―╯
-##
-##
-##
-## ------------------------------------------------------------------
+## ---------------------------------------------------
+##        WMBUS DEVICE D1MINI 32 --> CC1101
+## ---------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13  #D7  3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12  #D6  5: MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14   #D5  4: SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15    #D8  8: CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  7: Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2  6: FIFO status signals. High Impedance !
+  mosi_pin: GPIO23  # MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO19  # MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO18   # SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO5     # CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO21  # SDA  Clock output. High Impedance !
+  gdo2_pin: GPIO22  # SCL  FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: True
 
-## ---------------------------------------------------
-## SWITCHES
-## ---------------------------------------------------
-switch:
-  # reset boot counter value
-  - platform: template
-    name: "Device Reset Boot Counter"
-    turn_on_action:
-      then:
-        - lambda: |-
-            id(boot_counter) = 0;
-            id(bootcounter).publish_state(id(boot_counter));
-        - logger.log:
-            level: WARN
-            tag: "system"
-            format: "${device_name_short} reset boot counter o.k!"
-        - component.update: bootcounter
-
-  - platform: restart
-    name: "Device Restart"
-    id: restart_switch
-
-  # save device boot (develop only)
-  - platform: safe_mode
-    name: "Device Restart (Safe Mode)"
-
-  # reset the device to factory reset (develop only)
-  - platform: factory_reset
-    name: "Device Restart Factory"
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -282,8 +263,8 @@ sensor:
     # only hex is working for my watermeter !
     # see: https://github.com/SzczepanLeon/esphome-components/issues/6
     # edit watermeterid in the secrets file
-    # settings to add the watermeterid to the lqi, rssi and total_water_m3
-    meter_id: "0" # !secret watermeterId
+    ## settings to add the watermeterid to the lqi, rssi and total_water_m3
+    meter_id: ${wmid}
     type: izar
     add_prefix: true
 
@@ -291,9 +272,10 @@ sensor:
     # Note that a lower value indicates a better link.
     # The LQI of a received packet will be bad (higher number) when there is lot of interference.
     lqi:
+      name: "CC1101 LQI"
       id: wmbus_cc1101_lqi
-      name: "WLAN CC1101 LQI"
       entity_category: "diagnostic"
+      state_class: "measurement"
       unit_of_measurement: "lqi"
 
     # The RSSI value reported by the CC1101 is a 8 bit signed number with an effective
@@ -301,34 +283,38 @@ sensor:
     # RSSI stands for received signal strength (power) indication (in dBm).
     # A higher value indicates higher power. (internal only)
     rssi:
-      name: "WLAN CC1101 RSSI"
+      name: "CC1101 RSSI"
       id: wmbus_cc1101_rssi
-      unit_of_measurement: "%"
+      unit_of_measurement: "dBm"
+      icon: mdi:rss
+      state_class: "measurement"
       entity_category: "diagnostic"
 
     # waterdisplay - get the total watermter m3 from the wmbus telegram
     total_water_m3:
-      name: "Watermeter Display"
+      name: "Watermeter display"
       id: "waterdisplay"
       unit_of_measurement: "m³"
       state_class: total_increasing
       device_class: "water"
       accuracy_decimals: 3
+      icon: mdi:counter
       on_value:
         then:
           - lambda: |-
-              ESP_LOGI("wmbus", "Water Display value: %f", id(waterdisplay).state);
+              ESP_LOGD("system", "Water Display value: %f, last value: %f", id(waterdisplay).state, id(last_value));
+              id(last_value)=id(waterdisplay).state;
 
     # water current month (wM-Bus v2.1.4)
     current_month_total_water_l:
-      name: "Watermeter current month"
+      name: "Water current month"
       id: "watermonth"
       accuracy_decimals: 2
       unit_of_measurement: "L"
       state_class: total_increasing
       device_class: "water"
 
-    # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
+    # get the last month total watermter m3 from the wmbus telegram (wM-Bus v2.1.4).
     last_month_total_water_m3:
       name: "Water last month"
       id: "waterdisplay_lastmonth"
@@ -343,6 +329,8 @@ sensor:
       name: "Watermeter battery life"
       id: "watermeter_batterie"
       entity_category: "diagnostic"
+      state_class: "measurement"
+      accuracy_decimals: 2
       icon: mdi:battery
 
     # get the last transmit periode (wM-Bus v2.1.4)
@@ -350,42 +338,107 @@ sensor:
       name: "Watermeter transmit periode"
       id: "watermeter_last_reading"
       entity_category: "diagnostic"
+      state_class: "measurement"
       icon: mdi:timelapse
 
+    # get the current alarmcode (wM-Bus v2.1.4)
     current_alarms:
       id: "watermeter_current_alarms"
       name: "Watermeter current alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
+    # get the previous alarmcode (wM-Bus v2.1.4)
     previous_alarms:
       id: "watermeter_prev_alarms"
       name: "Watermeter previous alarm"
       entity_category: "diagnostic"
       icon: mdi:alarm-light
 
-  # Wifi quality RSSI used by wifi_signal_db
+  # Wifi quality RSSI (%)
   - platform: wifi_signal
+    name: Device WLAN Signal
     id: wifi_signal_db
     update_interval: 60s
-    internal: true
-    disabled_by_default: true
-
-  # Wifi quality RSSI in percentage
-  # Received Signal Strength (RSSI) is a measure of incoherent (raw) RF power in a channel.
-  - platform: copy # Reports the WiFi signal strength in %
-    source_id: wifi_signal_db
-    name: "Device WLAN RSSI"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
     entity_category: "diagnostic"
+    unit_of_measurement: "%"
 
- # device boot counter
+  # The debug component can be used to debug problems with ESPHome.
+  # At startup, it prints a bunch of useful information like reset reason,
+  # free heap size, ESPHome version and so on.
+  - platform: debug
+
+    #  Reports the free heap size in bytes.
+    free:
+      name: "Heap Free"
+      entity_category: "diagnostic"
+
+    # Reports the longest time between successive iterations of the main loop.
+    loop_time:
+      name: "Application Loop Time"
+      entity_category: "diagnostic"
+
+  # device boot counter
   - platform: template
-    name: Device Boot counter
+    name: Boot counter
     id: bootcounter
     accuracy_decimals: 0
     state_class: "measurement"
     entity_category: "diagnostic"
-    lambda: return (id(boot_counter));
+    lambda: |-
+      return (id(boot_counter));
+
+## ---------------------------------------------------
+## SWITCHES
+## ---------------------------------------------------
+switch:
+  # reset boot counter value
+  - platform: template
+    name: Boot Counter reset
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
+
+  # restart device
+  - platform: restart
+    name: "Restart device"
+    id: restart_switch
+
+  # save device boot (develop only)
+  - platform: safe_mode
+    name: "Restart (Safe Mode)"
+
+  # reset the device to factory reset (develop only)
+  - platform: factory_reset
+    icon: mdi:lock-reset
+    name: Restart factory default
+
+## ---------------------------------------------------
+## TEXT SENSORS
+## ---------------------------------------------------
+text_sensor:
+  - platform: debug
+    # Reports the device information:
+    device:
+      name: "Device Info"
+      entity_category: "diagnostic"
+    # Reports the last reboot reason in a human-readable form.
+    reset_reason:
+      name: "Reset Reason"
+      entity_category: "diagnostic"
+
+  # Last boot timestamp
+  - platform: template
+    name: "Last Boot timestamp"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start

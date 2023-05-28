@@ -16,13 +16,13 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-d1mini"
+  device_name_short: "water-meter-d1mini2"
   device_description: "TEST: Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter-Test"
   appversion: "2.0.8"
 
   ## all watermeters wmid: "0", your watermeter: wmid: !secret watermeterId
-  # wmid: "0"
+  ## wmid: "0"
   wmid: "0x43430778"
 
   ## logger settings, use DEBUG or VERBOSE to see the telegram data
@@ -276,8 +276,8 @@ wmbus:
   miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
   clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
   cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+  gdo0_pin: GPIO04  #D1  SDA  Clock output. High Impedance !
+  gdo2_pin: GPIO05  #D2  SCL  FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: True

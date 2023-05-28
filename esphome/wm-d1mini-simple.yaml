@@ -241,8 +241,8 @@ wmbus:
   miso_pin: GPIO12  #D6  MISO Attached to Hardware SPI controller MISO SPI Interface
   clk_pin: GPIO14   #D5  SCK  Attached to Hardware SPI controller CLK
   cs_pin: GPIO15    #D8  CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2  FIFO status signals. High Impedance !
+  gdo0_pin: GPIO04  #D1  SDA  Clock output. High Impedance !
+  gdo2_pin: GPIO05  #D2  SCL  FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log.
   log_unknown: False
