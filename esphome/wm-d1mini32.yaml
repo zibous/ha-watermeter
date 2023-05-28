@@ -43,9 +43,7 @@ substitutions:
 ## HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
 ## -----------------------------------------------------------------
 esp32:
-  board: az-delivery-devkit-v4
-  framework:
-    type: arduino
+  board: wemos_d1_mini32
 
 ## ----------------------------------------------------------------
 ## APPLICATION ESPHOME

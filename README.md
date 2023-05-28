@@ -115,10 +115,12 @@ __Note__: The **ESP32** has more RAM memory and is therefore better suited for u
 
 |  Device | Remarks   | Hardware  | 
 |---------|-----------|--------|
-| **Wemos D1 Mini** ![d1Mini-wemos](./esphome/docs/d1Mini-wemos.png) |  CC1101, board: d1_mini   |   ESP8266 80MHz, **80KB RAM**, 4MB Flash |
-| **Wemos D1 Mini Board** ![d1mini-esp8266MOD-12F](./esphome/docs/d1mini-esp8266MOD-12F.png) |  CC1101, board: esp12e (board: d1_mini )   |  ESP8266 80MHz, **80KB RAM** , 4MB Flash       |
-| **NodeMCU Lolin V3 Module** ![NodeMCU Lolin V3 Module](./esphome/docs/nodemcu_v3.png)   |  CC1101, board: NodeMCU Lua Lolin V3 Module ESP8266  | ESP8266 80MHz, **80KB RAM** , 4MB Flash      |
-| **ESP32 Dev Kit C V4 NodeMCU** ![d1mini-esp8266MOD-12F](./esphome/docs/az-delivery-devkit-v4.png)   |  CC1101, board: az-delivery-devkit-v4  |  ESP32 240MHz, **520KB RAM**, 4MB Flash     |
+|**Wemos D1 Mini Board 80KB RAM**<br><img src="./esphome/docs/d1Mini-wemos.png"  width="40%">|  CC1101, board: d1_mini   |   ESP8266 80MHz, **80KB RAM**, 4MB Flash |
+|**Wemos D1 Mini 80KB RAM**<br><img src="./esphome/docs/d1mini-esp8266MOD-12F.png"  width="40%"> |  CC1101, board: esp12e (board: d1_mini )|ESP8266 80MHz, **80KB RAM** , 4MB Flash       |
+|**NodeMCU Lolin V3 Modul 80KB RAM** <br><img src="./esphome/docs/nodemcu_v3.png"  width="40%"> |     CC1101, board: NodeMCU Lua Lolin V3 Module ESP8266  | ESP8266 80MHz, **80KB RAM** , 4MB Flash      |
+|**D1MINI ESP32 320KB RAM**<br><img src="./esphome/docs/d1miniesp32.png"  width="40%"> |  CC1101, board: D!MINI ESP32  |  ESP32 240MHz, **320KB RAM**, 4MB Flash    |
+|**ESP32 Dev Kit C V4 520KB RAM**<br><img src="./esphome/docs/az-delivery-devkit-v4.png"  width="40%"> |  CC1101, board: az-delivery-devkit-v4  |  ESP32 240MHz, **520KB RAM**, 4MB Flash     |
+
 
 <br>
 
@@ -141,8 +143,11 @@ __Note__: The **ESP32** has more RAM memory and is therefore better suited for u
 |------------------|-----------|----------------|
 | 🛠 WMBUSCHECK  |Test configuration and wmbus. NO SENSORS only messages: Details see Log window  |[wm-check-wmbus.yaml](esphome/wm-check-wmbus.yaml)  |
 | 🛠 ESP32 Test  |Frist run to find watermeters. Messages see Log window or syslog messages |[wm-esp32-test.yaml](esphome/wm-esp32-test.yaml)  |
-| 💻 ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.         |[wm-esp32-simple.yaml](esphome/wm-esp32-simple.yaml)  |
-|✔️ ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-esp32.yaml](esphome/wm-esp32.yaml)  |  
+| 💻 ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.|[wm-esp32-simple.yaml](esphome/wm-esp32-simple.yaml) |
+|✔️ ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-esp32.yaml](esphome/wm-esp32.yaml) |
+| 🛠 D1 MINI ESP32 Test  |Frist run to find watermeters. Messages see Log window or syslog messages |[wm-d1mini32-test.yaml](esphome/wm-d1mini32-test.yaml)  |
+| 💻 D1 MINI ESP32 Simple  |Simple Sensor outputs, no calculations. Low memory consumption.         |[wm-d1mini32-simple.yaml](esphome/wm-d1mini32-simple.yaml)  |
+|✔️ D1 MINI ESP32  |Full version - Sensors and calulated values, Statitics. Alarmcode text message          |[wm-d1mini32.yaml](esphome/wm-d1mini32.yaml)  |
 | D1MINI IZAR WMBUS|Testcase for IZAR WMBUS METER          |[wm-d1mini_izar-wmbus.yaml](esphome/wm-d1mini_izar-wmbus.yaml)|
 | 🛠 D1MINI Test|Frist run to find watermeters. Messages see Log window or syslog messages         |[wm-d1mini-test.yaml](esphome/wm-d1mini-test.yaml)|
 | 💻 D1MINI Simple |Simple Sensor outputs, no calculations. Low memory consumption.          |[wm-d1mini-simple.yaml](esphome/wm-d1mini-simple.yaml)|
