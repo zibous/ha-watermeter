@@ -214,6 +214,14 @@ wifi:
   domain: !secret domain
 
 ## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  # It is recommended to leave mDNS enabled.
+  disabled: false
+
+## ---------------------------------------------------
 ## COMPONENT CAPTIVE PORTAL
 ## ---------------------------------------------------
 captive_portal:

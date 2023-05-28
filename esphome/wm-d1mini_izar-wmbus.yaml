@@ -197,6 +197,13 @@ wifi:
       priority: 2
   domain: !secret domain
 
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
+
 # ---------------------------------------------------
 ## Home Assistant API COMPONENT
 ## Homeassistant service call (all values in liter):

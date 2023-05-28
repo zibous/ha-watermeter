@@ -9,17 +9,17 @@
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
-## WEBUI:   http://water-meter.local
-## REST:    curl -i http://water-meter.local/text_sensor/watermeterdata
+## WEBUI:   http://water-meter-nmc.local
+## REST:    curl -i http://water-meter-nmc.local/text_sensor/watermeterdata
 ## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
-## Backup:  http://water-meter.local/config.yaml
-##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## Backup:  http://water-meter-nmc.local/config.yaml
+##          curl -v 'http://water-meter-nmc.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## ------------------------------------------------------------------
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter"
+  device_name_short: "water-meter-nmc"
   device_description: "Watermeter NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
@@ -202,6 +202,13 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
 
 ## ---------------------------------------------------
 ## The captive portal component in ESPHome is a

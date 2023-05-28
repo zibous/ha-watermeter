@@ -11,7 +11,7 @@
 substitutions:
 
   # device and application settings
-  device_name_short: "water-meter-test"
+  device_name_short: "water-meter-check"
   device_description: "Watermeter CC1101 wmbus Test"
   projectname: "CC1101 wmbus Test.Watermeter"
   appversion: "2.0.7"
@@ -232,6 +232,13 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
 
 ## ---------------------------------------------------
 ## Captive portal component

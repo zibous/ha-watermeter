@@ -9,9 +9,9 @@
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
-## WEBUI:   http://water-meter-d1mini.local
-## Backup:  http://water-meter.local/config.yaml
-##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## WEBUI:   http:/water-meter-dminis.local
+## Backup:  http://water-meter-dminis.local/config.yaml
+##          curl -v 'http://water-meter-dminis.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## 0x43410778
 ## 0x43430778 **
@@ -21,7 +21,7 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-d1mini"
+  device_name_short: "water-meter-dminis"
   device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.8"
@@ -127,6 +127,13 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
 
 ## ---------------------------------------------------
 ## The captive portal component in ESPHome is a

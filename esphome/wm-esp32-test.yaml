@@ -14,7 +14,7 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-esp"
+  device_name_short: "water-meter-espt"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
@@ -147,6 +147,13 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
 
 ## ---------------------------------------------------
 ## The captive portal component in ESPHome is a

@@ -16,7 +16,7 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-d1mini2"
+  device_name_short: "water-meter-dminit"
   device_description: "TEST: Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter-Test"
   appversion: "2.0.8"
@@ -44,9 +44,6 @@ esp8266:
 
 preferences:
   flash_write_interval: 1min
-  
-mdns:
-  disabled: false
 
 ## ---------------------------------------------------
 ## ESPHOME Configuration
@@ -165,6 +162,14 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
+
 
 # The captive portal component in ESPHome is a fallback mechanism for
 # when connecting to the configured WiFi fails.

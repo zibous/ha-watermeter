@@ -14,16 +14,16 @@
 ##
 ## DO NOT USE THIS CONFIGURATION FOR PRODUCTION
 ##
-## WEBUI:   http://water-meter.local
-## Backup:  http://water-meter.local/config.yaml
-##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## WEBUI:   http://water-meter-nmct.local
+## Backup:  http://water-meter-nmct.local/config.yaml
+##          curl -v 'http://water-meter-nmct.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
 ##
 ## ------------------------------------------------------------------
 substitutions:
 
    ## device settings
-  device_name_short: "water-meter"
+  device_name_short: "water-meter-nmct"
   device_description: "Wasserzähler NODEMCU V3 + CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all Watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
@@ -141,6 +141,13 @@ wifi:
       password: !secret ssid2_pswd
       priority: 2
   domain: !secret domain
+
+## ---------------------------------------------------
+## mDNS Component
+## ---------------------------------------------------
+mdns:
+  # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  disabled: false
 
 ## ---------------------------------------------------
 ## The captive portal component in ESPHome is a
