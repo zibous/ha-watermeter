@@ -16,7 +16,7 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-d1mini32t"
+  device_name_short: "water-meter-d1mini32"
   device_description: "TEST: Wasserzähler Wemos D1 Mini 32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter-Test"
   appversion: "2.0.8"

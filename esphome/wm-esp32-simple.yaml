@@ -10,14 +10,14 @@
 ##         2. Using Homassistant API (discovery + devices)
 ##         3. uses backup component (optinal)
 ##
-## Backup:  http://water-meter-esps.local/config.yaml
-##          curl -v 'http://water-meter-esps.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## Backup:  http://water-meter-esp.local/config.yaml
+##          curl -v 'http://water-meter-esp.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## ---------------------------------------------------------------------------
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-esps"
+  device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"

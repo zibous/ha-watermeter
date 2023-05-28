@@ -10,14 +10,14 @@
 ##         2. Using Homassistant API (discovery + devices)
 ##         3. uses backup component (optinal)
 ##
-## Backup:  http://water-meter-d1mini32s.local/config.yaml
-##          curl -v 'http://water-meter-d1mini32s/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
+## Backup:  http://water-meter-d1mini32.local/config.yaml
+##          curl -v 'http://water-meter-d1mini32/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## ---------------------------------------------------------------------------
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-d1mini32s"
+  device_name_short: "water-meter-d1mini32"
   device_description: "SIMPLE: Wasserzähler Wemos D1 Mini 32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - find watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter-Test"
   appversion: "2.0.8"

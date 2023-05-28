@@ -14,7 +14,7 @@
 substitutions:
 
   ## device settings
-  device_name_short: "water-meter-espt"
+  device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "2.0.7"
