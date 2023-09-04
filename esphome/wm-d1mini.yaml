@@ -22,15 +22,15 @@ substitutions:
 
   ## device settings
   device_name_short: "water-meter-d1mini"
-  device_description: "Watermeter Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
+  device_description: "Watermeter Wemos D1 Mini +  EBYTE TI CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.0.8"
+  appversion: "2.0.9"
 
   ## logger settings
-  log_level: "WARN"  # not that logging need memory, so in production mode use "WARN"
-  log_wmbus: "ERROR" # Loglevel for wmbus meters component
-  log_baudrate: "0" # 0 disable uart logger messages
+  log_level: "WARN"   # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "ERROR"  # Loglevel for wmbus meters component
+  log_baudrate: "0"   # use 115200 to enable serial UART port logging.
 
 ## ----------------------------------------------------------------
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -45,12 +45,14 @@ esp8266:
 esphome:
   name: ${device_name_short}
   comment: ${device_description}
+  # Automatically add the mac address to the name
+  # so you can use a single firmware for all devices
+  name_add_mac_suffix: false
   project:
     name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    priority: -100.0
     then:
       - globals.set:
           id: boot_counter
@@ -64,7 +66,6 @@ esphome:
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
       - component.update: bootcounter
   on_shutdown:
-    priority: 700
     then:
       - logger.log:
           level: ERROR
@@ -92,19 +93,10 @@ external_components:
 
   # optinal: use local component from
   # https://github.com/TheStaticTurtle/esphome_syslog
-  # - source:
-  #     type: local
-  #     path: custom_components
-  #   components: [syslog]
-
-## ---------------------------------------------------
-## syslog service
-## ---------------------------------------------------
-# syslog:
-#   ip_address: !secret syslog_server
-#   port: !secret syslog_port
-#   min_level: DEBUG
-#   enable_logger: true
+  - source:
+      type: local
+      path: custom_components
+    components: [syslog]
 
 # ----------------------------------------------------------------
 # Save your ESPHome device configuration in firmware and and
@@ -115,6 +107,37 @@ backup:
     username: !secret web_username
     password: !secret web_password
   force_update: false
+
+## ---------------------------------------------------
+## syslog service
+## ---------------------------------------------------
+syslog:
+  ip_address: !secret syslog_server
+  port: !secret syslog_port
+  min_level: DEBUG
+  enable_logger: true
+
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
+    sensor: WARN
+    sensor.filter: WARN
+    text_sensor: WARN
+    api.service: ERROR
+    json: ERROR
+    mqtt: WARN
+    scheduler: ERROR
+    wifi: WARN
+    component: ERROR
+    api: WARN
+    # internal_temperature: ERROR
 
 ## ----------------------------------------------------------------
 ## GLOBALS VARIABLES
@@ -168,7 +191,7 @@ globals:
 
   - id: send_millisecond
     type: int
-    restore_value: false
+    restore_value: no
     initial_value: '0'
 
   - id: cc1101_state
@@ -188,58 +211,74 @@ globals:
     initial_value: '{"Init", "Warte auf Daten", "Daten empfangem", "Ready", "Error"}'
 
 ## ---------------------------------------------------
-## WIFI Settings 3 wifis
+## WIFI Settings
 ## ---------------------------------------------------
 wifi:
-  id: wifi_d1mini
+  # Fast connect can only be used with one network!.
+  # fast_connect: true
   networks:
+   # unifi accesspoint 2.4Ghz
+    - ssid: !secret ssid4_name
+      password: !secret ssid4_pswd
+      priority: 1
+    # office apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
-      priority: 0
-    - ssid: !secret ssid1_name
-      password: !secret ssid1_pswd
-      priority: 1
+      priority: 2
+    # living room apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
-      priority: 2
+      priority: 3
   domain: !secret domain
+  ap:
+    # ssid: (Optional, string): The name of the access point to create. Leave empty to use the device name.
+    # ssid: "${device_name_short} Hotspot"
+    password: !secret app_pswd
 
 ## ---------------------------------------------------
 ## mDNS Component
 ## ---------------------------------------------------
 mdns:
   # if mDNS is disabled, they will no longer be able to automatically find your devices.
+  # It is recommended to leave mDNS enabled.
   disabled: false
 
 ## ---------------------------------------------------
-## The captive portal component in ESPHome is a
-## fallback mechanism for when connecting to the
-## configured WiFi fails.
+## COMPONENT CAPTIVE PORTAL
 ## ---------------------------------------------------
 captive_portal:
-
-## ---------------------------------------------------
-## LOGGER COMPONENT
-## ---------------------------------------------------
-logger:
-  id: appslogger
-  level: ${log_level}
-  baud_rate: ${log_baudrate}
-  logs:
-    wmbus: ${log_wmbus}
-    wMBus-lib: ${log_wmbus}
 
 ## ---------------------------------------------------
 ## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  on_error:
+  safe_mode: false
+  on_begin:
+    then:
+      - logger.log:
+          format: "OTA Start"
+          tag: "OTA"
+          level: WARN
+  on_progress:
     then:
       - logger.log:
           level: WARN
-          tag: "system"
+          tag: "OTA"
+          format: "OTA progress %0.1f%%"
+          args: ["x"]
+  on_end:
+    then:
+      - logger.log:
+          format: "OTA End"
+          tag: "OTA"
+          level: WARN
+  on_error:
+    then:
+      - logger.log:
           format: "OTA update error %d"
+          tag: "OTA"
+          level: ERROR
           args: ["x"]
 
 ## ---------------------------------------------------
@@ -267,6 +306,9 @@ api:
   id: espapiwm2_d1
   port: 6053
   reboot_timeout: 0s
+  # https://esphome.io/components/api.html?highlight=api
+  encryption:
+    key: "inH49O9jBeK5yTGb1X2g4WV/1aS6YKUpu3Vu277fDgw="
   services:
     - service: set_water_val
       variables:
@@ -370,10 +412,9 @@ time:
     id: time_sntp
     timezone: Europe/Berlin
     servers:
-      - fritz.box
+      - !secret local_sntp
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
-      # - 1.pool.ntp.org
     on_time_sync:
       # Components should trigger on_time_sync when they update the system clock.
       then:
@@ -470,9 +511,9 @@ script:
             ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
             id(watermeter_status_message).publish_state(message);
 
-## ---------------------------------------------------
-##        WMBUS DEVICE D1MINI WEMOS --> CC1101
-## ---------------------------------------------------
+## -----------------------------------------------------
+##        WMBUS DEVICE D1MINI WEMOS -->  EBYTE TI CC1101
+## -----------------------------------------------------
 ##
 ##               GDO0
 ##                 o
@@ -536,55 +577,17 @@ wmbus:
   # led_blink_time: "100s"
 
 ## ---------------------------------------------------
-## SWITCHES
+## BINARY SENSOR
 ## ---------------------------------------------------
-switch:
-  # reset boot counter value
-  - platform: template
-    name: "${friendly_name} Boot Counter Reset"
-    turn_on_action:
-      then:
-        - lambda: |-
-            id(boot_counter) = 0;
-            id(bootcounter).publish_state(id(boot_counter));
-        - logger.log:
-            level: WARN
-            tag: "system"
-            format: "${device_name_short} reset boot counter o.k!"
-        - component.update: bootcounter
+binary_sensor:
 
-  # reset all global vars
+  # simulate led state
   - platform: template
-    name: "Wasseruhr Reset values"
-    turn_on_action:
-      then:
-        - lambda: |-
-            id(last_value) = 0.00;
-            id(boot_counter) = 0;
-            id(bootcounter).publish_state(id(boot_counter));
-            id(current_value) = 0.00;
-            id(watercurrent).publish_state(id(current_value));
-            id(hour_value) = 0.00;
-            id(waterhour).publish_state(id(hour_value));
-            id(daily_value) = 0.00;
-            id(waterday).publish_state(id(daily_value));
-            id(yesterday_value) = 0.00;
-            id(wateryesterday).publish_state(id(yesterday_value));
-            id(week_value) = 0.00;
-            id(waterweek).publish_state(id(week_value));
-            id(lastmonth_value) = 0.00;
-            id(waterlastmonth).publish_state(id(lastmonth_value));
-            id(year_value) = 0.00;
-            id(wateryear).publish_state(id(year_value));
-        - logger.log:
-            level: INFO
-            tag: "system"
-            format: "all values reset!"
-
-  # restarts the device
-  - platform: restart
-    name: "${friendly_name} Restart"
-    id: restart_switch
+    name: "Wasseruhr Status Led"
+    id: statusled
+    icon: mdi:led-outline
+    entity_category: "diagnostic"
+    lambda: "return id(current_value) > 0;"
 
 ## ---------------------------------------------------
 ## SENSORS
@@ -618,6 +621,13 @@ sensor:
     # A higher value indicates higher power. (internal only)
     rssi:
       id: wmbus_cc1101_rssi
+      name: "${friendly_name} CC1101 RSSI"
+      filters:
+        - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+      unit_of_measurement: "%"
+      entity_category: "diagnostic"
+      state_class: "measurement"
+      icon: mdi:rss
 
     # get the total watermter m3 from the wmbus telegram, log the timestamp
     # for the last reading  and calculates the statitics value
@@ -689,6 +699,16 @@ sensor:
               id: statusled
               state: !lambda "return id(current_value) > 0;"
 
+    # water current month (wM-Bus v2.1.4)
+    current_month_total_water_l:
+      name: Wasser Monat
+      id: "watermonth"
+      accuracy_decimals: 2
+      unit_of_measurement: "L"
+      icon: mdi:water-outline
+      state_class: total_increasing
+      device_class: "water"
+
     # get the last month total watermter m3 from the wmbus telegram  (wM-Bus 2.1.10)
     last_month_total_water_m3:
       name: "Wasseruhr Anzeige letzter Monat"
@@ -699,21 +719,13 @@ sensor:
       accuracy_decimals: 3
       icon: mdi:counter
 
-    # water current month (wM-Bus v2.1.4)
-    current_month_total_water_l:
-      name: Wasser Monat
-      id: "watermonth"
-      accuracy_decimals: 2
-      unit_of_measurement: "L"
-      state_class: total_increasing
-      device_class: "water"
-
     # get the battery life time (wM-Bus v2.1.4)
     remaining_battery_life_y:
       name: "Wasseruhr Batterielebensdauer"
       id: "watermeter_batterie"
       accuracy_decimals: 2
       unit_of_measurement: "Jahre"
+      state_class: "measurement"
       entity_category: "diagnostic"
       icon: mdi:battery
 
@@ -722,6 +734,7 @@ sensor:
       name: "Wasseruhr Update Intervall"
       id: "watermeter_transmit_periode"
       unit_of_measurement: "sec"
+      state_class: "measurement"
       accuracy_decimals: 2
       entity_category: "diagnostic"
       icon: mdi:timelapse
@@ -731,15 +744,26 @@ sensor:
       id: "watermeter_current_alarms"
       name: "Wasseruhr Alarm Code"
       entity_category: "diagnostic"
+      icon: mdi:message-alert-outline
       on_value:
         then:
           - lambda: |-
               int error_code = int(x);
-              std::string message = id(alarm_error_text)[error_code];
-              id(watermeter_alarm_message).publish_state(message);
+              std::string message = "";
               if(error_code==0){
-                ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message.c_str(), error_code);
+                  message = id(alarm_error_text)[error_code];
+                  id(watermeter_alarm_message).publish_state(message);
+                  ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message, error_code);
               }else{
+                for (int i = 1; i < 10; ++i) {
+                  if (error_code & (1 << i)) {
+                    if (!message.empty()) {
+                      message += ", ";
+                    }
+                    message += id(alarm_error_text)[i];
+                  }
+                }
+                id(watermeter_alarm_message).publish_state(message);
                 ESP_LOGW("wmbus", "WARNING Alarm message: %s, error code: %d", message.c_str(), error_code);
                 id(watermeter_alarm_timestamp).publish_state(id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z").c_str());
               }
@@ -748,18 +772,30 @@ sensor:
     previous_alarms:
       id: "watermeter_previous_alarms"
       name: "Wasseruhr Alarm Code voriger"
+      icon: mdi:message-alert
       entity_category: "diagnostic"
       on_value:
         then:
           - lambda: |-
               int error_code = int(x);
-              std::string message = id(alarm_error_text)[error_code];
-              id(watermeter_alarm_perv_message).publish_state(message);
+              std::string message = "";
               if(error_code==0){
-                ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message.c_str(), error_code);
+                  message = id(alarm_error_text)[error_code];
+                  id(watermeter_alarm_message).publish_state(message);
+                  ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message, error_code);
               }else{
+                for (int i = 1; i < 10; ++i) {
+                  if (error_code & (1 << i)) {
+                    if (!message.empty()) {
+                      message += ", ";
+                    }
+                    message += id(alarm_error_text)[i];
+                  }
+                }
                 ESP_LOGW("wmbus", "WARNING Alarm message: %s, error code: %d", message.c_str(), error_code);
+                id(watermeter_alarm_timestamp).publish_state(id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z").c_str());
               }
+              id(watermeter_alarm_perv_message).publish_state(message);
               if(id(watermeter_alarm_timestamp).has_state() == false) {
                 id(watermeter_alarm_timestamp).publish_state("--");
               }
@@ -770,6 +806,7 @@ sensor:
     id: "watercurrent"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well
     state_class: "measurement"
     device_class: "water"
     lambda: return (id(current_value));
@@ -780,6 +817,7 @@ sensor:
     id: "waterhour"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     state_class: total_increasing
     device_class: "water"
     lambda: return (id(hour_value));
@@ -790,6 +828,7 @@ sensor:
     id: "waterday"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(daily_value));
@@ -800,6 +839,7 @@ sensor:
     id: "wateryesterday"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(yesterday_value));
@@ -810,19 +850,10 @@ sensor:
     id: "waterweek"
     accuracy_decimals: 2
     unit_of_measurement: "L"
+    icon: mdi:water-well-outline
     device_class: "water"
     state_class: total_increasing
     lambda: return (id(week_value));
-
-  # water current year
-  - platform: template
-    name: Wasser Jahr
-    id: "wateryear"
-    accuracy_decimals: 2
-    unit_of_measurement: "L"
-    state_class: total_increasing
-    device_class: "water"
-    lambda: return (id(year_value));
 
   # water last month
   - platform: template
@@ -834,6 +865,16 @@ sensor:
     device_class: "water"
     lambda: return (id(lastmonth_value));
 
+  # water current year
+  - platform: template
+    name: Wasser Jahr
+    id: "wateryear"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(year_value));
+
   # service call delay
   - platform: template
     name: Wasseruhr Daten Intervall
@@ -844,31 +885,25 @@ sensor:
     state_class: "measurement"
     entity_category: "diagnostic"
 
-
-  # Wifi quality RSSI, internal used to calculate the Wifi quality RSSI in percentage
+  # Wifi quality RSSI (%)
   - platform: wifi_signal
+    name: "${friendly_name} WLAN Signal"
     id: wifi_signal_db
     update_interval: 60s
-    internal: true
-    disabled_by_default: true
-
-  # Reports the Device WiFi signal strength in %
-  - platform: copy
-    source_id: wifi_signal_db
-    name: "${friendly_name} WLAN Qualität"
     filters:
       - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
     entity_category: "diagnostic"
+    unit_of_measurement: "%"
 
-  # Reports the CC1101 WiFi signal strength in %
-  - platform: copy
-    source_id: wmbus_cc1101_rssi
-    name: "${friendly_name} CC1101 WLAN Qualität"
-    filters:
-      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
-    unit_of_measurement: "%"
-    entity_category: "diagnostic"
+  # device internal temperature (only webview)
+  # - platform: internal_temperature
+  #   name: Device Internal Temperature
+  #   id: device_internal_temperature
+  #   icon: mdi:thermometer-lines
+  #   state_class: "measurement"
+  #   update_interval: 60s
+  #   entity_category: "diagnostic"
+  #   disabled_by_default: true
 
   # Uptime device in hours
   - platform: uptime
@@ -893,23 +928,65 @@ sensor:
     lambda: return (id(boot_counter));
 
 ## ---------------------------------------------------
-## BINARY SENSOR
+## SWITCHES
 ## ---------------------------------------------------
-binary_sensor:
-
-  # simulate led state
+switch:
+  # reset boot counter value
   - platform: template
-    name: "Wasseruhr Status Led"
-    id: statusled
-    icon: mdi:led-outline
-    entity_category: "diagnostic"
-    lambda: "return id(current_value) > 0;"
+    name: "${friendly_name} Boot Counter Reset"
+    icon: mdi:lock-reset
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "${device_name_short} reset boot counter o.k!"
+        - component.update: bootcounter
+
+  # reset all global vars
+  - platform: template
+    name: "Wasseruhr Reset values"
+    icon: mdi:lock-reset
+    turn_on_action:
+      then:
+        - lambda: |-
+            id(last_value) = 0.00;
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+            id(current_value) = 0.00;
+            id(watercurrent).publish_state(id(current_value));
+            id(hour_value) = 0.00;
+            id(waterhour).publish_state(id(hour_value));
+            id(daily_value) = 0.00;
+            id(waterday).publish_state(id(daily_value));
+            id(yesterday_value) = 0.00;
+            id(wateryesterday).publish_state(id(yesterday_value));
+            id(week_value) = 0.00;
+            id(waterweek).publish_state(id(week_value));
+            id(lastmonth_value) = 0.00;
+            id(waterlastmonth).publish_state(id(lastmonth_value));
+            id(year_value) = 0.00;
+            id(wateryear).publish_state(id(year_value));
+        - logger.log:
+            level: INFO
+            tag: "system"
+            format: "all values reset!"
+
+  # restarts the device
+  - platform: restart
+    name: "${friendly_name} Restart"
+    id: restart_switch
+    icon: mdi:restart
 
 ## ---------------------------------------------------
 ## TEXT SENSOR
 ## ---------------------------------------------------
 text_sensor:
 
+  # watermeter status message (updated by script: set_status_message)
   - platform: template
     name: "Wasseruhr Status Info"
     id: watermeter_status_message
@@ -940,12 +1017,14 @@ text_sensor:
   # optional device version (only on webserver)
   - platform: version
     name: "${friendly_name} Version"
+    icon: mdi:application-cog-outline
     id: appver
+    hide_timestamp: true
     disabled_by_default: true
 
   # Last boot timestamp (only on webserver)
   - platform: template
-    name: "${friendly_name} Last Boot"
+    name: "Device Last Boot"
     disabled_by_default: true
     id: device_lastBoot_time
     icon: mdi:clock-start
@@ -956,3 +1035,21 @@ text_sensor:
     id: watermeter_lastupdate
     icon: mdi:clock-start
     entity_category: "diagnostic"
+
+  # optional device timestamp (only for webserver)
+  - platform: template
+    id: systime
+    disabled_by_default: true
+    icon: mdi:clock-start
+    lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+
+  # connected to ssid (only for webserver)
+  # error: src/esphome/components/wifi_info/wifi_info_text_sensor.h:32:49: error: 'class esphome::wifi::WiFiComponent' has no member named 'get_dns_address'; did you mean 'get_ip_address'?
+  # don'nt know how to fix it
+  #- platform: wifi_info
+  #  ssid:
+  #    name: ${friendly_name} WLAN SSID
+  #    id: wlan_ssid
+  #    disabled_by_default: true
+  #    icon: mdi:wifi-settings
+

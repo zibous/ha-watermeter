@@ -43,6 +43,9 @@ esp8266:
 esphome:
   name: ${device_name_short}
   comment: ${device_description}
+  # Automatically add the mac address to the name
+  # so you can use a single firmware for all devices
+  name_add_mac_suffix: false
   project:
     name: ${projectname}
     version: ${appversion}
@@ -114,6 +117,29 @@ syslog:
   port: !secret syslog_port
   min_level: DEBUG
   enable_logger: true
+
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
+    sensor: WARN
+    sensor.filter: WARN
+    text_sensor: WARN
+    api.service: ERROR
+    json: ERROR
+    mqtt: WARN
+    scheduler: ERROR
+    internal_temperature: ERROR
+    wifi: WARN
+    component: ERROR
+    api: WARN
+
 
 ## ----------------------------------------------------------------
 ## GLOBALS VARIABLES
@@ -187,21 +213,26 @@ globals:
     initial_value: '{"Init", "Warte auf Daten", "Daten empfangem", "Ready", "Error"}'
 
 ## ---------------------------------------------------
-## WIFI Settings 3 wifis
+## WIFI Settings
 ## ---------------------------------------------------
 wifi:
-  id: wifi_nodemcu
   networks:
+   # unifi accesspoint 2.4Ghz
+    - ssid: !secret ssid4_name
+      password: !secret ssid4_pswd
+      priority: 1
+    # office apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
-      priority: 0
-    - ssid: !secret ssid1_name
-      password: !secret ssid1_pswd
-      priority: 1
+      priority: 2
+    # living room apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
-      priority: 2
+      priority: 3
   domain: !secret domain
+  ap:
+    # ssid (Optional, string): The name of the access point to create. Leave empty to use the device name.  
+    password: !secret app_pswd
 
 ## ---------------------------------------------------
 ## mDNS Component
@@ -218,27 +249,36 @@ mdns:
 captive_portal:
 
 ## ---------------------------------------------------
-## LOGGER COMPONENT
-## ---------------------------------------------------
-logger:
-  id: appslogger
-  level: ${log_level}
-  baud_rate: ${log_baudrate}
-  logs:
-    wmbus: ${log_wmbus}
-    wMBus-lib: ${log_wmbus}
-
-## ---------------------------------------------------
 ## OTA COMPONENT
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  on_error:
+  safe_mode: false
+  on_begin:
+    then:
+      - logger.log:
+          format: "OTA Start"
+          tag: "OTA"
+          level: WARN
+  on_progress:
     then:
       - logger.log:
           level: WARN
-          tag: "system"
+          tag: "OTA"
+          format: "OTA progress %0.1f%%"
+          args: ["x"]
+  on_end:
+    then:
+      - logger.log:
+          format: "OTA End"
+          tag: "OTA"
+          level: WARN
+  on_error:
+    then:
+      - logger.log:
           format: "OTA update error %d"
+          tag: "OTA"
+          level: ERROR
           args: ["x"]
 
 ## ---------------------------------------------------
@@ -370,7 +410,7 @@ time:
     id: time_sntp
     timezone: Europe/Berlin
     servers:
-      - fritz.box
+      - !secret local_sntp
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
       # - 1.pool.ntp.org

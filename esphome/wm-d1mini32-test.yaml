@@ -45,6 +45,9 @@ preferences:
 esphome:
   name: ${device_name_short}
   comment: ${device_description}
+  # Automatically add the mac address to the name
+  # so you can use a single firmware for all devices
+  name_add_mac_suffix: false
   project:
     name: ${projectname}
     version: ${appversion}
@@ -191,12 +194,32 @@ debug:
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  on_error:
+  safe_mode: false
+  on_begin:
+    then:
+      - logger.log:
+          format: "OTA Start"
+          tag: "OTA"
+          level: WARN
+  on_progress:
     then:
       - logger.log:
           level: WARN
-          tag: "system"
+          tag: "OTA"
+          format: "OTA progress %0.1f%%"
+          args: ["x"]
+  on_end:
+    then:
+      - logger.log:
+          format: "OTA End"
+          tag: "OTA"
+          level: WARN
+  on_error:
+    then:
+      - logger.log:
           format: "OTA update error %d"
+          tag: "OTA"
+          level: ERROR
           args: ["x"]
 
 ## ---------------------------------------------------
