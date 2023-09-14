@@ -12,6 +12,11 @@
 - WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
 - Hardware: ESP32 240MHz, 520KB RAM, 4MB Flash
 
+## Flashing Firmware
+
+- > ESPHOME Flasher: https://github.com/esphome/esphome-flasher/releases
+- > ESP Web Tools: https://esphome.github.io/esp-web-tools/
+
 <br>
 
 ## Connect to WIFI - Access Point Mode
