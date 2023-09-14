@@ -17,6 +17,8 @@
 ## Connect to WIFI - Access Point Mode
 The ESP device is prepared as a Wi-Fi access point and create its own network. Connect to the Wi-Fi access point to set your local WIFI.
 
+![Access Point Mode](./WLAN_ACCESS.png)
+
 <br>
 ### LOGGING w/o CC1101 connected
 
