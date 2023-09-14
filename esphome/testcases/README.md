@@ -25,6 +25,8 @@ The ESP device is prepared as a Wi-Fi access point and create its own network. C
 ![Access Point Mode](./WLAN_ACCESS.png)
 
 <br>
+
+
 ### LOGGING w/o CC1101 connected
 
 Simple Log from the device, no CC1101 allready connected.
