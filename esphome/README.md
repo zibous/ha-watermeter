@@ -397,6 +397,8 @@ The flashing process is done using the esptool library by espressif.
 
 - SmartRC-CC1101-Driver-Lib: <https://github.com/LSatan/SmartRC-CC1101-Driver-Lib>
 
+- CC1101 Tools: <https://github.com/mcore1976/cc1101-tool/tree/main>
+
 - CC1101 Adapter Platine: <https://oshpark.com/shared_projects/dVZXCMXP>
 
 - EBYTE TI CC1101: <https://www.cdebyte.com/products/E07-900M10S>
