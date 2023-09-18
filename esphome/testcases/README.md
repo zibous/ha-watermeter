@@ -1,21 +1,35 @@
 # Testcases Watermeter Firmware
 
-## water-meter-izar-test.bin
+## How to flash the test firmware
+
+1. Select the firmware for your device and download the firmeware
+2. Connect your device to the USB 
+3. Start ESPHome-Flasher is a utility app or the ESP WEB Flash Tool (chrome browser)
+
+   You can use the following Software to transfer the firmware to the device:
+    - > ESPHOME Flasher: https://github.com/esphome/esphome-flasher/releases
+    - > ESP Web Tools: https://esphome.github.io/esp-web-tools/
+4. After flashing restart the device and watch to the logging console
+
+## ESP Web Tools
+    - Connect to the device
+    - Prepare for first use
+    - When finish set the local WIFI and "Visit Device"
+    - OTA Update the firmware for your device
+    
+Do not use upload firmeware, this is not working - only OTA Update will work.
+
+### water-meter-izar-test.bin
 - WMBUS METER D1 MINI 32 + CC1101 for Diehl IZAR RC 868 I R4 PL
 - HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
 
-## water-meter-dm32-test.bin
+### water-meter-dm32-test.bin
 - WMBUS METER D1 MINI 32 + CC1101 for Diehl IZAR RC 868 I R4 PL
 - HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
 
-## water-meter-esp32-izar-test.bin
+### water-meter-esp32-izar-test.bin
 - WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
 - Hardware: ESP32 240MHz, 520KB RAM, 4MB Flash
-
-## Flashing Firmware
-
-- > ESPHOME Flasher: https://github.com/esphome/esphome-flasher/releases
-- > ESP Web Tools: https://esphome.github.io/esp-web-tools/
 
 <br>
 
