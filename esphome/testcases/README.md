@@ -116,5 +116,54 @@ INFO Successfully connected to water-meter-dm32-test.local
 [15:14:57][C][wmbus:416]:     GDO0 Pin: GPIO21
 [15:14:57][C][wmbus:417]:     GDO2 Pin: GPIO22
 [15:14:57][E][wmbus:430]:   Check connection to CC1101!
+```
 
+### LOGGING ESP32 with CC1101 connected
+
+```
+INFO ESPHome 2023.10.0-dev
+INFO Reading configuration /config/wm-esp32-izar-test2.yaml...
+INFO Updating https://github.com/SzczepanLeon/esphome-components.git@main
+INFO Starting log output from water-meter-esp32-izar-test2.local using esphome API
+WARNING Can't connect to ESPHome API for water-meter-esp32-izar-test2.local: Error resolving IP address: [Errno -3] Temporary failure in name resolution (APIConnectionError)
+INFO Trying to connect to water-meter-esp32-izar-test2.local in the background
+INFO Successfully connected to water-meter-esp32-izar-test2.local
+[13:15:40][I][app:102]: ESPHome version 2023.10.0-dev compiled on Sep 21 2023, 12:21:47
+[13:15:40][I][app:104]: Project Diehl_IZAR_RC_868.Watermeter-Test version 2.0.8
+[13:15:40][C][logger:357]: Logger:
+[13:15:40][C][logger:358]:   Level: VERBOSE
+[13:15:40][C][logger:359]:   Log Baud Rate: 0
+[13:15:40][C][logger:361]:   Hardware UART: UART0
+[13:15:40][C][logger:365]:   Level for 'wmbus': VERBOSE
+[13:15:40][C][logger:365]:   Level for 'wMBus-lib': VERBOSE
+[13:15:40][C][logger:365]:   Level for 'sensor': WARN
+[13:15:40][C][logger:365]:   Level for 'sensor.filter': WARN
+[13:15:40][C][logger:365]:   Level for 'text_sensor': WARN
+[13:15:40][C][logger:365]:   Level for 'api.service': ERROR
+[13:15:40][C][logger:365]:   Level for 'json': ERROR
+[13:15:40][C][logger:365]:   Level for 'mqtt': WARN
+[13:15:40][C][logger:365]:   Level for 'scheduler': ERROR
+[13:15:40][C][logger:365]:   Level for 'wifi': WARN
+[13:15:40][C][logger:365]:   Level for 'component': ERROR
+[13:15:40][C][logger:365]:   Level for 'api': WARN
+[13:15:40][C][restart:068]: Restart Switch 'Restart Device'
+[13:15:40][C][restart:070]:   Icon: 'mdi:restart'
+[13:15:40][C][restart:091]:   Restore Mode: always OFF
+[13:15:40][C][safe_mode_switch:068]: Safe Mode Switch 'Restart (Safe Mode)'
+[13:15:40][C][safe_mode_switch:070]:   Icon: 'mdi:restart-alert'
+[13:15:40][C][safe_mode_switch:091]:   Restore Mode: always OFF
+[13:15:40][C][factory_reset.switch:068]: Factory Reset Switch 'Restart factory default'
+[13:15:40][C][factory_reset.switch:070]:   Icon: 'mdi:lock-reset'
+[13:15:40][C][factory_reset.switch:091]:   Restore Mode: always OFF
+[13:15:40][C][version.text_sensor:021]: Version Text Sensor 'ESPHome Version'
+[13:15:40][C][version.text_sensor:021]:   Icon: 'mdi:information-box-outline'
+[13:15:40][V][version.text_sensor:021]:   Unique ID: 'c8f09ef34794-version'
+[13:15:40][C][captive_portal:088]: Captive Portal:
+[13:15:40][C][web_server:161]: Web Server:
+[13:15:40][C][web_server:162]:   Address: water-meter-esp32-izar-test2.local:80
+[13:15:40][C][sntp:053]: SNTP Time:
+[13:15:43][D][sntp:078]: Synchronized time: 2023-09-21 13:15:43
+[13:15:43][W][system:385]: Synchronized sntp clock
+[13:15:50][D][wmbus:184]: Meter ID [0x43410778] RSSI: -78 dBm LQI: 135 Mode: T1 not found in configuration T: 1944A511780741434418A261140013DBC8CF48AB7711031F7B92 (26)
+[13:15:59][D][wmbus:184]: Meter ID [0x43410778] RSSI: -77 dBm LQI: 130 Mode: T1 not found in configuration T: 1944A511780741434418A271140013DBDFE0010056C2DAC46290 (26)
 ```
