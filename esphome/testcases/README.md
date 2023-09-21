@@ -20,8 +20,8 @@
 Do not use upload firmeware, this is not working - only OTA Update will work.
 
 ### water-meter-izar-test.bin
-- WMBUS METER D1 MINI 32 + CC1101 for Diehl IZAR RC 868 I R4 PL
-- HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
+- WMBUS METER D1 MINI ESP8266 + CC1101 for Diehl IZAR RC 868 I R4 PL
+- HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 
 ### water-meter-dm32-test.bin
 - WMBUS METER D1 MINI 32 + CC1101 for Diehl IZAR RC 868 I R4 PL
@@ -37,6 +37,9 @@ Do not use upload firmeware, this is not working - only OTA Update will work.
 - wMbus-lib@1.2.22
 - lsatan/SmartRC-CC1101-Driver-Lib @ ^2.5.7
 - wmbus-drivers@0.0.0
+- ESPHome version 2023.10.0-dev compiled on Sep 21 2023
+
+
 <br>
 
 ## Connect to WIFI - Access Point Mode
