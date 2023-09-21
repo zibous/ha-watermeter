@@ -167,3 +167,43 @@ INFO Successfully connected to water-meter-esp32-izar-test2.local
 [13:15:50][D][wmbus:184]: Meter ID [0x43410778] RSSI: -78 dBm LQI: 135 Mode: T1 not found in configuration T: 1944A511780741434418A261140013DBC8CF48AB7711031F7B92 (26)
 [13:15:59][D][wmbus:184]: Meter ID [0x43410778] RSSI: -77 dBm LQI: 130 Mode: T1 not found in configuration T: 1944A511780741434418A271140013DBDFE0010056C2DAC46290 (26)
 ```
+
+## Analyze Telegram
+
+> https://wmbusmeters.org/analyze/1944A511780741434418A261140013DBC8CF48AB7711031F7B92
+
+```
+telegram=|1944A511780741434418A2_61140013DBC8CF48AB7711031F7B92|
+
+Auto driver  : izar
+Best driver  : unknown 00/00
+Using driver : izar 00/00
+000   : 19 length (25 bytes)
+001   : 44 dll-c (from meter SND_NR)
+002   : a511 dll-mfct (DME)
+004   : 41434418 dll-id (18444341)
+008   : 78 dll-version
+009   : 07 dll-type (Water meter)
+010   : a2 tpl-ci-field (Mfct specific)
+011 C?: 61140013DBC8CF48AB7711031F7B92 mfct specific
+
+{
+    "media":"water",
+    "meter":"izar",
+    "name":"",
+    "id":"18444341",
+    "last_month_total_m3":240.377,
+    "remaining_battery_life_y":10,
+    "total_m3":243.054,
+    "transmit_period_s":8,
+    "current_alarms":"no_alarm",
+    "last_month_measure_date":"2023-09-01",
+    "previous_alarms":"no_alarm",
+    "timestamp":"2023-09-21T11:19:14Z"
+}
+
+
+Using: wmbusmeters: 1.14.0-19-g0b852fb
+0b852fb420a931984b231eb363a1826091299761
+```
+
