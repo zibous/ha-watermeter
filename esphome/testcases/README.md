@@ -49,6 +49,11 @@ The ESP device is prepared as a Wi-Fi access point and create its own network. C
 
 <br>
 
+## Dashboard
+
+![Dashboard](./water-meter-esp32-izar-test2.png)
+
+<br>
 
 ### LOGGING w/o CC1101 connected
 
