@@ -31,6 +31,12 @@ Do not use upload firmeware, this is not working - only OTA Update will work.
 - WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
 - Hardware: ESP32 240MHz, 520KB RAM, 4MB Flash
 
+## water-meter-esp32-izar-test2.bin
+- WMBUS METER ESP32 DEVKIT V1 + CC1101 for Diehl IZAR RC 868 I R4 PL
+- HARDWARE: ESP32 240MHz, 320KB RAM, 4MB Flash
+- wMbus-lib@1.2.22
+- lsatan/SmartRC-CC1101-Driver-Lib @ ^2.5.7
+- wmbus-drivers@0.0.0
 <br>
 
 ## Connect to WIFI - Access Point Mode
