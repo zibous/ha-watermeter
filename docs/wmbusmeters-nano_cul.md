@@ -22,7 +22,7 @@ The following is required before installation:
 ```bash
 $ sudo apt-get update
 $ sudo apt-get install build-essential libncurses-dev cmake automake make 
-$ sudo apt-get install -y mosquitto mosquitto-clients librtlsdr-dev
+$ sudo apt-get install -y mosquitto mosquitto-clients librtlsdr-dev libxml2-dev
 ```
 
 ## Build wmbusmeters
