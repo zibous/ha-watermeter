@@ -4,18 +4,10 @@
 ##
 ## usage:  1. Using wM-Bus v2.1.4
 ##         2. Using Homassistant API (discovery + devices)
-##         3. Using Backup component
 ##
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
-##
-## WEBUI:   http:/water-meter-dmini.local
-## Backup:  http://water-meter-dmini.local/config.yaml
-##          curl -v 'http://water-meter-dmini.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
-##
-## 0x43410778
-## 0x43430778 **
-## 0x43890785
+
 ##
 ## ------------------------------------------------------------------
 substitutions:
@@ -25,7 +17,7 @@ substitutions:
   device_description: "Watermeter Wemos D1 Mini +  EBYTE TI CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.0.9"
+  appversion: "3.0.0"
 
   ## logger settings
   log_level: "WARN"  # not that logging need memory, so in production mode use "WARN"
@@ -72,50 +64,17 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 ## External components
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 external_components:
-
-  # uses the latest version from SzczepanLeon
+  # uses the version 3 from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
 
-  # use local component from
-  # https://github.com/zdzichu6969/esphome-components
-  - source:
-      type: local
-      path: custom_components
-    components: [backup]
-
-  # optinal: use local component from
-  # https://github.com/TheStaticTurtle/esphome_syslog
-  - source:
-      type: local
-      path: custom_components
-    components: [syslog]
-
-# ----------------------------------------------------------------
-# Save your ESPHome device configuration in firmware and and
-# recover it if you lost source files.
-# ----------------------------------------------------------------
-backup:
-  auth:
-    username: !secret web_username
-    password: !secret web_password
-  force_update: false
-
-## ---------------------------------------------------
-## syslog service
-## ---------------------------------------------------
-syslog:
-  ip_address: !secret syslog_server
-  port: !secret syslog_port
-  min_level: DEBUG
-  enable_logger: true
 
 ## ---------------------------------------------------
 ## LOGGER COMPONENT
@@ -133,7 +92,7 @@ logger:
     api.service: ERROR
     json: ERROR
     mqtt: WARN
-    scheduler: ERROR    
+    scheduler: ERROR
     wifi: WARN
     component: ERROR
     api: WARN
@@ -147,6 +106,14 @@ globals:
     type: int
     restore_value: yes
     initial_value: "0"
+  - id: send_millisecond
+    type: int
+    restore_value: no
+    initial_value: "0"
+  - id: current_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
 
 ## ---------------------------------------------------
 ## WIFI Settings
@@ -185,7 +152,7 @@ captive_portal:
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  safe_mode: false
+  platform: esphome
   on_begin:
     then:
       - logger.log:
@@ -334,7 +301,7 @@ binary_sensor:
 sensor:
 
   # watermeter 1: nearly to mine
-  - platform: wmbus    
+  - platform: wmbus
     meter_id: 0x43410778
     type: izar
     add_prefix: True
@@ -348,7 +315,7 @@ sensor:
       icon: mdi:counter
 
   # watermeter 2: nearly to mine
-  - platform: wmbus    
+  - platform: wmbus
     meter_id: 0x43890785
     type: izar
     add_prefix: True
@@ -539,7 +506,7 @@ switch:
   - platform: restart
     name: "Restart Device"
     id: restart_switch
-    icon: mdi:restart        
+    icon: mdi:restart
 
 text_sensor:
 
@@ -556,7 +523,7 @@ text_sensor:
     disabled_by_default: true
     icon: mdi:clock-start
     lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
-  
+
   # optional device version (only on webserver)
   - platform: version
     name: "ESPHome Version"

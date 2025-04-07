@@ -4,16 +4,13 @@
 ##
 ## uses:
 ##   - lib maciekn
-##   - lib backup
-##   - lib syslog
 ## ######################################################
 substitutions:
-
   # device settings
   device_name_short: "water-meter-izar"
   device_description: "Wasserzähler Wemos D1 Min, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL) Developer Version maciekn"
   projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "1.1.7"
+  appversion: "2.1.0"
 
   # my watermeter id (change this to your watermeter ID)
   myWaterMeterID: "43430778"
@@ -51,65 +48,22 @@ esphome:
     - "https://github.com/bblanchon/ArduinoJson.git"
   build_path: ./build/${device_name_short}
   on_boot:
-    - priority: -100.00
-      then:
-        - globals.set:
-            id: boot_counter
-            value: !lambda "return id(boot_counter)+=1;"
-        - logger.log:
-            level: WARN
-            tag: "system"
-            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-        - component.update: bootcounter
-    - priority: 700
-      then:
-        - logger.log:
-            level: WARN
-            tag: "system"
-            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
+    then:
+      - globals.set:
+          id: boot_counter
+          value: !lambda "return id(boot_counter)+=1;"
+      - logger.log:
+          level: WARN
+          tag: "system"
+          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+      - component.update: bootcounter
   on_shutdown:
-    priority: 700
     then:
       - logger.log:
           level: ERROR
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-external_components:
-
-  # use local component from
-  # https://github.com/TheStaticTurtle/esphome_syslog
-  - source:
-      type: local
-      path: custom_components
-    components: [syslog]
-
-  # use local version
-  # source from https://github.com/dentra/esphome-components
-  - source:
-      type: local
-      path: custom_components
-    components: [backup]
-
-# ----------------------------------------------------------------
-# Save your ESPHome device configuration in firmware and and
-# recover it if you lost source files.
-# ----------------------------------------------------------------
-# Just download it from http://water-meter-izar.local/config.yaml
-backup:
-  auth:
-    username: !secret web_username
-    password: !secret web_password
-  force_update: false
-
-## ---------------------------------------------------
-## syslog service
-## ---------------------------------------------------
-syslog:
-  ip_address: !secret syslog_server
-  port: !secret syslog_port
-  min_level: DEBUG
-  enable_logger: true
 
 # ----------------------------------------------------------------
 # Global variables
@@ -182,7 +136,7 @@ globals:
 logger:
   id: appslogger
   level: ${log_level}
-  baud_rate: 0  #disable logging via UART.
+  baud_rate: 0 #disable logging via UART.
 
 ## ---------------------------------------------------
 ## WIFI Settings 3 wifis
@@ -340,7 +294,7 @@ api:
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  safe_mode: false
+  platform: esphome
   on_begin:
     then:
       - logger.log:
@@ -648,7 +602,6 @@ text_sensor:
       std::string s = buf;
       return s;
 
-
 ## ---------------------------------------------------
 ##  SENSOR
 ## ---------------------------------------------------
@@ -812,7 +765,6 @@ sensor:
     state_class: "measurement"
     device_class: "water"
     lambda: return (id(lastmonth_value));
-
 
   # device uptime human reading format
   # internal used only, not on api and web ui

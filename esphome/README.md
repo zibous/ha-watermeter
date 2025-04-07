@@ -61,7 +61,7 @@
 	  cs_pin: GPIO05    ## CSN:  orange  8: CSN  Attached to Hardware SPI controller
 	  gdo0_pin: GPIO16  ## GD00: gelb    7: RX Clock output. High Impedance !
 	  gdo2_pin: GPIO17  ## GD02: weiss   6: TX FIFO status signals. High Impedance !
-	  
+
 	# https://github.com/LSatan/SmartRC-CC1101-Driver-Lib/blob/master/img/Esp32_CC1101.png
 	```
 
@@ -75,6 +75,9 @@ After ESP32 + CC1101 has been wired, the application can be flashed with ESPHOME
 ## ESPHOME Dashboard V3
 
 ![ESPHOME water-meter-esp](docs/watermeter-webserver3.png)
+
+[![](https://img.shields.io/badge/ESPHOME_DASHBOARD-SOURCE-blue?style=for-the-badge)]( https://github.com/zibous/ha-watermeter/tree/master/esphome/webserver)
+
 
 ## ESPHOME Dashboard V2
 ![ESPHOME water-meter-esp](docs/water-meter-esp.png)
@@ -100,15 +103,15 @@ ____
     To find the `watermeterId ` you can set the watermeterId to 0 and
 	 the log_level: "VERBOSE" to find your meterId.
   -  see log messages to find your `watermeterID`
-  
+
 -  **2nd Step**: Edit the `secrets.yaml` and change the `watermeterID`
    - Install [wm-esp32.yaml](wm-esp32.yaml)
-   - Check log messages 
-     
+   - Check log messages
+
 - **3rd Step**: Memory
    - Logging need's memory. Set loglevel to `warn` for production mode !
    - Use ESP32 because this device has 520KB RAM.
-    
+
   <br>
 
   > **IMPORTEND**: Be shure that you use the latest version for the build:

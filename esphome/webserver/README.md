@@ -19,7 +19,7 @@
 
 <br>
 
-The web_server component creates a simple web server on the node that can be accessed through any browser and a simple REST API. 
+The web_server component creates a simple web server on the node that can be accessed through any browser and a simple REST API.
 In order to save memory, I don't use the ESP WEBserver, but my own version that I have installed on my server.
 
 ![ESPHOME-WEBSERVER3](../docs/webserver_3_0.png)
@@ -34,7 +34,7 @@ see: <https://esphome.io/components/web_server.html?highlight=webserver>
 
 - **Components Data**
 	- Sorted by Component (Binary, Sensor, Switch...)
-	- Entries sorted as entered in configuration (yaml). 
+	- Entries sorted as entered in configuration (yaml).
 	- Tooltip (State column) for entity details.
 - **Loginfo**
 	- Message sorted by Timestamp (last one is on first line).
@@ -59,15 +59,15 @@ Unfortunately a little limited, since not all data is published via the API inte
 
 
  - **css_url**: The URL that should be used for the CSS stylesheet. Defaults to https://esphome.io/_static/webserver-v1.min.css. This is only for version 1.0 Webserver. Change this to your webserver settings.
- 
+
  - **js_url** : The URL that should be used for the JS script. Defaults to https://esphome.io/_static/webserver-v1.min.js. Change this to your webserver settings.
 
-<br> 
+<br>
 
 ## Installation
 
-1. Copy the web server files from Github to your web server. 
-2. Change the settings in the ESPHOME application 
+1. Copy the web server files from Github to your web server.
+2. Change the settings in the ESPHOME application
 3. Create the ESPHOME application
 
 
@@ -77,6 +77,7 @@ Unfortunately a little limited, since not all data is published via the API inte
 ![ESPHOME-WEBSERVER3](../docs/watermeter-webserver3.png)
 
 ### Version 1.0
+
 
 ```yaml
 ## ---------------------------------------------------
@@ -90,6 +91,11 @@ web_server:
 ```
 
 ### Version 2.0
+
+If you have installed Homeassistant, you can use this as webserver.
+Copy the webserver files to `/home/homeassistant/.homeassistant/www/esphome`
+
+Set the webserver v2 url with `secrets.yaml` to  `webserver_jsurl:  "http://homeassistant.local:8123/local/esphome/v2/www.js"`
 
 ```yaml
 ## ---------------------------------------------------

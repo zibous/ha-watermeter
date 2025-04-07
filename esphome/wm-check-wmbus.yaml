@@ -1,4 +1,3 @@
----
 ## ------------------------------------------------------------------
 ## TESTCASE FOR WMBUS METER + CC1101 for WATERMETES
 ##
@@ -14,7 +13,7 @@ substitutions:
   device_name_short: "water-meter"
   device_description: "Watermeter CC1101 wmbus Test"
   projectname: "CC1101 wmbus Test.Watermeter"
-  appversion: "2.0.7"
+  appversion: "3.0.0"
 
 # logger settings
   log_level: "VERBOSE"  # not that logging need memory, so in production mode use "WARN"
@@ -196,31 +195,31 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    priority: -100.00
     then:
       - logger.log:
           level: INFO
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
   on_shutdown:
-    priority: 700
     then:
       - logger.log:
           level: ERROR
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 ## External components
-## ----------------------------------------------------------------
+## ---------------------------------------------------
 external_components:
-  # uses the latest version from SzczepanLeon
-  - source: github://SzczepanLeon/esphome-components@main
+  # uses the version 3 from SzczepanLeon
+  # https://github.com/SzczepanLeon/esphome-components
+  # You can make ESPHome check the repository every time by setting this option to 0s
+  - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
 
 ## ---------------------------------------------------
-## WIFI Settings 
+## WIFI Settings
 ## ---------------------------------------------------
 wifi:
   networks:
@@ -231,7 +230,7 @@ wifi:
     # office apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid3_name
       password: !secret ssid3_pswd
-      priority: 2  
+      priority: 2
     # living room apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
@@ -265,8 +264,8 @@ logger:
 ## OTA Updates
 ## ---------------------------------------------------
 ota:
+  platform: esphome
   password: !secret ota_pswd
-  safe_mode: false
   on_begin:
     then:
       - logger.log:

@@ -1,36 +1,28 @@
----
 ## ------------------------------------------------------------------
 ## WMBUS METER D1 MINI + CC1101 for Diehl IZAR RC 868 I R4 PL
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
 ##
 ## usage:  1. Using wM-Bus v2.1.4
 ##         2. Using Homassistant API (discovery + devices)
-##         3. Using Backup component
-##         4. Using Syslog component
 ##
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
 ##
 ## WEBUI:   http://water-meter-d1mini.local
-## SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
-## Backup:  http://water-meter.local/config.yaml
-##          curl -v 'http://water-meter.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
-##
 ##
 ## ------------------------------------------------------------------
 substitutions:
-
   ## device settings
   device_name_short: "water-meter-d1mini"
   device_description: "Watermeter Wemos D1 Mini +  EBYTE TI CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.0.9"
+  appversion: "3.0.0"
 
   ## logger settings
-  log_level: "WARN"   # not that logging need memory, so in production mode use "WARN"
-  log_wmbus: "ERROR"  # Loglevel for wmbus meters component
-  log_baudrate: "0"   # use 115200 to enable serial UART port logging.
+  log_level: "WARN" # not that logging need memory, so in production mode use "WARN"
+  log_wmbus: "ERROR" # Loglevel for wmbus meters component
+  log_baudrate: "0" # use 115200 to enable serial UART port logging.
 
 ## ----------------------------------------------------------------
 ## HARDWARE: D1 MINI ESP8266 80MHz, 80KB RAM, 4MB Flash
@@ -72,50 +64,16 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
-## EXTERNAL COMPONENTS
-## ----------------------------------------------------------------
+## ---------------------------------------------------
+## External components
+## ---------------------------------------------------
 external_components:
-
-  # uses the latest version from SzczepanLeon (wM-Bus 2.1.10)
+  # uses the version 3 from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
-
-  # optinal: use local component from
-  # https://github.com/zdzichu6969/esphome-components
-  - source:
-      type: local
-      path: custom_components
-    components: [backup]
-
-  # optinal: use local component from
-  # https://github.com/TheStaticTurtle/esphome_syslog
-  - source:
-      type: local
-      path: custom_components
-    components: [syslog]
-
-# ----------------------------------------------------------------
-# Save your ESPHome device configuration in firmware and and
-# recover it if you lost source files.
-# ----------------------------------------------------------------
-backup:
-  auth:
-    username: !secret web_username
-    password: !secret web_password
-  force_update: false
-
-## ---------------------------------------------------
-## syslog service
-## ---------------------------------------------------
-syslog:
-  ip_address: !secret syslog_server
-  port: !secret syslog_port
-  min_level: DEBUG
-  enable_logger: true
 
 ## ---------------------------------------------------
 ## LOGGER COMPONENT
@@ -143,7 +101,6 @@ logger:
 ## GLOBALS VARIABLES
 ## ----------------------------------------------------------------
 globals:
-
   - id: boot_counter
     type: int
     restore_value: yes
@@ -192,12 +149,12 @@ globals:
   - id: send_millisecond
     type: int
     restore_value: no
-    initial_value: '0'
+    initial_value: "0"
 
   - id: cc1101_state
     type: int
     restore_value: no
-    initial_value: '0'
+    initial_value: "0"
 
   - id: alarm_error_text
     type: std::vector<std::string>
@@ -217,7 +174,7 @@ wifi:
   # Fast connect can only be used with one network!.
   # fast_connect: true
   networks:
-   # unifi accesspoint 2.4Ghz
+    # unifi accesspoint 2.4Ghz
     - ssid: !secret ssid4_name
       password: !secret ssid4_pswd
       priority: 1
@@ -253,7 +210,7 @@ captive_portal:
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  safe_mode: false
+  platform: esphome
   on_begin:
     then:
       - logger.log:
@@ -432,7 +389,6 @@ time:
         - script.execute: set_status_message
 
     on_time:
-
       # check cc1101 telegram state message
       - seconds: 30
         then:
@@ -457,10 +413,10 @@ time:
         hours: 0
         then:
           - lambda: |-
-             id(yesterday_value)=id(daily_value);
-             id(wateryesterday).publish_state(id(yesterday_value));
-             id(daily_value)=0.00;
-             id(waterday).publish_state(id(daily_value));
+              id(yesterday_value)=id(daily_value);
+              id(wateryesterday).publish_state(id(yesterday_value));
+              id(daily_value)=0.00;
+              id(waterday).publish_state(id(daily_value));
           - logger.log:
               tag: "system"
               level: INFO
@@ -501,15 +457,14 @@ time:
 ## SCRIPTS COMPONENT
 ## ---------------------------------------------------
 script:
-
   # id(set_status_message).execute();
   - id: set_status_message
     then:
-        - lambda: |-
-            int msgcode = int(id(cc1101_state));
-            std::string message = id(cc1101_state_message)[msgcode];
-            ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
-            id(watermeter_status_message).publish_state(message);
+      - lambda: |-
+          int msgcode = int(id(cc1101_state));
+          std::string message = id(cc1101_state_message)[msgcode];
+          ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
+          id(watermeter_status_message).publish_state(message);
 
 ## -----------------------------------------------------
 ##        WMBUS DEVICE D1MINI WEMOS -->  EBYTE TI CC1101
@@ -541,12 +496,12 @@ script:
 ##
 ## --------------------------------------------------
 wmbus:
-  mosi_pin: GPIO13  #D7  3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO12  #D6  5: MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO14   #D5  4: SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO15    #D8  8: CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
-  gdo0_pin: GPIO05  #D1  7: Clock output. High Impedance !
-  gdo2_pin: GPIO04  #D2  6: FIFO status signals. High Impedance !
+  mosi_pin: GPIO13 #D7  3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
+  miso_pin: GPIO12 #D6  5: MISO Attached to Hardware SPI controller MISO SPI Interface
+  clk_pin: GPIO14 #D5  4: SCK  Attached to Hardware SPI controller CLK
+  cs_pin: GPIO15 #D8  8: CSN  Attached to Hardware SPI controller, Controls Boot Mode; CS SPI Interface 10k Pull-Down, boot fails if pulled high !!!
+  gdo0_pin: GPIO05 #D1  7: Clock output. High Impedance !
+  gdo2_pin: GPIO04 #D2  6: FIFO status signals. High Impedance !
 
   # log_unknown (Optional): Show telegrams from not configured meters in log.
   log_unknown: False
@@ -580,7 +535,6 @@ wmbus:
 ## BINARY SENSOR
 ## ---------------------------------------------------
 binary_sensor:
-
   # simulate led state
   - platform: template
     name: "Wasseruhr Status Led"
@@ -593,7 +547,6 @@ binary_sensor:
 ## SENSORS
 ## ---------------------------------------------------
 sensor:
-
   - platform: wmbus
 
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
@@ -985,7 +938,6 @@ switch:
 ## TEXT SENSOR
 ## ---------------------------------------------------
 text_sensor:
-
   # watermeter status message (updated by script: set_status_message)
   - platform: template
     name: "Wasseruhr Status Info"
@@ -1052,4 +1004,3 @@ text_sensor:
   #    id: wlan_ssid
   #    disabled_by_default: true
   #    icon: mdi:wifi-settings
-

@@ -1,30 +1,23 @@
----
 ## ---------------------------------------------------------------------------
 ## WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
 ## Hardware: ESP32 240MHz, 520KB RAM, 4MB Flash
 ##
 ## this version shows all watermeters. Use this for the first test
 ##
-##  1. uses the latest wmbusmeter component from github
-##  2. Optional uses syslog component
-##
-##  SYSLOG:  tail -f /var/log/syslog | grep "water-meter"
-##
 ## ---------------------------------------------------------------------------
 substitutions:
-
   ## device settings
   device_name_short: "water-meter-esp"
   device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) - all watermeters"
   projectname: "Diehl IZAR RC 868.Watermeter"
-  appversion: "2.0.7"
+  appversion: "3.0.0"
 
   ## all watermeters   wmid: "0"
   ## your watermeter: wmid: !secret watermeterId
   wmid: "0"
 
   ## logger settings
-  log_level: "DEBUG"  # not that logging need memory, so in production mode use "WARN"
+  log_level: "DEBUG" # not that logging need memory, so in production mode use "WARN"
   log_wmbus: "DEBUG" # Loglevel for wmbus meters component
   log_baudrate: "0" # 0 disable uart logger messages
 
@@ -42,7 +35,6 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    priority: 200
     then:
       - globals.set:
           id: boot_counter
@@ -53,7 +45,6 @@ esphome:
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
       - component.update: bootcounter
   on_shutdown:
-    priority: 700
     then:
       - logger.log:
           level: ERROR
@@ -69,57 +60,22 @@ esp32:
   framework:
     type: arduino
 
-## ----------------------------------------------------------------
+## ------------------------------------------------------------------
 ## EXTERNAL COMPONENTS
-## ----------------------------------------------------------------
+## https://esphome.io/components/external_components.html
+## ------------------------------------------------------------------
 external_components:
-
-  # uses the latest version from SzczepanLeon
+  # uses the version 3 from SzczepanLeon (github)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
-
-  # use local component from
-  # https://github.com/zdzichu6969/esphome-components
-  - source:
-      type: local
-      path: custom_components
-    components: [backup]
-
-  # use local component from
-  # https://github.com/TheStaticTurtle/esphome_syslog
-  # - source:
-  #     type: local
-  #     path: custom_components
-  #   components: [syslog]
-
-## ---------------------------------------------------
-## syslog service
-## tail -f /var/log/syslog | grep "water-meter"
-## ---------------------------------------------------
-# syslog:
-#   ip_address: !secret syslog_server
-#   port: !secret syslog_port
-#   min_level: DEBUG
-#   enable_logger: true
-
-# ----------------------------------------------------------------
-# Save your ESPHome device configuration in firmware and and
-# recover it if you lost source files.
-# ----------------------------------------------------------------
-backup:
-  auth:
-    username: !secret web_username
-    password: !secret web_password
-  force_update: false
 
 ## ----------------------------------------------------------------
 ## Global variables
 ## ----------------------------------------------------------------
 globals:
-
   - id: boot_counter
     type: int
     restore_value: yes
@@ -181,7 +137,7 @@ logger:
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
-  safe_mode: false
+  platform: esphome
   on_begin:
     then:
       - logger.log:
@@ -243,7 +199,6 @@ time:
             level: INFO
             format: "Synchronized sntp clock"
 
-
 ## ------------------------------------------------------------------
 ##           WMBUS CC1101 --> ESP32 az-delivery-devkit-v4
 ## ------------------------------------------------------------------
@@ -268,17 +223,16 @@ time:
 ##
 ## ------------------------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23    ## SI:   braun
-  miso_pin: GPIO19    ## SO:   grün
-  clk_pin: GPIO18     ## SCLK: violett
-  cs_pin: GPIO05      ## CSN:  orange
-  gdo0_pin: GPIO16    ## GD00: gelb (rx)
-  gdo2_pin: GPIO17    ## GD02: weiss (tx)
+  mosi_pin: GPIO23 ## SI:   braun
+  miso_pin: GPIO19 ## SO:   grün
+  clk_pin: GPIO18 ## SCLK: violett
+  cs_pin: GPIO05 ## CSN:  orange
+  gdo0_pin: GPIO16 ## GD00: gelb (rx)
+  gdo2_pin: GPIO17 ## GD02: weiss (tx)
 
   # log_unknown (Optional): Show telegrams from not configured meters in log.
   # Defaults to False
   log_unknown: True
-
 
 ## ---------------------------------------------------
 ## SWITCHES
@@ -312,7 +266,6 @@ switch:
 ## SENSORS
 ## ---------------------------------------------------
 sensor:
-
   - platform: wmbus
     # Meter ID (usually from sticker). Can be specified as decimal or hex.
     # only hex is working for my watermeter !
