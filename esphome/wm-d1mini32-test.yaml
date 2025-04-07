@@ -22,8 +22,7 @@ substitutions:
   appversion: "2.0.8"
 
   ## all watermeters wmid: "0", your watermeter: wmid: !secret watermeterId
-  ## wmid: "0"
-  wmid: "0x43430778"
+  wmid: "0"
 
   ## logger settings, use DEBUG or VERBOSE to see the telegram data
   log_level: "DEBUG"    # In production mode use "WARN"
@@ -82,54 +81,12 @@ esphome:
 ## External components
 ## ---------------------------------------------------
 external_components:
-
-  # uses the latest version from SzczepanLeon
+  # uses the version 3 from SzczepanLeon
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
-  - source: github://SzczepanLeon/esphome-components@main
+  - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
-
-  # uses the latest local version from SzczepanLeon
-  # - source:
-  #    type: local
-  #    path: custom_components
-  #  components: [wmbus]
-
-  # use local component from
-  # https://github.com/zdzichu6969/esphome-components
-  - source:
-      type: local
-      path: custom_components
-    components: [backup]
-
-  # use local component from
-  # enable this if you have a syslog server
-  # https://github.com/TheStaticTurtle/esphome_syslog
-  # - source:
-  #     type: local
-  #     path: custom_components
-  #   components: [syslog]
-
-
-## ---------------------------------------------------
-## syslog service
-## ---------------------------------------------------
-# syslog:
-#   ip_address: !secret syslog_server
-#   port: !secret syslog_port
-#   min_level: DEBUG
-#   enable_logger: true
-
-# ----------------------------------------------------------------
-# Save your ESPHome device configuration in firmware and and
-# recover it if you lost source files.
-# ----------------------------------------------------------------
-backup:
-  auth:
-    username: !secret web_username
-    password: !secret web_password
-  force_update: false
 
 ## ---------------------------------------------------
 ## Global variables
@@ -166,7 +123,6 @@ wifi:
 mdns:
   # if mDNS is disabled, they will no longer be able to automatically find your devices.
   disabled: false
-
 
 # The captive portal component in ESPHome is a fallback mechanism for
 # when connecting to the configured WiFi fails.
@@ -228,7 +184,7 @@ ota:
 web_server:
   port: 80
   version: 2
-  js_url: !secret webserver_jsurl
+  # js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
