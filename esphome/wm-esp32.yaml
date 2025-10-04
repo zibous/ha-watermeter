@@ -4,25 +4,28 @@
 ##
 ## This version shows data from the defined watermeter and
 ## uses the watermeterID (HEX) from the secrets.yaml file.
+##
+## usage:  1. Using the last wM-Bus component
+##         2. Using Homassistant API (discovery + devices)
+##
+## REST:    curl -i http://water-meter-esp.local/text_sensor/watermeterdata
+##
 ## ---------------------------------------------------------------------------
 substitutions:
   ## device settings
   device_name_short: "water-meter-esp"
-  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
+  device_description: "Production: Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "3.0.0"
+  appversion: "2.2.0"
 
   ## logger settings
   log_level: "VERBOSE" # not that logging need memory, so in production mode use "WARN"
   log_wmbus: "ERROR" # Loglevel for wmbus meters component
   log_baudrate: "115200" # use 0 to disable serial UART port logging.
 
-  ## data service (optional, default: False)
-  ## use only if you have a service host present
-  service_enabled: "false"
-  service_url: !secret service_host
-  service: "izar.watermeter"
+  device_area: "Heizraum"
+  esphome_min: "2024.6.6"
 
 ## -----------------------------------------------------------------
 ## HARDWARE az-delivery-devkit-v4,ESP32 240MHz, 520KB RAM, 4MB Flash
@@ -57,6 +60,8 @@ esphome:
     name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
+  min_version: ${esphome_min}
+  area: ${device_area}
   on_boot:
     then:
       - globals.set:
@@ -77,20 +82,20 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ---------------------------------------------------
-## External components
-## ---------------------------------------------------
+## ----------------------------------------------------------------
+## EXTERNAL COMPONENTS
+## ----------------------------------------------------------------
 external_components:
-  # uses the version 3 from SzczepanLeon
+  # uses the 3.2.3 version from SzczepanLeon (github)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@version_3
-    refresh: 0s
-    components: [wmbus]
+    components: [ wmbus ]
 
-## ---------------------------------------------------
+## ------------------------------------------------------------------
 ## COMPONENT LOGGER
-## ---------------------------------------------------
+## https://esphome.io/components/logger.html
+## ------------------------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
@@ -185,18 +190,18 @@ globals:
 ## ---------------------------------------------------
 wifi:
   networks:
+    # office apple capsulate accesspoint 2.4Ghz
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 0
     # unifi accesspoint 2.4Ghz
     - ssid: !secret ssid4_name
       password: !secret ssid4_pswd
       priority: 1
-    # office apple capsulate accesspoint 2.4Ghz
-    - ssid: !secret ssid3_name
-      password: !secret ssid3_pswd
-      priority: 2
     # living room apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
-      priority: 3
+      priority: 2
   domain: !secret domain
   ap:
     # ssid (Optional, string): The name of the access point to create. Leave empty to use the device name.
@@ -214,47 +219,20 @@ mdns:
 ## COMPONENT CAPTIVE PORTAL
 ## ---------------------------------------------------
 captive_portal:
-
-## ---------------------------------------------------
-## COMPONENT OTA
-## ---------------------------------------------------
+  ## ------------------------------------------------------------------
+  ## COMPONENT OTA
+  ## https://esphome.io/components/ota.html
+  ## ------------------------------------------------------------------
 ota:
-  password: !secret ota_pswd
-  platform: esphome
-  on_begin:
-    then:
-      - logger.log:
-          format: "OTA Start"
-          tag: "OTA"
-          level: WARN
-  on_progress:
-    then:
-      - logger.log:
-          level: WARN
-          tag: "OTA"
-          format: "OTA progress %0.1f%%"
-          args: ["x"]
-  on_end:
-    then:
-      - logger.log:
-          format: "OTA End"
-          tag: "OTA"
-          level: WARN
-  on_error:
-    then:
-      - logger.log:
-          format: "OTA update error %d"
-          tag: "OTA"
-          level: ERROR
-          args: ["x"]
+  - platform: esphome
+    id: component_ota
+    password: "7d52bxpo42dd94f4fed3e99eab8f1e26"
 
 ## ---------------------------------------------------
 ## COMPONENT WEBSERVER (local hosted)
 ## ---------------------------------------------------
 web_server:
   port: 80
-  version: 2
-  js_url: !secret webserver_jsurl
 
 ## ---------------------------------------------------
 ## COMPONENT Home Assistant API
@@ -464,16 +442,6 @@ time:
               format: "Reset value yearly, starting new year"
 
 ## ---------------------------------------------------
-## COMPONENT HTTP (optional)
-## Prepare for sending HTTP requests
-## ---------------------------------------------------
-http_request:
-  id: http_request_data
-  useragent: ${service}
-  timeout: 10s
-  verify_ssl: false
-
-## ---------------------------------------------------
 ## COMPONENT SCRIPTS
 ## ---------------------------------------------------
 script:
@@ -485,44 +453,6 @@ script:
           std::string message = id(cc1101_state_message)[msgcode];
           ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
           id(watermeter_status_message).publish_state(message);
-
-  # id(post_device_state).execute();
-  - id: post_device_state
-    then:
-      - if:
-          condition:
-            lambda: return "${service_enabled} =='true'";
-          then:
-            - logger.log:
-                tag: "system"
-                level: INFO
-                format: "Post new data to the ${service_url}${device_name_short}, service enabled: ${service_enabled}"
-            - http_request.post:
-                url: "${service_url}/${device_name_short}"
-                headers:
-                  Content-Type: application/json
-                json: |-
-                  root["device"] = "${device_name_short}";
-                  root["waterdisplay"] = id(waterdisplay).state;
-                  root["current"] = id(id(watercurrent)).state;
-                  root["hour"] = id(waterhour).state;
-                  root["day"] = id(waterday).state;
-                  root["yesterday"] = id(wateryesterday).state;
-                  root["week"] = id(waterweek).state;
-                  root["month"] = id(watermonth).state;
-                  root["lastmonth"] = id(waterhour).state;
-                  root["year"] = id(wateryear).state;
-                  root["bootcounter"] = id(bootcounter).state;
-                  root["version"] = "${device_name_short} ${appversion}";
-                  root["time"] = id(time_sntp).now().strftime("%Y-%m-%d %H:%M:%S");
-                on_response:
-                  then:
-                    - lambda: |-
-                        if (status_code == 200) {
-                           ESP_LOGI ("system", "HTTP POST o.k");
-                        } else {
-                            ESP_LOGI ("system", "HTTP POST failed");
-                        }
 
 ## ------------------------------------------------------------------
 ##           WMBUS CC1101 --> ESP32 az-delivery-devkit-v4
@@ -677,11 +607,6 @@ sensor:
                 id(year_value)+=id(current_value);
                 id(wateryear).publish_state(id(year_value));
                 ESP_LOGD("wmbus", "Set current value to %.3f litre and publish the data", id(current_value));
-                if ( ${service_enabled} == true){
-                  id(post_device_state).execute();
-                }else{
-                  ESP_LOGD("wmbus", "Data Service to host disabled");
-                }
               }else{
                 id(current_value) = 0.00;
                 id(cc1101_state) = 1;
