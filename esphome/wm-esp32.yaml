@@ -12,6 +12,7 @@
 ## Backup:  http://water-meter-esp.local/config.yaml
 ##          curl -v 'http://water-meter-esp.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
+##
 ## ---------------------------------------------------------------------------
 substitutions:
   ## device settings
