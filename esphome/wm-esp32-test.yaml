@@ -12,6 +12,9 @@ substitutions:
   projectname: "Diehl IZAR RC 868.Watermeter"
   appversion: "3.0.0"
 
+  esphome_version: "2025.9.1"
+  last_test: "2026-01-22 14:00"
+
   ## all watermeters   wmid: "0"
   ## your watermeter: wmid: !secret watermeterId
   wmid: "0"
@@ -19,7 +22,7 @@ substitutions:
   ## logger settings
   log_level: "DEBUG" # not that logging need memory, so in production mode use "WARN"
   log_wmbus: "DEBUG" # Loglevel for wmbus meters component
-  log_baudrate: "0" # 0 disable uart logger messages
+  log_baudrate: "115200" # 0 disable uart logger messages
 
 ## ----------------------------------------------------------------
 ## APPLICATION ESPHOME
@@ -226,7 +229,7 @@ wmbus:
   mosi_pin: GPIO23 ## SI:   braun
   miso_pin: GPIO19 ## SO:   grün
   clk_pin: GPIO18 ## SCLK: violett
-  cs_pin: GPIO05 ## CSN:  orange
+  cs_pin: GPIO21 ## CSN:  orange
   gdo0_pin: GPIO16 ## GD00: gelb (rx)
   gdo2_pin: GPIO17 ## GD02: weiss (tx)
 
