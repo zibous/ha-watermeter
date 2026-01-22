@@ -7,25 +7,27 @@
 ##
 ## usage:  1. Using the last wM-Bus component
 ##         2. Using Homassistant API (discovery + devices)
+##         3. uses backup component (optinal)
 ##
-## REST:    curl -i http://water-meter-esp.local/text_sensor/watermeterdata
+## Backup:  http://water-meter-esp.local/config.yaml
+##          curl -v 'http://water-meter-esp.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## ---------------------------------------------------------------------------
 substitutions:
   ## device settings
   device_name_short: "water-meter-esp"
-  device_description: "Production: Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
+  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
   friendly_name: "Watermeter" # device name
-  appversion: "2.2.0"
+  appversion: "3.0.0"
+
+  esphome_version: "2025.9.1"
+  last_test: "2026-01-22 14:00"
 
   ## logger settings
-  log_level: "VERBOSE" # not that logging need memory, so in production mode use "WARN"
+  log_level: "INFO" # not that logging need memory, so in production mode use "WARN"
   log_wmbus: "ERROR" # Loglevel for wmbus meters component
-  log_baudrate: "115200" # use 0 to disable serial UART port logging.
-
-  device_area: "Heizraum"
-  esphome_min: "2024.6.6"
+  log_baudrate: "115200" # use 115200 to enable serial UART port logging .
 
 ## -----------------------------------------------------------------
 ## HARDWARE az-delivery-devkit-v4,ESP32 240MHz, 520KB RAM, 4MB Flash
@@ -37,7 +39,7 @@ esp32:
 
 # Customize the frequency in which data is flushed to the flash.
 preferences:
-  flash_write_interval: 10min
+  flash_write_interval: 30min
 
 ## ----------------------------------------------------------------
 ## APPLICATION ESPHOME
@@ -48,21 +50,12 @@ esphome:
   # Automatically add the mac address to the name
   # so you can use a single firmware for all devices
   name_add_mac_suffix: false
-  # additiona compile otions
-  platformio_options:
-    platform: espressif32
-    board: az-delivery-devkit-v4
-    ## larger stack size required with all registers enable_load_test
-    build_flags:
-      - "-DCONFIG_ARDUINO_LOOP_STACK_SIZE=32768"
-    # monitor_filters: esp32_exception_decoder
   project:
     name: ${projectname}
     version: ${appversion}
   build_path: ./build/${device_name_short}
-  min_version: ${esphome_min}
-  area: ${device_area}
   on_boot:
+    # priority: -100.0
     then:
       - globals.set:
           id: boot_counter
@@ -74,6 +67,7 @@ esphome:
           level: WARN
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+      # update the device boot counter sensor
       - component.update: bootcounter
   on_shutdown:
     then:
@@ -82,20 +76,21 @@ esphome:
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
+## ------------------------------------------------------------------
 ## EXTERNAL COMPONENTS
-## ----------------------------------------------------------------
+## https://esphome.io/components/external_components.html
+## ------------------------------------------------------------------
 external_components:
-  # uses the 3.2.3 version from SzczepanLeon (github)
+  # uses the version 3 from SzczepanLeon (github)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@version_3
-    components: [ wmbus ]
+    refresh: 0s
+    components: [wmbus]
 
-## ------------------------------------------------------------------
+## ---------------------------------------------------
 ## COMPONENT LOGGER
-## https://esphome.io/components/logger.html
-## ------------------------------------------------------------------
+## ---------------------------------------------------
 logger:
   id: appslogger
   level: ${log_level}
@@ -175,37 +170,33 @@ globals:
     initial_value: "0"
 
   - id: alarm_error_text
-    type: std::vector<std::string>
+    type: std::array<const char*, 10>
     restore_value: no
-    # initial_value: '{"no error", "general_alarm","leakage","meter_blocked","back_flow","underflow","overflow","submarine","sensor_fraud","mechanical_fraud"}'
-    initial_value: '{"Keiner", "Fehler","Zähler undicht","Zähler blockiert","Wasser Rückfluss","Wasser Unterlauf","Wasser Überlauf","Überschwemung","Sensor Fehler", "Mechanischer Fehler"}'
+    initial_value: '{"Keiner","Fehler","Zähler undicht","Zähler blockiert","Wasser Rückfluss","Wasser Unterlauf","Wasser Überlauf","Überschwemmung","Sensor Fehler","Mechanischer Fehler"}'
 
   - id: cc1101_state_message
-    type: std::vector<std::string>
+    type: std::array<const char*, 5>
     restore_value: no
-    initial_value: '{"Init", "Warte auf Daten", "Daten empfangem", "Ready", "Error"}'
+    initial_value: '{"Init","Warte auf Daten","Daten empfangem","Ready","Error"}'
 
 ## ---------------------------------------------------
 ## WIFI Settings
 ## ---------------------------------------------------
 wifi:
   networks:
-    # office apple capsulate accesspoint 2.4Ghz
-    - ssid: !secret ssid3_name
-      password: !secret ssid3_pswd
-      priority: 0
     # unifi accesspoint 2.4Ghz
     - ssid: !secret ssid4_name
       password: !secret ssid4_pswd
       priority: 1
+    # office apple capsulate accesspoint 2.4Ghz
+    - ssid: !secret ssid3_name
+      password: !secret ssid3_pswd
+      priority: 2
     # living room apple capsulate accesspoint 2.4Ghz
     - ssid: !secret ssid2_name
       password: !secret ssid2_pswd
-      priority: 2
+      priority: 3
   domain: !secret domain
-  ap:
-    # ssid (Optional, string): The name of the access point to create. Leave empty to use the device name.
-    password: !secret app_pswd
 
 ## ---------------------------------------------------
 ## mDNS Component
@@ -219,20 +210,20 @@ mdns:
 ## COMPONENT CAPTIVE PORTAL
 ## ---------------------------------------------------
 captive_portal:
-  ## ------------------------------------------------------------------
-  ## COMPONENT OTA
-  ## https://esphome.io/components/ota.html
-  ## ------------------------------------------------------------------
+
+## ---------------------------------------------------
+## COMPONENT OTA
+## ---------------------------------------------------
 ota:
-  - platform: esphome
-    id: component_ota
-    password: "7d52bxpo42dd94f4fed3e99eab8f1e26"
+  password: !secret ota_pswd
+  platform: esphome
 
 ## ---------------------------------------------------
 ## COMPONENT WEBSERVER (local hosted)
 ## ---------------------------------------------------
 web_server:
   port: 80
+  version: 1
 
 ## ---------------------------------------------------
 ## COMPONENT Home Assistant API
@@ -251,7 +242,6 @@ api:
   id: espapi_wmbus_esp32
   port: 6053
   reboot_timeout: 0s
-  # https://esphome.io/components/api.html?highlight=api
   encryption:
     key: "inH49O9jBeK5yTGb1X2g4WV/1aS6YKUpu3Vu277fDgw="
   services:
@@ -267,13 +257,12 @@ api:
         - globals.set:
             id: hour_value
             value: !lambda |-
-              if((water_val_hour) and (water_val_hour)>0.001){
+              if (water_val_hour > 0.001) {
                 ESP_LOGD("system", "Set hourly value to: %f", water_val_hour);
-                return (water_val_hour);
-              }else{
-                ESP_LOGD("system", "Skip setting hourly value");
-                return id(hour_value);
-              };
+                id(waterhour).publish_state(water_val_hour);
+                return water_val_hour;
+              }
+              return id(hour_value);
               id(waterhour).publish_state(id(hour_value));
 
         - globals.set:
@@ -350,16 +339,17 @@ api:
               ]
 
 ## ---------------------------------------------------
-## SNTP COMPONENT
+## COMPONENT Timeserver SNTP
+## Change this to your timezone and ntp server
 ## ---------------------------------------------------
 time:
   - platform: sntp
     id: time_sntp
     timezone: Europe/Berlin
     servers:
-      - !secret local_sntp
       - 0.at.pool.ntp.org
       - 0.pool.ntp.org
+      - 1.pool.ntp.org
     on_time_sync:
       # Components should trigger on_time_sync when they update the system clock.
       then:
@@ -451,7 +441,7 @@ script:
       - lambda: |-
           int msgcode = int(id(cc1101_state));
           std::string message = id(cc1101_state_message)[msgcode];
-          ESP_LOGD("wmbus", "cc1101 state message: %s, error code: %d", message.c_str(), msgcode);
+          ESP_LOGD("wmbus", "watermeter state message: %s, error code: %d", message.c_str(), msgcode);
           id(watermeter_status_message).publish_state(message);
 
 ## ------------------------------------------------------------------
@@ -466,55 +456,25 @@ script:
 ##   |                          EP32                               |
 ## - | 5v               az-delivery-devkit-v4                      | -- ANT
 ##   |                                                             |
-##   |                          16 17 5  18 19               23    |
+##   |                          16 17    18 19    21         23    |
 ##   ╰――x――x――x――x――x――x――x――x――o――x――o――o――o――o――o――o――o――o――o――o―╯
-##                              |  |  |  |  |                 |   |
-##                              o  |  |  o  |                 |   ╰-o - 2 (GND)
-##                              7  o  |  4  o                 o
-##                            GDO0 6  | CLK 5                 3
-##                               GD02 o    MISO              M0SI
-##                                    8
-##                                   CSN
+##                              |  |     |  |     |           |   |
+##                              o  |     o  |     |           |   ╰-o - 2 (GND)
+##                              7  o     4  o     o           o
+##                            GDO0 6    CLK 5     8           3
+##                               GD02      MISO  CSN         M0SI
+##
 ##
 ## ------------------------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23 ## SI:   braun   3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO19 ## SO:   grün    5: MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO18 ## SCLK: violett 4: SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO05 ## CSN:  orange  8: CSN  Attached to Hardware SPI controller
-  gdo0_pin: GPIO16 ## GD00: gelb    7: RX Clock output. High Impedance !
-  gdo2_pin: GPIO17 ## GD02: weiss   6: TX FIFO status signals. High Impedance !
+  mosi_pin: GPIO23 ## SI:   braun
+  miso_pin: GPIO19 ## SO:   grün
+  clk_pin: GPIO18 ## SCLK: violett
+  cs_pin: GPIO21 ## CSN:  orange
+  gdo0_pin: GPIO16 ## GD00: gelb (rx)
+  gdo2_pin: GPIO17 ## GD02: weiss (tx)
 
-  # log_unknown (Optional): Show telegrams from not configured meters in log. Defaults to False
   log_unknown: False
-
-  ## -------------------------------------------------
-  ## Using wmbusmeters i a pipe (optional)
-  ## uncomment for using
-  ## -------------------------------------------------
-  # clients:
-  #  - name: "wmbusmeters"
-  #    ip_address: !secret wmbusmeter_host
-  #    port: 7227
-  #    format: rtlwMBus
-  #    transport: UDP
-
-  ## -------------------------------------------------
-  ## setting: wmbusmeters.conf on wbusmeters server
-  ## -------------------------------------------------
-  ## loglevel: normal
-  ## device: rtlwmbus:CMD(nc -lku 7227)
-  ## donotprobe: /dev/ttyAMA0
-  ## logtelegrams: false
-  ## format: json
-  ## logfile: /dev/stdout
-  ## shell: /wmbusmeters/mosquitto_pub.sh "wmbusmeters/$METER_NAME" "$METER_JSON"
-
-  ## -------------------------------------------------
-  ## led blink mode (optional) xx = PIN
-  ## -------------------------------------------------
-  # led_pin: GPIOxx
-  # led_blink_time: "100ms"
 
 ## ---------------------------------------------------
 ## BINARY SENSOR
@@ -687,23 +647,14 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              int error_code = int(x);
-              std::string message = "";
-              if(error_code==0){
-                  message = id(alarm_error_text)[error_code];
-                  id(watermeter_alarm_message).publish_state(message);
-                  ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message, error_code);
+              int code = int(x);
+              if (code < 0 || code >= id(alarm_error_text).size()) code = 1;
+              const char* msg = id(alarm_error_text)[code];
+              id(watermeter_alarm_message).publish_state(msg);
+              if(code==0){
+                ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", msg, code);
               }else{
-                for (int i = 1; i < 10; ++i) {
-                  if (error_code & (1 << i)) {
-                    if (!message.empty()) {
-                      message += ", ";
-                    }
-                    message += id(alarm_error_text)[i];
-                  }
-                }
-                id(watermeter_alarm_message).publish_state(message);
-                ESP_LOGW("wmbus", "WARNING Alarm message: %s, error code: %d", message.c_str(), error_code);
+                ESP_LOGW("wmbus", "WARNING Alarm message: %s, error code: %d", msg, code);
                 id(watermeter_alarm_timestamp).publish_state(id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z").c_str());
               }
 
@@ -717,28 +668,19 @@ sensor:
       on_value:
         then:
           - lambda: |-
-              int error_code = int(x);
-              std::string message = "";
-              if(error_code==0){
-                  message = id(alarm_error_text)[error_code];
-                  id(watermeter_alarm_message).publish_state(message);
-                  ESP_LOGD("wmbus", "Alarm message: %s, error code: %d", message, error_code);
+              int code = int(x);
+              if (code < 0 || code >= id(alarm_error_text).size()) code = 1;
+              const char* msg = id(alarm_error_text)[code];
+              id(watermeter_alarm_perv_message).publish_state(msg);
+              if(code==0){
+                ESP_LOGD("wmbus", "Alarm previous message: %s, error code: %d", msg, code);
               }else{
-                for (int i = 1; i < 10; ++i) {
-                  if (error_code & (1 << i)) {
-                    if (!message.empty()) {
-                      message += ", ";
-                    }
-                    message += id(alarm_error_text)[i];
-                  }
-                }
-                ESP_LOGW("wmbus", "WARNING Alarm message: %s, error code: %d", message.c_str(), error_code);
-                id(watermeter_alarm_timestamp).publish_state(id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z").c_str());
+                 ESP_LOGW("wmbus", "WARNING Alarm previous message: %s, error code: %d", msg, code);
               }
-              id(watermeter_alarm_perv_message).publish_state(message);
               if(id(watermeter_alarm_timestamp).has_state() == false) {
                 id(watermeter_alarm_timestamp).publish_state("--");
               }
+
 
   # water current (updated by id: "waterdisplay")
   - platform: template
