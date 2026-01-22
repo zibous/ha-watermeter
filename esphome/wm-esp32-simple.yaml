@@ -7,20 +7,39 @@
 ##
 ## usage:  1. Using the last wM-Bus component
 ##         2. Using Homassistant API (discovery + devices)
+##         3. uses backup component (optinal)
 ##
+## Backup:  http://water-meter-esp.local/config.yaml
+##          curl -v 'http://water-meter-esp.local/config.yaml' --digest -u USERNAME:PASSWORD -o config.yaml
 ##
 ## ---------------------------------------------------------------------------
 substitutions:
   ## device settings
   device_name_short: "water-meter-esp"
-  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module (Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
+  device_description: "Wasserzähler ESP32, CUL - CC1101, IZAR module Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
   projectname: "Diehl IZAR RC 868.Watermeter"
+  friendly_name: "Watermeter" # device name
   appversion: "3.0.0"
 
+  esphome_version: "2025.9.1"
+  last_test: "2026-01-22 14:00"
+
   ## logger settings
-  log_level: "WARN" # not that logging need memory, so in production mode use "WARN"
+  log_level: "INFO" # not that logging need memory, so in production mode use "WARN"
   log_wmbus: "ERROR" # Loglevel for wmbus meters component
-  log_baudrate: "0" # 0 disable uart logger messages
+  log_baudrate: "115200" # use 115200 to enable serial UART port logging .
+
+## -----------------------------------------------------------------
+## HARDWARE az-delivery-devkit-v4,ESP32 240MHz, 520KB RAM, 4MB Flash
+## -----------------------------------------------------------------
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: arduino
+
+# Customize the frequency in which data is flushed to the flash.
+preferences:
+  flash_write_interval: 30min
 
 ## ----------------------------------------------------------------
 ## APPLICATION ESPHOME
@@ -36,42 +55,53 @@ esphome:
     version: ${appversion}
   build_path: ./build/${device_name_short}
   on_boot:
-    then:
-      - globals.set:
-          id: boot_counter
-          value: !lambda "return id(boot_counter)+=1;"
-      - logger.log:
-          level: WARN
-          tag: "system"
-          format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
-      - component.update: bootcounter
+    - priority: -100.00
+      then:
+        - globals.set:
+            id: boot_counter
+            value: !lambda "return id(boot_counter)+=1;"
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} API is connected, Device ready!"
+        - component.update: bootcounter
+    - priority: 800
+      then:
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "BOOTMESSAGE:${device_name_short} hardware initialization of vital components is executed "
+
   on_shutdown:
+    priority: 700
     then:
       - logger.log:
           level: ERROR
           tag: "system"
           format: "BOOTMESSAGE:${device_name_short} is down!"
 
-## ----------------------------------------------------------------
-## HARDWARE az-delivery-devkit-v4
-##          ESP32 240MHz, 520KB RAM, 4MB Flash
-## ----------------------------------------------------------------
-esp32:
-  board: az-delivery-devkit-v4
-  framework:
-    type: arduino
-
-## ---------------------------------------------------
-## External components
-## ---------------------------------------------------
+## ------------------------------------------------------------------
+## EXTERNAL COMPONENTS
+## https://esphome.io/components/external_components.html
+## ------------------------------------------------------------------
 external_components:
-  # uses the version 3 from SzczepanLeon
+  # uses the version 3 from SzczepanLeon (github)
   # https://github.com/SzczepanLeon/esphome-components
   # You can make ESPHome check the repository every time by setting this option to 0s
   - source: github://SzczepanLeon/esphome-components@version_3
     refresh: 0s
     components: [wmbus]
 
+## ---------------------------------------------------
+## LOGGER COMPONENT
+## ---------------------------------------------------
+logger:
+  id: appslogger
+  level: ${log_level}
+  baud_rate: ${log_baudrate}
+  logs:
+    wmbus: ${log_wmbus}
+    wMBus-lib: ${log_wmbus}
 
 ## ----------------------------------------------------------------
 ## GLOBALS VARIABLES
@@ -113,56 +143,18 @@ mdns:
 captive_portal:
 
 ## ---------------------------------------------------
-## LOGGER COMPONENT
-## ---------------------------------------------------
-logger:
-  id: appslogger
-  level: ${log_level}
-  baud_rate: ${log_baudrate}
-  logs:
-    wmbus: ${log_wmbus}
-    wMBus-lib: ${log_wmbus}
-
-## ---------------------------------------------------
-## OTA COMPONENT
+## COMPONENT OTA
 ## ---------------------------------------------------
 ota:
   password: !secret ota_pswd
   platform: esphome
-  on_begin:
-    then:
-      - logger.log:
-          format: "OTA Start"
-          tag: "OTA"
-          level: WARN
-  on_progress:
-    then:
-      - logger.log:
-          level: WARN
-          tag: "OTA"
-          format: "OTA progress %0.1f%%"
-          args: ["x"]
-  on_end:
-    then:
-      - logger.log:
-          format: "OTA End"
-          tag: "OTA"
-          level: WARN
-  on_error:
-    then:
-      - logger.log:
-          format: "OTA update error %d"
-          tag: "OTA"
-          level: ERROR
-          args: ["x"]
 
 ## ---------------------------------------------------
-## COMPONENT WEBSERVER
+## COMPONENT WEBSERVER (local hosted)
 ## ---------------------------------------------------
 web_server:
   port: 80
-  version: 2
-  js_url: !secret webserver_jsurl
+  version: 1
 
 ## ---------------------------------------------------
 ## Home Assistant API COMPONENT
@@ -201,27 +193,27 @@ time:
 ##                                                               |
 ##   ╭――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――x――o―╮
 ##   |                                                             |
-##   |                                                             |
+##   |                          EP32                               |
 ## - | 5v               az-delivery-devkit-v4                      | -- ANT
 ##   |                                                             |
-##   |                          16 17 5  18 19               23    |
+##   |                          16 17    18 19    21         23    |
 ##   ╰――x――x――x――x――x――x――x――x――o――x――o――o――o――o――o――o――o――o――o――o―╯
-##                              |  |  |  |  |                 |   |
-##                              o  |  |  o  |                 |   ╰-o - 2 (GND)
-##                              7  o  |  4  o                 o
-##                            GDO0 6  | CLK 5                 3
-##                               GD02 o    MISO              M0SI
-##                                    8
-##                                   CSN
+##                              |  |     |  |     |           |   |
+##                              o  |     o  |     |           |   ╰-o - 2 (GND)
+##                              7  o     4  o     o           o
+##                            GDO0 6    CLK 5     8           3
+##                               GD02      MISO  CSN         M0SI
+##
 ##
 ## ------------------------------------------------------------------
 wmbus:
-  mosi_pin: GPIO23 ## SI:   braun   3: MOSI Attached to Hardware SPI controller MOSI SPI Interface
-  miso_pin: GPIO19 ## SO:   grün    5: MISO Attached to Hardware SPI controller MISO SPI Interface
-  clk_pin: GPIO18 ## SCLK: violett 4: SCK  Attached to Hardware SPI controller CLK
-  cs_pin: GPIO05 ## CSN:  orange  8: CSN  Attached to Hardware SPI controller
-  gdo0_pin: GPIO16 ## GD00: gelb    7: RX Clock output. High Impedance !
-  gdo2_pin: GPIO17 ## GD02: weiss   6: TX FIFO status signals. High Impedance !
+  mosi_pin: GPIO23 ## SI:   braun
+  miso_pin: GPIO19 ## SO:   grün
+  clk_pin: GPIO18 ## SCLK: violett
+  cs_pin: GPIO21 ## CSN:  orange
+  gdo0_pin: GPIO16 ## GD00: gelb (rx)
+  gdo2_pin: GPIO17 ## GD02: weiss (tx)
+
   log_unknown: False
 
 ## ---------------------------------------------------
@@ -360,10 +352,3 @@ sensor:
     state_class: "measurement"
     entity_category: "diagnostic"
     lambda: return (id(boot_counter));
-
-  # Last boot timestamp
-  - platform: template
-    name: "Device Last Boot"
-    disabled_by_default: true
-    id: device_lastBoot_time
-    icon: mdi:clock-start
