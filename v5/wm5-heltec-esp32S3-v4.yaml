@@ -1,0 +1,819 @@
+# --------------------------------------------------------------------------------
+# diymore ESP32 LoRa V4 Entwicklungsboard,
+# Verbessert ESP32 S3 LoRa Architektur, WLAN, Bluetooth, 2 MB PSRAM, 16 MB Flash,
+# 863–928 MHz Antennen, unterstützt GPS und Solar für Arduino Meshtastic LoRaWAN
+# OLED Display SD 1315
+# Anazon: https://amzn.eu/d/0dHiJSkA
+# --------------------------------------------------------------------------------
+substitutions:
+
+  hostname: "wm5-heltec-izar"
+  friendly_name: "Wasserzähler"
+  dashbordtitle: "HELTEC V4 Wasserzähler Izar Wifi Lora 32"
+  device_description: "Production 2025 WMBUS Meter Izar Heltec Wifi Lora 32 V2"
+
+  # The format of the name should be author_name.project_name.
+  projectname: "Peter Siebler.Izar HELTEC Watermeter"
+  device_area: "Heizraum"
+  appversion: "1.0.0"
+
+  watermeter_installed: "2024-03-01 14:00:00"
+  hakey: "inH49O9jBeK5yTGb1X2g4WV/1aS6YKUpu3Vu277fDgw="
+
+  update_interval: 10s
+  impulsfactor: "0.100"
+
+  esphome_min: "2026.6.4"
+
+esphome:
+  name: ${hostname}
+  friendly_name: ${dashbordtitle}
+  comment: ${device_description}
+  build_path: ./build/${hostname}
+  project:
+    name: ${projectname}
+    version: ${appversion}
+  area: ${device_area}
+  min_version: ${esphome_min}
+  name_add_mac_suffix: false
+  on_boot:
+    priority: 1000
+    then:
+      - lambda: |-
+          gpio_config_t io_conf35 = {};
+          io_conf35.intr_type = GPIO_INTR_DISABLE;
+          io_conf35.mode = GPIO_MODE_OUTPUT;
+          io_conf35.pin_bit_mask = (1ULL << 35);
+          gpio_config(&io_conf35);
+          gpio_set_level(GPIO_NUM_35, 0);
+          gpio_config_t io_conf36 = {};
+          io_conf36.intr_type = GPIO_INTR_DISABLE;
+          io_conf36.mode = GPIO_MODE_OUTPUT;
+          io_conf36.pin_bit_mask = (1ULL << 36);
+          gpio_config(&io_conf36);
+          gpio_set_level(GPIO_NUM_36, 0);
+          esp_rom_delay_us(200000);
+
+
+esp32:
+  board: esp32-s3-devkitc-1
+  variant: esp32s3
+  framework:
+    type: esp-idf
+
+# Einbinden der SX1262-kompatiblen wM-Bus Komponenten (Fork von HenrikBurton)
+external_components:
+  - source: github://HenrikBurton/esphome-components-wmbus5@main
+    components: [wmbus_common, wmbus_radio, wmbus_meter]
+
+globals:
+
+  ## all for gasmeter
+  - id: gas_daily_value
+    type: float
+    restore_value: true
+    initial_value: "0.0"
+
+  - id: gas_hour_value
+    type: float
+    restore_value: true
+    initial_value: "0.0"
+
+  - id: gasmeter_z61counter
+    type: float
+    restore_value: true
+    initial_value: "33711"
+
+  - id: gasmeter_z61pulse
+    type: float
+    restore_value: false
+    initial_value: "0.100"
+
+  - id: gas_meter_displayinital
+    type: float
+    restore_value: true
+    initial_value: "29060.654"
+
+  - id: gas_meter_displayvalue
+    type: float
+    restore_value: true
+    initial_value: "31362.222"
+
+  - id: gas_meter_totalm3
+    type: float
+    restore_value: true
+    initial_value: "35165.066"
+
+  - id: m3kw
+    type: float
+    restore_value: true
+    initial_value: "10.4312"
+
+  ## all for watermeter
+
+  - id: last_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: current_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: hour_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: daily_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: send_millisecond
+    type: int
+    restore_value: no
+    initial_value: "0"
+
+logger:
+  level: INFO
+  logs:
+    wmbusmeters: ERROR
+    wmbus: ERROR
+    cc1101: ERROR
+
+wifi:
+  networks:
+    # default wifi smarthome iot
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pswd
+      priority: 100
+    # fallback 1: wifi 2.4Ghz + 5GHz
+    - ssid: !secret ssid1_name
+      password: !secret ssid1_pswd
+      priority: 50
+    # fallback 2: wifi 2.4Ghz + 5GHz
+    - ssid: !secret ssid9_name
+      password: !secret ssid9_pswd
+      priority: 30
+  domain: !secret domain
+  reboot_timeout: 0s
+  enable_on_boot: true
+  power_save_mode: NONE
+  ap:
+    ssid: "${friendly_name} Hotspot"
+    password: !secret hotspot_pswd
+
+captive_portal:
+
+mdns:
+  disabled: false
+
+api:
+  id: espapi_wmbus_heltec_v4
+  port: 6053
+  reboot_timeout: 0s
+  encryption:
+    key: ${hakey}
+  services:
+    - service: set_watermeter_esp_data
+      variables:
+        water_val_hour: float
+        water_val_day: float
+      then:
+        - logger.log:
+            tag: "service"
+            format: "Try to set new values: hour: %.3f, day: %.3f"
+            level: INFO
+            args:
+              [
+                "water_val_hour",
+                "water_val_day"
+              ]
+        # new value for water hourly
+        - globals.set:
+            id: hour_value
+            value: !lambda |-
+              if((water_val_hour) and (water_val_hour)>0.001){
+                ESP_LOGD("service", "Set hourly value to: %f", water_val_hour);
+                return (water_val_hour);
+              }else{
+                ESP_LOGD("service", "Skip setting hourly value");
+                return id(hour_value);
+              };
+              id(waterhour).publish_state(id(hour_value));
+        - component.update: waterhour
+        # new value for water daily
+        - globals.set:
+            id: daily_value
+            value: !lambda |-
+              if((water_val_day) and (water_val_day)>0.001){
+                ESP_LOGD("service", "Set daily value to: %f", water_val_day);
+                return (water_val_day);
+              }else{
+                ESP_LOGD("service", "Skip setting hourly value");
+                return id(daily_value);
+              };
+              id(waterday).publish_state(id(daily_value));
+        - component.update: waterday
+
+    - service: set_gasmeterdisplay
+      variables:
+        my_newdisplayvalue: float
+      then:
+        - globals.set:
+            id: gas_meter_displayvalue
+            value: !lambda return (my_newdisplayvalue);
+        - globals.set:
+            id: gas_meter_totalm3
+            value: !lambda return ((my_newdisplayvalue) - id(gas_meter_displayinital));
+        - logger.log:
+            format: "Gasmeter Display value: %.1f"
+            args:
+              - !lambda id(gas_meter_displayvalue)
+            tag: main
+            level: DEBUG
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+ota:
+  platform: esphome
+  password: !secret ota_pswd
+
+time:
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Berlin
+    servers:
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      - 1.pool.ntp.org
+    on_time:
+        - seconds: 0
+          minutes: 0
+          hours: 0
+          then:
+            - lambda: !lambda |-
+                if(id(gas_daily_value)){
+                  id(gas_daily_value)=0.00;
+                }
+            - lambda: |-
+                id(daily_value)=0.00;
+                id(waterday).publish_state(id(daily_value));
+            - component.update: waterday
+            - logger.log:
+                tag: "timeserver"
+                level: INFO
+                format: "Set yesterday value and reset value daily, starting new day"
+
+        - seconds: 0
+          minutes: 0
+          then:
+            - lambda: !lambda |-
+                if(id(gas_hour_value)){
+                  id(gas_hour_value)=0.00;
+                }
+            - globals.set:
+                id: hour_value
+                value: "0.00"
+            - lambda: id(waterhour).publish_state(id(hour_value));
+            - logger.log:
+                tag: "timeserver"
+                level: INFO
+                format: "Reset value hour, starting next hour"
+            - component.update: waterhour
+
+# wmbus_meter: Interner SPI-Bus des Heltec V4 für den SX1262 Funkchip
+spi:
+  clk_pin: GPIO9
+  mosi_pin: GPIO10
+  miso_pin: GPIO11
+
+# wmbus_meter: Funk-Pinbelegung speziell für das V4-Board
+wmbus_radio:
+  radio_type: SX1262
+  cs_pin: GPIO8
+  reset_pin: GPIO12
+  irq_pin: GPIO14
+
+# wmbus_meter: WIRELESS M-BUS DRIVER (IZAR WASSERZÄHLER)
+wmbus_meter:
+  - id: wa_meter
+    meter_id: 0x24058612
+    type: izar
+    mode:
+      - T1
+      - C1
+
+# One-Wire Bus für Temperatursensoren (DS18B20)
+one_wire:
+  - platform: gpio
+    pin: GPIO4
+    id: DA1
+
+# OLED Display SD 1315
+i2c:
+  - id: bus_a
+    sda: GPIO17
+    scl: GPIO18
+    frequency: 100khz
+    scan: true
+
+font:
+  - file: "gfonts://Roboto"
+    id: font1
+    size: 10
+    glyphs: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789.,:;!_#@*+-=/()[]{}°³äöüÄÖÜß "
+
+display:
+  - platform: ssd1306_i2c
+    model: "ssd1306 128x64"
+    id: screen
+    i2c_id: bus_a
+    address: 0x3C
+    reset_pin: GPIO21
+    lambda: |-
+      int y = 2;
+      int abstand = 13;
+      int x_wert = 128;
+      it.print(0, y, id(font1), "Gateway aktiv");
+
+      if (id(wlan_ssid).has_state() && id(wlan_ssid).state != "Unknown") {
+        it.printf(x_wert, y, id(font1), TextAlign::TOP_RIGHT, "%s", id(wlan_ssid).state.c_str());
+      } else {
+        it.print(x_wert, y, id(font1), TextAlign::TOP_RIGHT, "Offline");
+      }
+      if (id(gas_meter_display).has_state()) {
+        y += abstand;
+        it.print(0, y, id(font1), "Gas");
+        it.printf(x_wert, y, id(font1), TextAlign::TOP_RIGHT, "%.3f m³", id(gas_meter_display).state);
+      }
+      if (id(waterdisplay).has_state()) {
+        y += abstand;
+        it.print(0, y, id(font1), "Wasser");
+        it.printf(x_wert, y, id(font1), TextAlign::TOP_RIGHT, "%.3f m³", id(waterdisplay).state);
+      }
+      y += abstand;
+      if (id(coldwater_pressure).has_state()) {
+        it.printf(0, y, id(font1), "Wasser %.2f bar", id(coldwater_pressure).state);
+      }
+      if (id(coldwater_temperature).has_state()) {
+        it.printf(x_wert, y, id(font1), TextAlign::TOP_RIGHT, "%.2f °C", id(coldwater_temperature).state);
+      }
+
+button:
+
+  - platform: restart
+    name: Restart ESP
+    id: restart_device
+    disabled_by_default: false
+    entity_category: config
+    icon: mdi:restart
+    device_class: restart
+
+  - platform: template
+    name: Reset Gasuhr Werte
+    icon: mdi:lock-reset
+    entity_category: config
+    on_press:
+      then:
+        - lambda: !lambda |-
+            id(gasmeter_z61counter) = 0.000;
+            id(gas_meter_totalm3)= 0.000;
+            id(gas_meter_displayvalue)= 0.000;
+            id(gas_daily_value)= 0.000;
+            id(gas_hour_value)= 0.000;
+            id(gas_meter_display).update();
+            id(gas_meter_total_m3).update();
+        - logger.log:
+            level: INFO
+            tag: "service"
+            format: "Gaszähler all values reset!"
+
+  # reset all global vars
+  - platform: template
+    name: "Reset Wasseruhr Werte"
+    icon: mdi:lock-reset
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+            id(last_value) = 0.00;
+            id(current_value) = 0.00;
+            id(watercurrent).publish_state(id(current_value));
+            id(hour_value) = 0.00;
+            id(waterhour).publish_state(id(hour_value));
+            id(daily_value) = 0.00;
+            id(waterday).publish_state(id(daily_value));
+        - logger.log:
+            level: INFO
+            tag: "service"
+            format: "Wasserzähler all values reset!"
+
+binary_sensor:
+
+  - platform: status
+    name: Status
+    id: device_api_status
+    icon: mdi:state-machine
+    entity_category: diagnostic
+
+  - platform: gpio
+    pin:
+      number: GPIO5
+      mode: INPUT_PULLUP
+    name: "Gas Impuls"
+    id: gassensor_state
+    icon: mdi:counter
+    filters:
+      - delayed_on: 10ms
+      - delayed_off: 10ms
+    on_release:
+      - then:
+          - lambda: |-
+              id(gasmeter_z61counter) += id(gasmeter_z61pulse);
+              id(gas_meter_displayvalue) += id(gasmeter_z61pulse);
+              id(gas_meter_totalm3) += id(gasmeter_z61pulse);
+              id(gas_daily_value) += id(gasmeter_z61pulse);
+              id(gas_hour_value) += id(gasmeter_z61pulse);
+          - component.update: gas_meter_impulse_count
+          - component.update: gas_meter_display
+          - component.update: gas_meter_total_m3_hour
+          - component.update: gas_meter_total_m3_day
+          - component.update: gas_meter_total_m3
+          - component.update: gas_meter_m3_current
+          - component.update: gas_meter_total_kw
+          - component.update: gas_meter_total_kw_day
+          - component.update: gas_meter_total_kw_hour
+    on_press:
+      - then:
+          - component.update: gas_meter_m3_current
+
+sensor:
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: total_m3
+    id: "waterdisplay"
+    name: Wasser Anzeige
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: "water"
+    accuracy_decimals: 3
+    icon: mdi:counter
+    on_value:
+      then:
+        - lambda: |-
+            if ((id(last_value) > 0.00) and (id(waterdisplay).state)>(id(last_value)) ) {
+              id(current_value) = float(id(waterdisplay).state-id(last_value)) * 1000.00;
+              id(watercurrent).publish_state(id(current_value));
+              id(hour_value)+=id(current_value);
+              id(waterhour).publish_state(id(gas_hour_value));
+              id(daily_value)+=id(current_value);
+              id(waterday).publish_state(id(gas_daily_value));
+            }else{
+              id(current_value) = 0.00;
+              id(watercurrent).publish_state(id(current_value));
+            }
+            id(last_value)=id(waterdisplay).state;
+
+        - component.update: watercurrent
+        - component.update: waterhour
+        - component.update: waterday
+        - text_sensor.template.publish:
+            id: watermeter_lastupdate
+            state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+        - component.update: watermeter_lastupdate
+
+        - sensor.template.publish:
+            id: watermeter_read_timeout
+            state: !lambda |-
+              int time_used = ( millis() - id(send_millisecond) );
+              id(send_millisecond) = millis();
+              return float(time_used)/1000;
+        - component.update: watermeter_read_timeout
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: last_month_total_m3
+    id: "waterdisplaylastmonth"
+    name: Wasser Vormonat
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: "water"
+    accuracy_decimals: 3
+    icon: mdi:counter
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: remaining_battery_life_y
+    name: "Batterielebensdauer"
+    id: "watermeter_batterie"
+    accuracy_decimals: 2
+    unit_of_measurement: "Jahre"
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    icon: mdi:battery
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: rssi_dbm
+    name:  RSS Signal
+    unit_of_measurement: "dbm"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    icon: mdi:rss
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: transmit_period_s
+    name: "Wasser Update Intervall"
+    id: "watermeter_transmit_periode"
+    unit_of_measurement: "sec"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    entity_category: "diagnostic"
+    icon: mdi:timelapse
+
+  - platform: template
+    name: Wasser aktuell
+    id: "watercurrent"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(current_value));
+
+  - platform: template
+    name: Wasser pro Stunde
+    id: "waterhour"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(hour_value));
+
+  - platform: template
+    name: Wasser Heute
+    id: "waterday"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(daily_value));
+
+  - platform: template
+    name: Wasser Daten Intervall
+    id: watermeter_read_timeout
+    icon: mdi:clock-start
+    accuracy_decimals: 2
+    unit_of_measurement: "sec"
+    state_class: "measurement"
+    entity_category: "diagnostic"
+
+
+  # DS18B20 Temperatursensor (Glidert sich in die sensor-Liste ein)
+  - platform: dallas_temp
+    address: 0x7900000C8579C728
+    one_wire_id: DA1
+    accuracy_decimals: 2
+    unit_of_measurement: "°C"
+    name: Wasser Temperatur
+    id: coldwater_temperature
+    device_class: temperature
+    state_class: measurement
+    icon: mdi:thermometer-lines
+    update_interval: 60s
+
+  # Analoger Drucksensor (Glidert sich in die sensor-Liste ein)
+  - platform: adc
+    pin: GPIO1
+    id: coldwater_pressure
+    name: Wasser Druck
+    unit_of_measurement: "bar"
+    accuracy_decimals: 2
+    device_class: pressure
+    state_class: measurement
+    update_interval: 10s
+    attenuation: 12db
+    icon: mdi:water-check
+    filters:
+      - calibrate_linear:
+          - 0.34 -> 0.0
+          - 3.06 -> 10.0
+
+
+# Gaszähler ------------------------------
+  - platform: template
+    name: Gas Anzeige
+    id: gas_meter_display
+    accuracy_decimals: 3
+    unit_of_measurement: m³
+    icon: mdi:counter
+    device_class: gas
+    update_interval: 10s
+    lambda: return id(gas_meter_displayvalue);
+
+  - platform: template
+    name: Gas aktuell
+    id: gas_meter_m3_current
+    icon: mdi:counter
+    device_class: gas
+    unit_of_measurement: m³
+    accuracy_decimals: 2
+    update_interval: 10s
+    lambda: |-
+      if (id(gassensor_state).state) {
+        return 0;
+      }else{
+        return id(gasmeter_z61pulse);
+      }
+
+  - platform: template
+    name: Gas Impulse
+    id: gas_meter_impulse_count
+    icon: mdi:counter
+    state_class: measurement
+    accuracy_decimals: 0
+    update_interval: 10s
+    lambda: return (id(gasmeter_z61counter));
+
+  - platform: template
+    name: Gas pro Stunde
+    id: gas_meter_total_m3_hour
+    unit_of_measurement: m³
+    state_class: total_increasing
+    accuracy_decimals: 3
+    icon: mdi:gauge
+    update_interval: 10s
+    lambda: return (id(gas_hour_value));
+
+  - platform: template
+    name: Gas heute
+    id: gas_meter_total_m3_day
+    unit_of_measurement: m³
+    state_class: total_increasing
+    accuracy_decimals: 3
+    icon: mdi:gauge
+    update_interval: 10s
+    lambda: return (id(gas_daily_value));
+
+  - platform: template
+    name: Gas gesamt
+    id: gas_meter_total_m3
+    icon: mdi:fire-circle
+    accuracy_decimals: 3
+    unit_of_measurement: m³
+    device_class: gas
+    state_class: total_increasing
+    update_interval: 10s
+    lambda: return id(gas_meter_totalm3);
+
+  - platform: template
+    name: Gas kWh pro Stunde
+    id: gas_meter_total_kw_hour
+    icon: mdi:fire-circle
+    unit_of_measurement: kWh
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    update_interval: 10s
+    lambda: return (id(hour_value) * id(m3kw));
+
+  - platform: template
+    name: Gas kWh heute
+    id: gas_meter_total_kw_day
+    icon: mdi:fire-circle
+    unit_of_measurement: kWh
+    state_class: total_increasing
+    device_class: energy
+    accuracy_decimals: 3
+    update_interval: 10s
+    lambda: return (id(daily_value) * id(m3kw));
+
+  - platform: template
+    name: Gas kWh gesamt
+    id: gas_meter_total_kw
+    icon: mdi:fire-circle
+    accuracy_decimals: 3
+    device_class: energy
+    state_class: total_increasing
+    unit_of_measurement: kWh
+    update_interval: 10s
+    lambda: return (id(gas_meter_totalm3) * id(m3kw));
+
+  - platform: wifi_signal
+    id: wifisignal
+    name: WLAN Signal
+    icon: mdi:wifi-strength-1
+    update_interval: 60s
+    entity_category: diagnostic
+    disabled_by_default: true
+    unit_of_measurement: dBm
+    accuracy_decimals: 0
+    device_class: signal_strength
+    state_class: measurement
+
+  - platform: copy
+    source_id: wifisignal
+    id: sensor_wifi_signal_percentage
+    name: WLAN Qualität
+    icon: mdi:wifi-strength-1
+    unit_of_measurement: "%"
+    state_class: "measurement"
+    device_class: ""
+    entity_category: diagnostic
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    accuracy_decimals: 2
+
+  - platform: uptime
+    name: "Online seit"
+    id: uptime_human
+    icon: mdi:clock-start
+    filters:
+      - filter_out: nan
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    accuracy_decimals: 2
+
+datetime:
+  - platform: template
+    id: wm_installed
+    name: "Installiert am"
+    type: datetime
+    optimistic: yes
+    initial_value: ${watermeter_installed}
+    restore_value: true
+    disabled_by_default: true
+    entity_category: "diagnostic"
+    icon: mdi:clock-start
+
+## TEXT SENSOR
+text_sensor:
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: timestamp
+    name: Uhrzeit
+    id: watimestamp
+    icon: mdi:clock-start
+    entity_category: "diagnostic"
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: last_month_measure_date
+    name: Wasser Ablesedatum
+    id: walastmeda
+    icon: mdi:clock-start
+    entity_category: "diagnostic"
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: current_alarms
+    name: Wasser Alarm
+    entity_category: "diagnostic"
+    icon: mdi:message-alert-outline
+
+  - platform: wmbus_meter
+    parent_id: wa_meter
+    field: previous_alarms
+    name: Wasser Alarm voriger
+    entity_category: "diagnostic"
+    icon: mdi:message-alert-outline
+
+  - platform: version
+    name: "Gerät ESPHome Version"
+    icon: mdi:information-box-outline
+    id: appver
+    entity_category: "diagnostic"
+    hide_timestamp: true
+    hide_hash: true
+    disabled_by_default: true
+
+  - platform: template
+    name: "Wasserdaten vom"
+    id: watermeter_lastupdate
+    icon: mdi:clock-start
+
+  - platform: wifi_info
+    ssid:
+      name: WLAN SSID
+      id: wlan_ssid
+      icon: mdi:wifi-settings
+      entity_category: "diagnostic"
+    ip_address:
+      name: WLAN IP Address
+      icon: mdi:ip
+      disabled_by_default: true
+      entity_category: "diagnostic"
+
+# e.o.f configuration
