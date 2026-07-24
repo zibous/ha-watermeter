@@ -1,0 +1,1046 @@
+## -----------------------------------------------------------------------------------------------------
+##  WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
+##
+## curl -X POST http://10.1.1.71/text/meter_id_input/set --data "value=43430778"
+## curl -X POST http://10.1.1.71/text/meter_id_input/set --data "value=00000000"## 
+##  Log live beobachten
+## curl http://10.1.1.71/logs
+## -----------------------------------------------------------------------------------------------------
+substitutions:
+
+  ## device settings
+  hostname: "water-meter-esp"
+  ## fallback meter_id used only if NVS has no saved value yet
+  default_meter_id: "00000000"
+  dashbordtitle: "ESP32-Devkit-V4  - Wasserzähler 2026"
+  friendly_name: "Wasseruhr"
+  device_description: "Production 2024: Wasserzähler ESP32, CUL - CC1101, IZAR module Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
+
+  # The format of the name should be author_name.project_name.
+  projectname: "Peter Siebler.${hostname}"
+  appversion: "Diehl IZAR RC 868 v3.0.0 (esp32-devkit-v4--wasserzahler.yaml)"
+  hardware: "ESP32_Devkit_V4"
+
+  watermeter_installed: "2024-03-01 14:00:00"
+  location: "Heizraum"
+
+  ## logger settings
+  log_level: "DEBUG" # not that logging need memory, so in production mode use "WARN"
+  log_baudrate: "115200" # use 0 to disable serial UART port logging.
+
+  hakey: "inH49O9jBeK5yTGb1X2g4WV/1aS6YKUpu3Vu277fDgw="
+
+## HARDWARE az-delivery-devkit-v4,ESP32 240MHz, 520KB RAM, 4MB Flash
+esp32:
+  board: az-delivery-devkit-v4
+  framework:
+    type: esp-idf  # Wechsel von arduino auf esp-idf
+
+# Customize the frequency in which data is flushed to the flash.
+preferences:
+  flash_write_interval: 10min
+
+## APPLICATION ESPHOME
+esphome:
+  name: ${hostname}
+  friendly_name: ${dashbordtitle}
+  build_path: ./build/${hostname}
+  comment: ${device_description}
+  on_boot:
+    priority: 600  # vor wmbus_meter start ausführen
+    then:
+      - globals.set:
+          id: boot_counter
+          value: !lambda "return id(boot_counter)+=1;"
+      # Gespeicherte Meter-ID in wmbus_meter laden (falls nicht leer / Default)
+      - lambda: |-
+          std::string mid = id(stored_meter_id);
+          if (!mid.empty() && mid != "${default_meter_id}") {
+            ESP_LOGW("system", "Lade gespeicherte Meter-ID: %s", mid.c_str());
+            id(water_meter).set_meter_params(
+              mid,
+              "izar",
+              "",
+              {LinkMode::T1, LinkMode::C1}
+            );
+          } else {
+            ESP_LOGW("system", "Keine gespeicherte Meter-ID – nutze secrets.yaml Wert");
+          }
+      - logger.log:
+          level: WARN
+          tag: "system"
+          format: "BOOTMESSAGE:${hostname} API is connected, Device ready!"
+      - component.update: bootcounter
+  on_shutdown:
+    then:
+      - logger.log:
+          level: ERROR
+          tag: "system"
+          format: "BOOTMESSAGE:${hostname} is down!"
+  project:
+    name: ${projectname}
+    version: ${appversion}
+  area: ${location}
+  name_add_mac_suffix: false
+  # minimum version of ESPHome required to compile.
+  min_version: 2026.6.4
+
+
+## EXTERNAL COMPONENTS
+## https://esphome.io/components/external_components.html
+external_components:
+  - source: github://SzczepanLeon/esphome-components@main
+    components: [ wmbus_common, wmbus_radio, wmbus_meter ]
+
+## Global variables
+globals:
+  - id: boot_counter
+    type: int
+    restore_value: yes
+    initial_value: "0"
+
+  - id: last_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: current_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: hour_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: daily_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: yesterday_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: week_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: month_value
+    type: float
+    restore_value: yes
+    initial_value: '0.0'
+
+  - id: lastmonth_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: year_value
+    type: float
+    restore_value: yes
+    initial_value: "0.00"
+
+  - id: send_millisecond
+    type: uint32_t
+    restore_value: no
+    initial_value: "0"
+
+  - id: cc1101_state
+    type: int
+    restore_value: no
+    initial_value: "0"
+
+  # Meter-ID persistiert im NVS Flash (überlebt Reboots und OTA-Updates)
+  - id: stored_meter_id
+    type: std::string
+    restore_value: yes
+    initial_value: '"${default_meter_id}"'
+
+
+logger:
+  level: DEBUG
+  logs:
+    wmbusmeters: INFO
+    cc1101: ERROR
+    # wmbus: ERROR
+
+## COMPONENT WIFI
+wifi:
+  networks:
+    # default wifi smarthome iot
+    - ssid: !secret wifi_ssid
+      password: !secret wifi_pswd
+      priority: 100
+    # fallback 1: wifi 2.4Ghz + 5GHz
+    - ssid: !secret ssid1_name
+      password: !secret ssid1_pswd
+      priority: 50
+    # fallback 2: wifi 2.4Ghz + 5GHz
+    - ssid: !secret ssid9_name
+      password: !secret ssid9_pswd
+      priority: 30
+  domain: !secret domain
+  reboot_timeout: 5min
+  enable_on_boot: true
+  power_save_mode: NONE
+  ap:
+    ssid: ${hostname}_AP
+    password: !secret hotspot_pswd
+
+## COMPONENT Captive Portal
+captive_portal:
+
+## mDNS Component
+mdns:
+  disabled: false
+
+## COMPONENT Over-the-Air Updates
+ota:
+  platform: esphome
+  password: !secret ota_pswd
+
+## COMPONENT WEBSERVER
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+## ---------------------------------------------------
+## COMPONENT Home Assistant API
+## https://esphome.io/components/api.html
+## Homeassistant service call (all values in liter):
+## ---------------------------------------------------
+## service: esphome.water_meter_esp_set_watermeter_esp_data
+## data:
+##   water_val_hour: 0.00
+##   water_val_day: 167.00
+##   water_val_yesterday: 240.35
+##   water_val_week: 901.00
+##   water_val_year: 33143.00
+##   water_val_lastmonth: 7580.25
+## ---------------------------------------------------
+api:
+  id: espapi_wmbus_esp32
+  port: 6053
+  reboot_timeout: 0s
+  # https://esphome.io/components/api.html?highlight=api
+  encryption:
+    key: ${hakey}
+
+  # service call from homeassistant to set the data
+  services:
+    - service: set_meter_id
+      variables:
+        new_meter_id: string
+      then:
+        - lambda: |-
+            std::string mid = new_meter_id;
+            std::transform(mid.begin(), mid.end(), mid.begin(), ::tolower);
+            mid.erase(std::remove_if(mid.begin(), mid.end(), ::isspace), mid.end());
+            if (mid.length() == 8) {
+              id(stored_meter_id) = mid;
+              id(meter_id_display).publish_state(mid);
+              ESP_LOGW("system", "Meter-ID via Service gesetzt: %s", mid.c_str());
+            } else {
+              ESP_LOGE("system", "Ungueltige Meter-ID: '%s'", mid.c_str());
+            }
+        - delay: 2s
+        - button.press: restart_device
+
+    - service: set_watermeter_esp_data
+      variables:
+        water_val_hour: float
+        water_val_day: float
+        water_val_yesterday: float
+        water_val_week: float
+        water_val_year: float
+        water_val_lastmonth: float
+      then:
+        - logger.log:
+            tag: "system"
+            format: "Try to set new values: hour: %.3f, day: %.3f, yesterday: %.3f, week: %.3f, last month: %.3f, year: %.3f"
+            level: INFO
+            args:
+              [
+                "water_val_hour",
+                "water_val_day",
+                "water_val_yesterday",
+                "id(week_value)",
+                "id(lastmonth_value)",
+                "id(year_value)",
+              ]
+        # new value for water hourly
+        - globals.set:
+            id: hour_value
+            value: !lambda |-
+              if((water_val_hour) and (water_val_hour)>0.001){
+                ESP_LOGD("system", "Set hourly value to: %f", water_val_hour);
+                return (water_val_hour);
+              }else{
+                ESP_LOGD("system", "Skip setting hourly value");
+                return id(hour_value);
+              };
+              id(waterhour).publish_state(id(hour_value));
+        - component.update: waterhour
+        # new value for water daily
+        - globals.set:
+            id: daily_value
+            value: !lambda |-
+              if((water_val_day) and (water_val_day)>0.001){
+                ESP_LOGD("system", "Set daily value to: %f", water_val_day);
+                return (water_val_day);
+              }else{
+                ESP_LOGD("system", "Skip setting hourly value");
+                return id(hour_value);
+              };
+              id(waterday).publish_state(id(daily_value));
+        - component.update: waterday
+        # new value for water yesterday
+        - globals.set:
+            id: yesterday_value
+            value: !lambda |-
+              if((water_val_yesterday) and (water_val_yesterday)>0.001){
+                ESP_LOGD("system", "Set yesterday value to: %f", water_val_yesterday);
+                return (water_val_yesterday);
+              }else{
+                ESP_LOGD("system", "Skip setting yesterday value");
+                return id(yesterday_value);
+              };
+              id(wateryesterday).publish_state(id(hour_value));
+        - component.update: wateryesterday
+        # new value for water weekly
+        - globals.set:
+            id: week_value
+            value: !lambda |-
+              if((water_val_week) and (water_val_week)>0.001){
+                ESP_LOGD("system", "Set weekly value to: %f", water_val_week);
+                return (water_val_week);
+              }else{
+                ESP_LOGD("system", "Skip setting weekly value");
+                return id(week_value);
+              };
+              id(waterweek).publish_state(id(week_value));
+        - component.update: waterweek
+        # new value for water lastmonth
+        - globals.set:
+            id: lastmonth_value
+            value: !lambda |-
+              if((water_val_lastmonth) and (water_val_lastmonth)>0.001){
+                ESP_LOGD("system", "Set last month value to: %f", water_val_lastmonth);
+                return (water_val_lastmonth);
+              }else{
+                ESP_LOGD("system", "Skip setting last month value");
+                return id(lastmonth_value);
+              };
+              id(waterlastmonth).publish_state(id(lastmonth_value));
+        - component.update: waterlastmonth
+        # new value for water yearly
+        - globals.set:
+            id: year_value
+            value: !lambda |-
+              if((water_val_year) and (water_val_year)>0.001){
+                ESP_LOGD("system", "Set last yearly value to: %f", water_val_year);
+                return (water_val_year);
+              }else{
+                ESP_LOGD("system", "Skip setting last yearly value");
+                return id(year_value);
+              };
+              id(wateryear).publish_state(id(year_value));
+        - component.update: wateryear
+        - logger.log:
+            tag: "system"
+            format: "All new Values set: hour: %.3f, day: %.3f, week: %.3f, last month: %.3f, year: %.3f"
+            level: INFO
+            args:
+              [
+                "id(hour_value)",
+                "id(daily_value)",
+                "id(week_value)",
+                "id(lastmonth_value)",
+                "id(year_value)",
+              ]
+
+## SNTP Time server
+time:
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Berlin
+    servers:
+      - !secret local_sntp
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+    on_time_sync:
+      # Components should trigger on_time_sync when they update the system clock.
+      then:
+        - if:
+            condition:
+              lambda: 'return id(device_lastBoot_time).state == "";'
+            then:
+              - text_sensor.template.publish:
+                  id: device_lastBoot_time
+                  state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+              - component.update: systime
+              - component.update: watermeter_lastupdate
+
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "Synchronized sntp clock"
+
+    on_time:
+      # reset hourly value
+      - seconds: 0
+        minutes: 0
+        then:
+          - globals.set:
+              id: hour_value
+              value: "0.00"
+          - lambda: id(waterhour).publish_state(id(hour_value));
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value hour, starting next hour"
+
+      # reset daily value and set yesterday value
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        then:
+          - lambda: |-
+              id(yesterday_value)=id(daily_value);
+              id(wateryesterday).publish_state(id(yesterday_value));
+              id(daily_value)=0.00;
+              id(waterday).publish_state(id(daily_value));
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Set yesterday value and reset value daily, starting new day"
+
+      # reset weekly value, start new week
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        days_of_week: MON
+        then:
+          - globals.set:
+              id: week_value
+              value: "0.00"
+          - lambda: id(waterweek).publish_state(id(week_value));
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value weekly, starting new week"
+
+      # new year, reset yearly value
+      - seconds: 0
+        minutes: 0
+        hours: 0
+        days_of_month: 1
+        months: JAN
+        then:
+          - globals.set:
+              id: year_value
+              value: "0.00"
+          - lambda: id(wateryear).publish_state(id(year_value));
+          - logger.log:
+              tag: "system"
+              level: INFO
+              format: "Reset value yearly, starting new year"
+
+
+## ---------------------------------------------------------------------------------
+##                WMBUS CC1101 --> ESP32 az-delivery-devkit-v4
+## ---------------------------------------------------------------------------------
+##
+##
+##                             ╭―――――――――――――――――――――――╮
+##                       GPIO6 | [ ] O  | USB |  O [ ] | 5V
+##                       GPIO7 | [ ]    -------    [ ] | GPIO11
+##                       GPIO8 | [ ]               [ ] | GPI010
+##                      GPIO15 | [ ]               [ ] | GPIO9
+##                       GPIO2 | [ ]               [ ] | GPI013
+##                       GPIO0 | [ ]               [ ] | GND
+##                       GPIO4 | [ ]               [ ] | GPI012
+##   GDO0 (2)  ■ <----  GPIO16 | [■]               [ ] | GPI014
+##   GDO2 (3)  ■ <----  GPIO17 | [■]               [ ] | GPI027
+##                      GPIO05 | [ ]  ___________  [ ] | GPI026
+##    CLK (5)  ■ <----  GPIO18 | [■] |           | [ ] | GPI025
+##   MISO (4)  ■ <----  GPIO19 | [■] |           | [ ] | GPI033
+##                         GND | [ ] |           | [ ] | GPI032
+##    CSN (1)  ■ <----  GPIO21 | [■] |           | [ ] | GPI035
+##                       GPIO3 | [ ] |           | [ ] | GPI034
+##                       GPIO1 | [ ] |           | [ ] | GPI039
+##                      GPIO22 | [ ] |           | [ ] | GPI036
+##    MSOI (6) ■ <----  GPIO23 | [■] |           | [ ] | RESET
+##     GND (7) ■ <----     GND | [■] |___________| [■] | 3.3V      ---> ■ 3.3V (8)
+##                             ╰―――――――――――――――――――――――╯
+##                                |  |  ____  ____  |
+##                                |  |  |  |  |  |  |
+##                                |__|__|  |__|  |__|
+##
+##                               INTERNAL LED: ■ GPIO2
+##
+##
+##                              ╭――――――――――――――――――――――――――――╮
+##                              │                      CSN ■ │ 1  --> ■ GPIO21
+##                              │                     GDO0 ■ │ 2  --> ■ GPIO16
+##                              │ ■ GND               GDO2 ■ │ 3  --> ■ GPIO17
+##                              │ ■ ANT      CC1101     SO ■ │ 4  --> ■ GPIO19
+##                              │ ■ GND                CLK ■ │ 5  --> ■ GPIO18
+##                              │                       SI ■ │ 6  --> ■ GPIO23
+##                              │                      GND ■ │ 7  --> ■ GND
+##                              │                     3.3V ■ │ 8  --> ■ 3.3V
+##                              ╰――――――――――――――――――――――――――――╯
+##
+##
+##
+## ---------------------------------------------------------------------------------
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO19
+
+wmbus_radio:
+  radio_type: CC1101
+  cs_pin: GPIO21
+  irq_pin: GPIO16
+  frequency: 868.95MHz
+
+wmbus_meter:
+  - id: water_meter
+    meter_id: !secret watermeterId
+    type: izar
+    mode:
+      - T1
+      - C1
+
+## ---------------------------------------------------
+## SWITCHES
+## ---------------------------------------------------
+button:
+  # reset boot counter value
+  - platform: template
+    name: "${friendly_name} Boot Counter Reset"
+    id: btn_bc
+    icon: mdi:counter
+    disabled_by_default: false
+    entity_category: config
+    on_press:
+      then:
+        - lambda: id(boot_counter) = 0; id(bootcounter).publish_state(id(boot_counter));
+        - logger.log:
+            level: WARN
+            tag: "system"
+            format: "${hostname} reset boot counter o.k!"
+        - component.update: bootcounter
+    device_class: restart
+
+  # reset all global vars
+  - platform: template
+    name: "${friendly_name} Reset values"
+    icon: mdi:lock-reset
+    entity_category: config
+    on_press:
+      then:
+        - lambda: |-
+            id(boot_counter) = 0;
+            id(bootcounter).publish_state(id(boot_counter));
+
+            id(last_value) = 0.0;
+            id(current_value) = 0.0;
+            id(watercurrent).publish_state(id(current_value));
+
+            id(hour_value) = 0.0;
+            id(waterhour).publish_state(id(hour_value));
+
+            id(daily_value) = 0.0;
+            id(waterday).publish_state(id(daily_value));
+
+            id(yesterday_value) = 0.0;
+            id(wateryesterday).publish_state(id(yesterday_value));
+
+            id(week_value) = 0.0;
+            id(waterweek).publish_state(id(week_value));
+
+            id(month_value) = 0.0;
+            id(watermonth).publish_state(id(month_value));
+
+            id(lastmonth_value) = 0.0;
+            id(waterlastmonth).publish_state(id(lastmonth_value));
+
+            id(year_value) = 0.0;
+            id(wateryear).publish_state(id(year_value));
+
+        - logger.log:
+            level: INFO
+            tag: "system"
+            format: "all values reset!"
+    device_class: restart
+
+  # simple button for restart
+  - platform: restart
+    name: ${friendly_name} Restart
+    id: restart_device
+    disabled_by_default: false
+    entity_category: config
+    icon: mdi:restart
+    device_class: restart
+    # web_server_sorting_weight: 14
+
+# BINARY SENSOR
+binary_sensor:
+  # simulate led state (updated by id: "waterdisplay")
+  - platform: template
+    name: "${friendly_name} Status Led"
+    id: statusled
+    icon: mdi:led-outline
+    entity_category: "diagnostic"
+    lambda: "return id(current_value) > 0;"
+
+  - platform: status
+    name: ${friendly_name} API Status
+    id: device_api_status
+    disabled_by_default: true
+    icon: mdi:state-machine
+    entity_category: diagnostic
+    # web_server_sorting_weight: 23
+
+
+## SENSOREN
+sensor:
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: total_m3
+    id: "waterdisplay"
+    name: "${friendly_name} Anzeige"
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: "water"
+    accuracy_decimals: 3
+    icon: mdi:counter
+    on_value:
+      then:
+        - lambda: |-
+            if (id(last_value) == 0.0) {
+              id(last_value) = x; // 'x' ist der aktuelle Wert von waterdisplay.state
+              id(cc1101_state) = 1;
+              ESP_LOGD("wmbus", "Erststart: Letzten Stand auf %.3f m³ gesetzt.", id(last_value));
+              return;
+            }
+            if (x > id(last_value)) {
+              id(cc1101_state) = 2;
+              ESP_LOGD("wmbus", "Wasser fliesst! Aktuell: %.3f, Vorher: %.3f", x, id(last_value));
+
+              id(current_value) = (x - id(last_value)) * 1000.0;
+              id(watercurrent).publish_state(id(current_value));
+
+              id(hour_value) += id(current_value);
+              id(waterhour).publish_state(id(hour_value));
+
+              id(daily_value) += id(current_value);
+              id(waterday).publish_state(id(daily_value));
+
+              id(week_value) += id(current_value);
+              id(waterweek).publish_state(id(week_value));
+
+              id(month_value) += id(current_value);
+              id(watermonth).publish_state(id(month_value));
+
+              id(year_value) += id(current_value);
+              id(wateryear).publish_state(id(year_value));
+
+              ESP_LOGD("wmbus", "Verbrauch von %.3f Litern auf alle Intervalle aufgeteilt.", id(current_value));
+            }
+
+            else if (x == id(last_value)) {
+              id(cc1101_state) = 1;
+              if (id(current_value) > 0.0) {
+                id(current_value) = 0.0;
+                id(watercurrent).publish_state(id(current_value));
+                ESP_LOGD("wmbus", "Wasserfluss gestoppt. Aktueller Fluss: 0.0 Liter.");
+              }
+            }
+
+            id(last_value) = x;
+
+        - text_sensor.template.publish:
+            id: watermeter_lastupdate
+            state: !lambda return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+
+        - sensor.template.publish:
+            id: watermeter_read_timeout
+            state: !lambda |-
+              uint32_t time_used = millis() - id(send_millisecond);
+              ESP_LOGD("wmbus", "Diff millisecond is: %u", time_used);
+              id(send_millisecond) = millis();
+              return (float)time_used / 1000.0;
+
+        - binary_sensor.template.publish:
+            id: statusled
+            state: !lambda "return id(current_value) > 0.0;"
+
+
+  # get the last month total watermter m3 from the wmbus telegram  (wM-Bus)
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: last_month_total_m3
+    id: "waterdisplay_lastmonth"
+    name: "${friendly_name} Anzeige letzter Monat"
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: "water"
+    accuracy_decimals: 3
+    icon: mdi:counter
+
+  # get the last transmit periode (wM-Bus)
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: transmit_period_s
+    id: "watermeter_transmit_periode"
+    name: "${friendly_name} Update Intervall"
+    unit_of_measurement: "sec"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    entity_category: "diagnostic"
+    icon: mdi:timelapse
+
+  # water current (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Aktuell
+    id: "watercurrent"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(current_value));
+
+  # water current hour (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Stunde
+    id: "waterhour"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(hour_value));
+
+  # water today (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Tag
+    id: "waterday"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(daily_value));
+
+  # water yesterday (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Gestern
+    id: "wateryesterday"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(yesterday_value));
+
+  # water current week (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Woche
+    id: "waterweek"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-circle
+    device_class: "water"
+    state_class: total_increasing
+    lambda: return (id(week_value));
+
+  - platform: template
+    name: "Wasser Monat"
+    id: "watermonth"
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    icon: mdi:water-outline
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(month_value));
+
+  # water last month (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser letzer Monat
+    id: "waterlastmonth"
+    icon: mdi:water-outline
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(lastmonth_value));
+
+  # water current year (updated by id: "waterdisplay")
+  - platform: template
+    name: Wasser Jahr
+    id: "wateryear"
+    icon: mdi:water-outline
+    accuracy_decimals: 2
+    unit_of_measurement: "L"
+    state_class: total_increasing
+    device_class: "water"
+    lambda: return (id(year_value));
+
+  # ratio lastmonth to current month (updated by id: "waterdisplay")
+  - platform: template
+    name: "Wasser Verbrauch Monatsvergleich"
+    id: water_consumption
+    unit_of_measurement: "%"
+    accuracy_decimals: 2
+    icon: mdi:percent
+    lambda: |-
+      float aktuell = id(month_value);
+      float vormonat = id(lastmonth_value);
+      if (vormonat <= 0.0) {
+        return 0.0;
+      }
+      return (aktuell / vormonat) * 100.0;
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: remaining_battery_life_y
+    id: "watermeter_batterie"
+    name: "${friendly_name} Batterielebensdauer"
+    accuracy_decimals: 0
+    unit_of_measurement: "Jahre"
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    icon: mdi:battery
+
+  # service call delay (updated by id: "waterdisplay")
+  - platform: template
+    name: ${friendly_name} Daten Intervall
+    id: watermeter_read_timeout
+    icon: mdi:clock-start
+    accuracy_decimals: 2
+    unit_of_measurement: "sec"
+    state_class: "measurement"
+    entity_category: "diagnostic"
+
+  # get the wifi signal from the esp device
+  - platform: wifi_signal
+    id: wifisignal
+    name: ${friendly_name} WiFi Signal
+    icon: mdi:wifi-strength-1
+    update_interval: 60s
+    entity_category: diagnostic
+    disabled_by_default: true
+    unit_of_measurement: dBm
+    accuracy_decimals: 0
+    device_class: signal_strength
+    state_class: measurement
+
+  # calulcate the wifi signal quality
+  - platform: copy # wifi signal in %
+    source_id: wifisignal
+    id: sensor_wifi_signal_percentage
+    name: ${friendly_name} WiFi Qualität
+    icon: mdi:wifi-strength-1
+    unit_of_measurement: "%"
+    state_class: "measurement"
+    device_class: ""
+    entity_category: diagnostic
+    filters:
+      - lambda: return min(max(2 * (x + 100.0), 0.0), 100.0);
+    accuracy_decimals: 2
+
+  # device internal temperature (only webserver)
+  - platform: internal_temperature
+    name: ${friendly_name} Gerätetemperatur
+    id: device_internal_temperature
+    icon: mdi:thermometer-lines
+    unit_of_measurement: "°C"
+    accuracy_decimals: 2
+    device_class: temperature
+    state_class: measurement
+    update_interval: 60s
+    entity_category: "diagnostic"
+    disabled_by_default: true
+
+  # Uptime device in hours
+  - platform: uptime
+    name: "${friendly_name} Online seit"
+    id: uptime_human
+    icon: mdi:clock-start
+    filters:
+      - filter_out: nan
+      - lambda: return x / 3600;
+    unit_of_measurement: "h"
+    entity_category: "diagnostic"
+    state_class: "measurement"
+    accuracy_decimals: 2
+    # web_server_sorting_weight: 16
+
+  # device boot counter by device boot
+  - platform: template
+    name: ${friendly_name} Anzahl Neustarts
+    id: bootcounter
+    icon: mdi:counter
+    accuracy_decimals: 0
+    state_class: "measurement"
+    entity_category: "diagnostic"
+    lambda: return (id(boot_counter));
+
+
+## ---------------------------------------------------------
+## Template Datetime
+## https://esphome.io/components/datetime/template.html
+## ---------------------------------------------------------
+datetime:
+  - platform: template
+    id: wm_installed
+    name: "${friendly_name} installiert"
+    type: datetime
+    optimistic: yes
+    initial_value: ${watermeter_installed}
+    restore_value: true
+    disabled_by_default: true
+    entity_category: "diagnostic"
+    icon: mdi:clock-start
+
+## ---------------------------------------------------------
+## Meter-ID zur Laufzeit setzen per curl:
+##   curl -X POST "http://water-meter-esp.siebler.home/text/wasseruhr_meter_id_eingabe/set" --data "value=24058612"
+##   curl "http://water-meter-esp.siebler.home/text_sensor/wasseruhr_meter_id"
+## ---------------------------------------------------------
+text:
+  - platform: template
+    id: meter_id_input
+    name: "${friendly_name} Meter ID Eingabe"
+    icon: mdi:identifier
+    mode: text
+    optimistic: false
+    min_length: 8
+    max_length: 8
+    set_action:
+      then:
+        - lambda: |-
+            std::string new_id = x;
+            std::transform(new_id.begin(), new_id.end(), new_id.begin(), ::tolower);
+            id(stored_meter_id) = new_id;
+            id(meter_id_display).publish_state(new_id);
+            ESP_LOGW("system", "Meter-ID gespeichert: %s – Neustart in 2s...", new_id.c_str());
+        - delay: 2s
+        - button.press: restart_device
+
+## ---------------------------------------------------
+## TEXT SENSOR
+## ---------------------------------------------------
+text_sensor:
+
+  # Aktuelle Meter-ID (lesbar als HEX-String)
+  - platform: template
+    id: meter_id_display
+    name: "${friendly_name} Meter ID"
+    icon: mdi:identifier
+    lambda: return id(stored_meter_id);
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: current_alarms
+    id: "watermeter_current_alarms"
+    name: "${friendly_name} Alarm Code"
+    entity_category: "diagnostic"
+    icon: mdi:message-alert-outline
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: previous_alarms
+    id: "watermeter_previous_alarms"
+    name: "${friendly_name} Alarm Code voriger"
+    icon: mdi:message-alert
+    entity_category: "diagnostic"
+
+  # watermeter alarm timestamp (updated by id: current_alarms)
+  - platform: template
+    name: "${friendly_name} Alarm Zeit"
+    id: watermeter_alarm_timestamp
+    icon: mdi:alarm-light
+    entity_category: "diagnostic"
+
+  # optional device version
+  - platform: version
+    name: "${friendly_name} ESPHome Version"
+    icon: mdi:information-box-outline
+    id: appver
+    entity_category: "diagnostic"
+    hide_timestamp: true
+    hide_hash: true
+    disabled_by_default: true
+
+  # Last boot timestamp (updated by device boot)
+  - platform: template
+    name: "${friendly_name} Last Boot"
+    disabled_by_default: true
+    id: device_lastBoot_time
+    icon: mdi:clock-start
+    entity_category: "diagnostic"
+
+  # waterdisplay timestamp last update (updated by id: "waterdisplay")
+  - platform: template
+    name: "${friendly_name} Daten vom"
+    id: watermeter_lastupdate
+    icon: mdi:clock-start
+
+  # optional device timestamp
+  - platform: template
+    id: systime
+    name: "${friendly_name} Uhrzeit"
+    disabled_by_default: true
+    entity_category: "diagnostic"
+    icon: mdi:clock-start
+    lambda: return id(time_sntp).now().strftime("%Y-%m-%dT%H:%M:%S %Z");
+
+  # Wifi Info (parts only on webserver)
+  # https://esphome.io/components/text_sensor/wifi_info.html
+  - platform: wifi_info
+    # get the current ssid from the wifi card
+    ssid:
+      name: ${friendly_name} WIFI SSID
+      id: wlan_ssid
+      icon: mdi:wifi-settings
+      entity_category: "diagnostic"
+
+    # get the current used ip address from the wifi card
+    ip_address:
+      name: ${friendly_name} IP Address
+      icon: mdi:ip
+      disabled_by_default: true
+      entity_category: "diagnostic"
+
+  # curl -i http://water-meter-esp.local/text_sensor/watermeterdata
+  - platform: template
+    id: watermeterdata
+    internal: true
+    disabled_by_default: true
+    lambda: |-
+      char buf[128];
+      sprintf(buf, "%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%.3f|%s",
+             id(waterdisplay).state,
+             id(current_value),
+             id(hour_value),
+             id(daily_value),
+             id(yesterday_value),
+             id(week_value),
+             id(watermonth).state,
+             id(lastmonth_value),
+             id(year_value),
+             id(systime).state.c_str()
+             );
+      std::string s = buf;
+      return s;
+# e.o.f configuration esp32
