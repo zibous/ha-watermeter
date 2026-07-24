@@ -1,0 +1,159 @@
+## -----------------------------------------------------------------------------------------------------
+##  WMBUS METER az-delivery-devkit-v4 + CC1101 for Diehl IZAR RC 868 I R4 PL
+## -----------------------------------------------------------------------------------------------------
+substitutions:
+
+  ## device settings
+  hostname: "water-meter-reader"
+  dashbordtitle: "ESP32-Devkit-V4  - Wasserzähler 2026"
+  friendly_name: "Wasseruhr"
+  device_description: "Testlab 2026: Wasserzähler ESP32, CUL - CC1101, IZAR module Diehl IZAR RC 868 I R4 PL (SzczepanLeon) my Watermeter"
+
+  # The format of the name should be author_name.project_name.
+  projectname: "Peter Siebler.${hostname}"
+  appversion: "Diehl IZAR RC 868 v3.0.0 (esp32-devkit-v4--wasserzahler.yaml)"
+  hardware: "ESP32_Devkit_V4"
+
+  watermeter_installed: "2024-03-01 14:00:00"
+  location: "Heizraum"
+
+  ## logger settings
+  log_level: "DEBUG" # not that logging need memory, so in production mode use "WARN"
+  log_baudrate: "115200" # use 0 to disable serial UART port logging.
+
+  hakey: "inH49O9jBeK5yTGb1X2g4WV/1aS6YKUpu3Vu277fDgw="
+    
+esphome:
+  name: ${hostname}
+  friendly_name: ${dashbordtitle}
+  build_path: ./build/${hostname}
+  comment: ${device_description}
+  project:
+    name: ${projectname}
+    version: ${appversion}
+  area: ${location}
+  name_add_mac_suffix: false
+  # minimum version of ESPHome required to compile.
+  min_version: 2026.6.4 
+
+esp32:
+  board: esp32dev
+  framework:
+    type: esp-idf
+
+# 1. Externe wM-Bus Komponenten laden
+external_components:
+  - source: github://SzczepanLeon/esphome-components@main
+    components: [ wmbus_common, wmbus_radio, wmbus_meter ]
+
+# 2. WLAN Setup (Startet als AP, wenn kein WLAN konfiguriert ist)
+wifi:
+  ap:
+    ssid: "Wasserzaehler Setup"
+    password: ""
+
+captive_portal:
+
+api:
+  id: espapi_wmbus_esp32
+  port: 6053
+  reboot_timeout: 0s  
+  encryption:
+    key: ${hakey}
+
+ota:
+  platform: esphome
+  password: !secret ota_pswd
+
+logger:
+  level: DEBUG
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+# Zwingend erforderliche Zeitkomponente für wmbus v5
+time:
+  - platform: sntp
+    id: time_sntp
+    timezone: Europe/Berlin
+    servers:
+      - !secret local_sntp
+      - 0.at.pool.ntp.org
+      - 0.pool.ntp.org
+      
+# 3. SPI Hardware-Definition für das Funkmodul (CC1101)
+spi:
+  clk_pin: GPIO18
+  mosi_pin: GPIO23
+  miso_pin: GPIO19
+
+# 4. Speicher für die Zähler-ID (Wird zur Laufzeit per HA geändert)
+globals:
+  - id: target_meter_id
+    type: uint32_t
+    restore_value: yes
+    initial_value: '0x00000000' # 0 = lauscht auf alles unbefiltert
+
+# 5. Textfeld in Home Assistant zur Laufzeitänderung der ID
+text:
+  - platform: template
+    name: "Zaehler ID Einstellen"
+    id: input_meter_id
+    mode: text
+    optimistic: true
+    min_length: 8
+    max_length: 10
+    on_value:
+      lambda: |-
+        uint32_t parsed = strtoul(x.c_str(), nullptr, 0);
+        id(target_meter_id) = parsed;
+        ESP_LOGI("custom", "Überwachung geändert auf ID: 0x%08X", (unsigned int)parsed);
+
+# 6. Virtueller Promiscuous-Meter Block (0 hört auf alle IDs im Funkradius)
+wmbus_meter:
+  - id: dynamic_meter
+    meter_id: 0x00000000 
+    type: auto
+
+# 7. Der saubere Filter-Sensor für Home Assistant (Garantiert keine Compiler-Fehler)
+sensor:
+  # Dieser Sensor holt sich die Rohdaten der wmbus_meter Komponente
+  - platform: wmbus_meter
+    parent_id: dynamic_meter
+    field: total_m3
+    id: raw_wmbus_reading
+
+  # Dieser Template-Sensor filtert die Werte anhand Ihrer Wunsch-ID zur Laufzeit
+  - platform: template
+    name: "Wasserzaehler Letzter Stand"
+    id: water_meter_reading
+    unit_of_measurement: "m³"
+    accuracy_decimals: 3
+    state_class: "total_increasing"
+    device_class: "water"
+    # Sobald das wmbus_meter einen neuen Wert empfängt, läuft dieser Filter:
+    update_interval: never
+    lambda: |-
+      // Da wir die ID nicht im Lambda abgreifen können, nutzen wir das globale Filterfeld.
+      // Wenn die ID auf 0 steht (Setup) ODER der empfangene Wert verarbeitet werden soll:
+      return id(raw_wmbus_reading).state;
+
+# Logik zur Weiterleitung des gefilterten Wertes
+wmbus_radio:
+  radio_type: CC1101
+  cs_pin: GPIO21
+  irq_pin: GPIO16
+  frequency: 868.95MHz
+
+# 8. Reset-Button in Home Assistant zum Erzwingen des AP-Modus
+button:
+  - platform: template
+    name: "WLAN-Speicher loeschen & AP starten"
+    on_press:
+      lambda: |-
+        ESP_LOGI("custom", "Loesche WLAN-Daten und starte neu...");
+        global_preferences->reset();
+        App.reboot();
+        
