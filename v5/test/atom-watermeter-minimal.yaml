@@ -1,0 +1,190 @@
+## -----------------------------------------------------------------------------------------------------
+##  ATOM LITE ESP32 + CC1101 - Wasserzähler MINIMAL
+##  Nur: total_m3, last_month_total_m3, alarm, batterie
+##  Kein WiFi-Netzwerk — nur AP Modus
+##
+##  Meter-ID setzen (wenn verbunden mit atom-watermeter-minimal_AP):
+##    curl -X POST "http://192.168.4.1/text/wasseruhr_meter_id_eingabe/set" --data "value=24058612"
+##    curl "http://192.168.4.1/text_sensor/wasseruhr_meter_id"
+## -----------------------------------------------------------------------------------------------------
+substitutions:
+  hostname: "atom-watermeter-minimal"
+  friendly_name: "Wasseruhr Minimal"
+  default_meter_id: "00000000"
+
+esp32:
+  board: m5stack-atom
+  framework:
+    type: esp-idf
+
+preferences:
+  flash_write_interval: 10min
+
+esphome:
+  name: ${hostname}
+  friendly_name: ${friendly_name}
+  build_path: ./build/${hostname}
+  min_version: 2026.6.4
+  on_boot:
+    priority: 600
+    then:
+      - lambda: |-
+          std::string mid = id(stored_meter_id);
+          if (!mid.empty() && mid != "${default_meter_id}") {
+            ESP_LOGW("system", "Lade gespeicherte Meter-ID: %s", mid.c_str());
+            id(water_meter).set_meter_params(
+              mid, "izar", "",
+              {LinkMode::T1, LinkMode::C1}
+            );
+          } else {
+            ESP_LOGW("system", "Keine Meter-ID gesetzt – empfange alle Zähler");
+          }
+
+external_components:
+  - source: github://SzczepanLeon/esphome-components@main
+    components: [ wmbus_radio, wmbus_common, wmbus_meter ]
+
+globals:
+  - id: stored_meter_id
+    type: std::string
+    restore_value: yes
+    initial_value: '"${default_meter_id}"'
+
+logger:
+  level: WARN
+  logs:
+    wmbusmeters: INFO
+    cc1101: ERROR
+    wmbus: ERROR
+
+## Kein WiFi-Netzwerk konfiguriert — startet sofort als AP
+wifi:
+  ap:
+    ssid: ${hostname}_AP
+    password: !secret hotspot_pswd
+
+captive_portal:
+
+mdns:
+  disabled: false
+
+ota:
+  platform: esphome
+  password: !secret ota_pswd
+
+web_server:
+  port: 80
+  version: 3
+  local: true
+
+api:
+  port: 6053
+  reboot_timeout: 0s
+  encryption:
+    key: !secret hakey
+
+## SPI + CC1101 (ATOM LITE Pinout)
+spi:
+  clk_pin: GPIO23
+  mosi_pin: GPIO19
+  miso_pin: GPIO33
+
+wmbus_radio:
+  radio_type: CC1101
+  cs_pin: GPIO22
+  irq_pin: GPIO26
+  frequency: 868.95MHz
+
+wmbus_meter:
+  - id: water_meter
+    meter_id: !secret watermeterId
+    type: izar
+    mode:
+      - T1
+      - C1
+
+## ---------------------------------------------------
+## Meter-ID zur Laufzeit setzen
+## curl -X POST "http://192.168.4.1/text/wasseruhr_meter_id_eingabe/set" --data "value=24058612"
+## ---------------------------------------------------
+text:
+  - platform: template
+    id: meter_id_input
+    name: "${friendly_name} Meter ID Eingabe"
+    icon: mdi:identifier
+    mode: text
+    optimistic: false
+    min_length: 8
+    max_length: 8
+    set_action:
+      then:
+        - lambda: |-
+            std::string new_id = x;
+            std::transform(new_id.begin(), new_id.end(), new_id.begin(), ::tolower);
+            id(stored_meter_id) = new_id;
+            id(meter_id_display).publish_state(new_id);
+            ESP_LOGW("system", "Meter-ID gespeichert: %s – Neustart in 2s...", new_id.c_str());
+        - delay: 2s
+        - button.press: restart_device
+
+button:
+  - platform: restart
+    name: "${friendly_name} Restart"
+    id: restart_device
+    icon: mdi:restart
+    entity_category: config
+
+## ---------------------------------------------------
+## Sensoren
+## ---------------------------------------------------
+sensor:
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: total_m3
+    id: waterdisplay
+    name: "${friendly_name} Anzeige"
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: water
+    accuracy_decimals: 3
+    icon: mdi:counter
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: last_month_total_m3
+    id: waterdisplay_lastmonth
+    name: "${friendly_name} Letzter Monat"
+    unit_of_measurement: "m³"
+    state_class: total_increasing
+    device_class: water
+    accuracy_decimals: 3
+    icon: mdi:counter
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: remaining_battery_life_y
+    id: watermeter_batterie
+    name: "${friendly_name} Batterie"
+    accuracy_decimals: 0
+    unit_of_measurement: "Jahre"
+    state_class: measurement
+    entity_category: diagnostic
+    icon: mdi:battery
+
+## ---------------------------------------------------
+## Text Sensoren
+## ---------------------------------------------------
+text_sensor:
+  - platform: template
+    id: meter_id_display
+    name: "${friendly_name} Meter ID"
+    icon: mdi:identifier
+    lambda: return id(stored_meter_id);
+
+  - platform: wmbus_meter
+    parent_id: water_meter
+    field: current_alarms
+    id: watermeter_alarm
+    name: "${friendly_name} Alarm"
+    icon: mdi:message-alert-outline
+    entity_category: diagnostic
