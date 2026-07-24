@@ -51,18 +51,13 @@ globals:
     initial_value: '"${default_meter_id}"'
 
 logger:
-  level: WARN
-  logs:
-    wmbusmeters: INFO
-    cc1101: ERROR
-    wmbus: ERROR
-
+  
 ## Kein WiFi-Netzwerk konfiguriert — startet sofort als AP
 wifi:
   ap:
     ssid: ${hostname}_AP
-    password: !secret hotspot_pswd
-
+    password: ""
+    
 captive_portal:
 
 mdns:
